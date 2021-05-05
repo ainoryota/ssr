@@ -7,12 +7,11 @@ import glob
 import time
 
 start = time.time()
-
+path="D:\Programing\SSR\SSC-ImageRecognition\SSC-ImageRecognition\\"
 cable_size=22
 circle_diameter=82
-count=0
-for data in glob.glob("Image/*.png"):
-    count=count+1
+
+for data in glob.glob(path+'Image\\*.png'):
     img = cv2.imread(data)
     original_img=img
     height, width, channels = img.shape[:3]
@@ -44,10 +43,10 @@ for data in glob.glob("Image/*.png"):
     max_R=min(255,R+color_range)
     
     print([min_B,min_G,min_R],[max_B,max_G,max_R])
-    bgrLower = np.array([min_B,min_G,min_R])   
-    bgrUpper = np.array([max_B,max_G,max_R])   
-    img_mask = cv2.inRange(img, bgrLower, bgrUpper) 
-    img = cv2.bitwise_and(img, img, mask=img_mask) 
+    bgrLower = np.array([min_B,min_G,min_R])    # 抽出する色の下限(BGR)
+    bgrUpper = np.array([max_B,max_G,max_R])    # 抽出する色の上限(BGR)
+    img_mask = cv2.inRange(img, bgrLower, bgrUpper) # BGRからマスクを作成
+    img = cv2.bitwise_and(img, img, mask=img_mask) # 元画像とマスクを合成
     _,img=cv2.threshold(img,0,255,cv2.THRESH_BINARY)
     img = cv2.medianBlur(img,3)
 
@@ -73,11 +72,9 @@ for data in glob.glob("Image/*.png"):
     if(start_point>circle_diameter): result_img = cv2.circle(original_img,( math.floor(width/2),start_point+math.floor(circle_diameter/2)), 5, (0,0,255), -1)
     else :result_img=original_img
 
-    cv2.imwrite("result\\"+os.path.basename(data),result_img)
+    cv2.imwrite(path+"result\\"+os.path.basename(data),result_img)
     cv2.imshow("img", result_img)
     cv2.waitKey()
     cv2.destroyAllWindows()
-    
-time=(time.time() - start)*1000;
-print ("elapsed_time:{0}".format(time/count)+ "[ms]")
+print ("elapsed_time:{0}".format( time.time() - start) + "[sec]")
 
