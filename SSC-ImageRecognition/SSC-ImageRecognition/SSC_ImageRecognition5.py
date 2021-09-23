@@ -131,6 +131,8 @@ def Calc(img):
     height, width, channels = img.shape[:3]
     maxValue = 0
     step = 12
+    field=np.empty((width,height));
+    
 
     #ざっくり解を調べる
     for x in range(0,width,step):
@@ -240,30 +242,19 @@ def ImageReconition(original_img):
     img = original_img[0:360, 280:640]
     original_img = original_img[0:360, (640 + 280):1280]
     
-    #img=cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    #水平方向角度の取得
     start = time.time()
-    data = Calc(img)
+    (y,x,angle1,angle2,angle3,value1,value2,value3,doubel_max) = Calc(img)
+    x=int(x)
+    y=int(y)
     print("calcTime",time.time() - start)
 
-    y = int(data[0])
-    x = int(data[1])
-    angle1 = data[2]
-    angle2 = data[3]
-    angle3 = data[4]
-    value1 = data[5]
-    value2 = data[6]
-    value3 = data[7]
-    doubel_max = data[8]
-
+    #仰角の取得
     start = time.time()
-    data2 = getTopAngle(img,y,x,angle1,angle2,angle3)
+    (topAngle1,topAngle2,topAngle3) = getTopAngle(img,y,x,angle1,angle2,angle3)
     print("getTopAngleTime",time.time() - start)
 
-    topAngle1 = data2[0]
-    topAngle2 = data2[1]
-    topAngle3 = data2[2]
-    
-
+    #信頼度の導出
     fortunity = min((value1,value2,value3)) / max(1,value1 + value2 + value3)
     fortunity = 1 - doubel_max / max(1,value1 + value2 + value3)
     fortuneLog.pop(0)
@@ -273,14 +264,12 @@ def ImageReconition(original_img):
         for i in range(5):
             fortuneLog[i] = 0
 
+
+    #描画など
     print(angle1,angle2,angle3,value1,value2,value3,fortunity)
-    #print(data,fortunity)
-    thickness = 25
     thickness = 1
     try:
         if(fortunity >= 0.1 or True):
-            #img =
-            #cv2.circle(img,(x,y),30,color=(255,0,0,50),thickness=thickness)
             theta = angle1
             img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(255,0,0,50),thickness=thickness)
             img = cv2.putText(img,str(int(topAngle1)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(255,0,0))
