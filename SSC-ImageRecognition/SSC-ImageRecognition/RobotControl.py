@@ -30,6 +30,8 @@ import sys
 from numba import jit
 from ctypes import windll
 
+from threading import Thread
+
 VIDEOMODE=False
 MOVEMODE=True
 branchcount=2#start branch No
@@ -305,37 +307,88 @@ def cam_init():
     timerlabel.grid(row=33, column=7)
     getCam();
 
+
+
+
+class VideoStream:
+    def __init__(self, resolution=(640, 360), framerate=15):
+
+        self.color_image = np.zeros((resolution[0], resolution[1]))
+        self.depth_image = self.color_image
+        self.resolution = resolution
+        self.framerate = framerate
+        
+        self.imu_pipe = rs.pipeline()
+        self.imu_config = rs.config()
+        self.imu_config.enable_stream(rs.stream.gyro)
+        self.imu_config.enable_stream(rs.stream.accel)
+        self.acc = []
+        self.gyro = []
+        
+        self.vid_pipe = rs.pipeline()
+        self.config = rs.config()
+        self.config.enable_stream(rs.stream.depth, resolution[0], resolution[1], rs.format.z16, framerate)
+        self.config.enable_stream(rs.stream.color, resolution[0], resolution[1], rs.format.bgr8, framerate)
+        
+        
+    def start_camera(self):
+        self.vid_pipe.start(self.config)
+        Thread(target=self.update_cam).start()       
+
+    def start_imu(self):
+        self.imu_pipe.start(self.imu_config)
+        Thread(target=self.update_imu).start()
+
+    def update_cam(self):
+        try:
+            while True:
+                # Wait for a coherent pair of frames: depth and color
+                vid_frames = self.vid_pipe.wait_for_frames()
+                depth_frame = vid_frames.get_depth_frame()
+                color_frame = vid_frames.get_color_frame()
+                if not depth_frame or not color_frame:
+                    continue
+
+                # Convert images to numpy arrays
+                self.depth_image = np.asanyarray(depth_frame.get_data())
+                self.color_image = np.asanyarray(color_frame.get_data())
+
+        except:
+            self.vid_pipe.stop()
+            print("Error in Vision", sys.exc_info())
+
+        finally:
+            self.vid_pipe.stop()
+
+
+    def update_imu(self):
+        try:
+            while True:
+                # Wait for a coherent pair of frames: depth and color
+                mot_frames = self.imu_pipe.wait_for_frames()
+                self.acc = mot_frames[0].as_motion_frame().get_motion_data()
+
+
+        except:
+            self.imu_pipe.stop()
+            print("Error in Vision", sys.exc_info())
+
+        finally:
+            self.imu_pipe.stop()
+
+
 def realsense_init():
     global cc
     global il,timerlabel
     global align,pipeline
+    global vs
 
 
-    # ストリーム(Depth/Color)の設定
-    config = rs.config()
-    #config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
-    #config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
-    #
-    config.enable_stream(rs.stream.color, 640, 360, rs.format.bgr8, 30)
-    config.enable_stream(rs.stream.infrared,1,640, 360, rs.format.y8, 30)
-    #
-    config.enable_stream(rs.stream.depth, 640, 360, rs.format.z16, 30)
-    #config.enable_stream(rs.stream.confidence, 640, 360,rs.format.raw8, 30)
-    #config.enable_stream(rs.stream.fisheye, 1)
-    config.enable_stream(rs.stream.gyro, rs.format.motion_xyz32f, 200)
-    config.enable_stream(rs.stream.accel, rs.format.motion_xyz32f, 250)
-    #config.enable_stream(rs.stream.pose)
-    #
-
-    
-    # ストリーミング開始
-    pipeline = rs.pipeline()
-    profile = pipeline.start(config)
-
-    # Alignオブジェクト生成
-    align_to = rs.stream.color
-    align = rs.align(align_to)
-
+    vs=VideoStream()
+    time.sleep(3)
+    vs.start_imu()
+    vs.start_camera()
+    time.sleep(3)
     
     img=Image.open('testResult/test.png')
     testImg=ImageTk.PhotoImage(img)
@@ -345,50 +398,38 @@ def realsense_init():
     timerlabel=tk.Label(root,text="")
     timerlabel.grid(row=33, column=7)
     getRealsense();
+    
 
 
 
 #@jit("f8[:,:]()")
 def getRealsense():
+
     start = time.time()
     global cc, il,timerlabel
     global branchdata
     global align,pipeline
     
+    
+
+
+
+
+    accel=vs.acc;
+    gyro=vs.gyro
+    #depth=vs.depth_index;
 
     # フレーム待ち(Color & Depth)
-    frames = pipeline.wait_for_frames()
+    #frames = pipeline.wait_for_frames()
 
-    #accel=frames[0].as_motion_frame()
-    #a=accel.get_motion_data();
-    #for frame in frames:
-    #    motion_data = frame.as_motion_frame().get_motion_data()
-    #    print(motion_data)
-        # prints: x: -0.0294199, y: -7.21769, z: -6.41355 for me
-        # to get numpy array:
-        #print(np.array([motion_data.x, motion_data.y, motion_data.z]))
-
-    aligned_frames = align.process(frames)
-    color_frame = aligned_frames.get_color_frame()
-    depth_frame = aligned_frames.get_depth_frame()
-    sekigai_frame = aligned_frames.get_infrared_frame()
-
-
-    #sekigai_frame = aligned_frames.get_confidence_frame()
-    #sekigai_frame = aligned_frames.get_infrared_frame()
-    #sekigai_frame = aligned_frames.get_infrared_frame()
-    #sekigai_frame = aligned_frames.get_infrared_frame()
+    #aligned_frames = align.process(frames)
+    #color_frame = aligned_frames.get_color_frame()
+    #depth_frame = aligned_frames.get_depth_frame()
     #sekigai_frame = aligned_frames.get_infrared_frame()
 
     #imageをnumpy arrayに
-    color_image = np.asanyarray(color_frame.get_data())
-    depth_image = np.asanyarray(depth_frame.get_data())
-    sekigai_frame=np.asanyarray(sekigai_frame.get_data())
-
-    #sekigai_frame=np.asanyarray(sekigai_frame.get_data())
-    #sekigai_frame=np.asanyarray(sekigai_frame.get_data())
-    #sekigai_frame=np.asanyarray(sekigai_frame.get_data())
-    #sekigai_frame=np.asanyarray(sekigai_frame.get_data())
+    color_image = vs.color_image
+    depth_image = vs.depth_image;
     #sekigai_frame=np.asanyarray(sekigai_frame.get_data())
 
 
@@ -447,7 +488,7 @@ def getRealsense():
     color_image_s = cv2.resize(color_image, (640, 360))
     depth_colormap_s = cv2.resize(depth_colormap, (640, 360))
 
-    sekigai_image=cv2.cvtColor(sekigai_frame,cv2.COLOR_GRAY2RGB)
+    #sekigai_image=cv2.cvtColor(sekigai_frame,cv2.COLOR_GRAY2RGB)
 
     #images = np.hstack((depth_colormap_s,sekigai_image))
     #images = np.hstack((depth_colormap_s,sekigai_image))
@@ -461,6 +502,7 @@ def getRealsense():
     testImg=ImageTk.PhotoImage( image_pil)
 
     result=ImageReconition(image_rgb);
+    testImg=image_rgb
     testImg=result[0]
     testImg=cv2.resize(testImg,dsize=(640,360))
 

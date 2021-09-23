@@ -342,6 +342,11 @@ def getTopAngle(original_img,x,y,angle1,angle2,angle3):
 
 def ImageReconition(original_img):
     img = original_img
+    
+    debugMode=False
+    if debugMode:
+        return [img,0,0,0]
+
     img = original_img[0:360, 280:640]
     original_img = original_img[0:360, (640 + 280):1280]
     
