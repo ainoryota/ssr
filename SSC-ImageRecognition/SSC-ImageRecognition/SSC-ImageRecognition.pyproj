@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>d586afa5-f9e4-4de4-b4f6-c666ee761802</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>SSC_ImageRecognition.py</StartupFile>
+    <StartupFile>RobotControl.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -21,8 +21,21 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="SSC_ImageRecognition.py" />
-    <Compile Include="usb_camera.py" />
+    <Compile Include="CalcBranch.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Control.py" />
+    <Compile Include="GUI_serial.py" />
+    <Compile Include="RobotControl.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SSC_ImageRecognition1.py" />
+    <Compile Include="SSC_ImageRecognition5.py" />
+    <Compile Include="SSC_ImageRecognition4.py" />
+    <Compile Include="SSC_ImageRecognition3.py" />
+    <Compile Include="SSC_ImageRecognition2.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
