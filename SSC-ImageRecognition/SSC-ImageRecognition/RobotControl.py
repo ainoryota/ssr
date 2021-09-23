@@ -494,10 +494,12 @@ def getRealsense():
     timerlabel.configure(text="{0} ms".format(timer))
     branchdata.append([result[1],result[2],timer])
 
-    if(result[3] > 0.1 and result[1] < 100):
+    if(result[3] > 0.1 and result[1] < 150):
         print("■■■■■分岐",result[4],result[5],result[6],result[7])
         if(v_auto.get()):
-            time.sleep(0.5)
+            #50で分岐→1.0
+            #0で分岐→0.5
+            time.sleep(0.5+result[1]*1.0/50)
             branchAngle(result[4],result[5],result[6],result[7])
 
             #num = int(branchEntry.get())

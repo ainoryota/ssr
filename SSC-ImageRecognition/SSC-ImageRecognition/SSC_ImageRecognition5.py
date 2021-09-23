@@ -60,7 +60,7 @@ def CalcDiffAngle(angle1,angle2):
     return ret
 
 @numba.jit(nopython=True)
-def CalcScore(field,x,y):
+def CalcScore(field,x,y,anglestep):
     circle_diameter = 82
     height, width = field.shape
     maxValue = 0
@@ -76,7 +76,7 @@ def CalcScore(field,x,y):
     cable_size = 12
     checkSize = 100
     W = math.floor(checkSize / 2)
-    anglestep = 5
+
     doubel_max = 0
     topAngle1 = 0
     topAngle2 = 0
@@ -184,14 +184,15 @@ def CalcScore(field,x,y):
 def Calc(img):
     height, width, channels = img.shape[:3]
     maxValue = 0
-    step = 12
+    step = 12*2
     field = np.where(np.any(img > 0,2) == 0,0,1)
     maxX = 0
     maxY = 0
+    anglestep=10
     #ざっくり解を調べる
     for x in range(0,width,step):
         for y in range(0,height,step):
-            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y)
+            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,anglestep)
             if(maxValue < value):
                 maxValue = value
                 maxAngle1 = angle1
@@ -205,11 +206,11 @@ def Calc(img):
                 maxDoubel = doubel
 
     #解の周辺をさらに調べる
-    detailStep = 2
-    detailanglestep = 1
+    detailStep = 5
+    detailanglestep = 5
     for x in range(maxX - step,maxX + step,detailStep):
         for y in range(maxY - step,maxY + step,detailStep):
-            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y)
+            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,detailanglestep)
             if(maxValue < value):
                 maxValue = value
                 maxAngle1 = angle1
