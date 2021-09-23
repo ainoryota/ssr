@@ -45,7 +45,6 @@ def CalcDiffAngle(angle1,angle2):
 def CalcScore(field,x,y):
     circle_diameter = 82
     height, width = field.shape
-    length = int(1 + math.sqrt(height ** 2 + width ** 2))
     maxValue = 0
     maxValue1 = 0
     maxValue2 = 0
@@ -68,16 +67,53 @@ def CalcScore(field,x,y):
     num = int(360 / anglestep)
 
     angleData = np.zeros((num,2))
-    for i in range(num):
+
+    i=-1
+    while i<num:
+        i=i+1
         angleData[i,0] = anglestep * i
                 
         cos = math.cos(math.radians(anglestep * i))
         sin = math.sin(math.radians(anglestep * i))
-        for r in range(0,length):
+
+
+        #startX=0
+        #startY=0
+        #goalX=0
+        #goalY=0
+        #if(cos>0):
+        #    goalX=width
+        #    startX=max(0,x-cable_size)
+        #elif(cos==0):
+        #    goalX=min(width,x+cable_size)
+        #    startX=max(0,x-cable_size)
+        #else:
+        #    goalX=min(width,x+cable_size)
+        #    startX=0
+
+        #if(sin>0):
+        #    goalY=height
+        #    startY=max(0,y-cable_size)
+        #elif(sin==0):
+        #    goalY=min(height,y+cable_size)
+        #    startY=max(0,y-cable_size)
+        #else:
+        #    goalY=min(height,y+cable_size)
+        #    startY=0
+
+        #if(np.any(field[startX:goalX,startY:goalY])==False):
+        #    i=int(int((angleData[i,0]+90)/90)*90/anglestep)
+        #    continue;
+
+
+        r=0
+        while True:
+            r+=1
             originalX = x + r * cos
             originalY = y + r * sin
             if(originalX >= width or originalX < 0 or originalY >= height or originalY < 0):
                 break
+
 
             for thick in range(0,-cable_size,-1):
                 X = int(originalX - thick * sin)#cos(theta+90)
@@ -131,7 +167,7 @@ def Calc(img):
     height, width, channels = img.shape[:3]
     maxValue = 0
     step = 12
-    field=np.where(np.sum(img,2)==0,0,1)
+    field=np.where(np.any(img>0,2)==0,0,1)
 
     #ざっくり解を調べる
     for x in range(0,width,step):
