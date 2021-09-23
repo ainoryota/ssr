@@ -312,7 +312,7 @@ def cam_init():
 
 class VideoStream:
     def __init__(self, resolution=(640, 360), framerate=15):
-
+        self.debugMode=False
         self.color_image = np.zeros((resolution[0], resolution[1]))
         self.depth_image = self.color_image
         self.resolution = resolution
@@ -352,7 +352,7 @@ class VideoStream:
                 # Convert images to numpy arrays
                 self.depth_image = np.asanyarray(depth_frame.get_data())
                 self.color_image = np.asanyarray(color_frame.get_data())
-
+                if(self.debugMode):break;
         except:
             self.vid_pipe.stop()
             print("Error in Vision", sys.exc_info())
@@ -367,8 +367,7 @@ class VideoStream:
                 # Wait for a coherent pair of frames: depth and color
                 mot_frames = self.imu_pipe.wait_for_frames()
                 self.acc = mot_frames[0].as_motion_frame().get_motion_data()
-
-
+                if(self.debugMode):break;
         except:
             self.imu_pipe.stop()
             print("Error in Vision", sys.exc_info())
@@ -385,10 +384,10 @@ def realsense_init():
 
 
     vs=VideoStream()
-    time.sleep(3)
+    time.sleep(1)
     vs.start_imu()
     vs.start_camera()
-    time.sleep(3)
+    time.sleep(1)
     
     img=Image.open('testResult/test.png')
     testImg=ImageTk.PhotoImage(img)
@@ -402,96 +401,44 @@ def realsense_init():
 
 
 
-#@jit("f8[:,:]()")
+@jit("f8[:,:]()")
 def getRealsense():
 
     start = time.time()
     global cc, il,timerlabel
     global branchdata
     global align,pipeline
-    
-    
-
-
-
-
-    accel=vs.acc;
-    gyro=vs.gyro
-    #depth=vs.depth_index;
-
-    # フレーム待ち(Color & Depth)
-    #frames = pipeline.wait_for_frames()
-
-    #aligned_frames = align.process(frames)
-    #color_frame = aligned_frames.get_color_frame()
-    #depth_frame = aligned_frames.get_depth_frame()
-    #sekigai_frame = aligned_frames.get_infrared_frame()
-
-    #imageをnumpy arrayに
-    color_image = vs.color_image
-    depth_image = vs.depth_image;
-    #sekigai_frame=np.asanyarray(sekigai_frame.get_data())
-
-
-    
-    #depth imageをカラーマップに変換
-
     minDistance=100
     maxDistance=300
+    
+    
+    accel=vs.acc;
+    gyro=vs.gyro
+    color_image = vs.color_image
+    depth_image = vs.depth_image;
 
-    for x in range(640):
-        for y in range(360):
-            if(depth_image[y][x]>5000):depth_image[y][x]=0;
-            depth_image[y][x]=depth_image[y][x];
 
+    depth_image=np.where(depth_image>5000,0,depth_image)#視認性の観点から5000以上なら0に
     original_depth_colormap = cv2.resize(cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.08), cv2.COLORMAP_JET),(640,360)).copy()
+    for p in list(zip(*np.where(depth_image==0))):
+        original_depth_colormap[p]=[0,0,0]
 
-    
-    for x in range(640):
-        for y in range(360):
-            if(depth_image[y][x]==0):
-                original_depth_colormap[y][x][0]=0;
-                original_depth_colormap[y][x][1]=0;
-                original_depth_colormap[y][x][2]=0;
-            original_depth_colormap[y][x]=original_depth_colormap[y][x];
+    depth_image=np.where(depth_image>maxDistance,0,depth_image)#索道らしくない距離を除去
 
-    for x in range(640):
-        for y in range(360):
-            if(depth_image[y][x]>maxDistance):depth_image[y][x]=0;
-            depth_image[y][x]=depth_image[y][x];
-    
-    
+    #これがないと型が合わない。例えばdepth_colormap=depth_image-minDistance;はだめ
     depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0), cv2.COLORMAP_JET)
-    #original_depth_colormap=depth_colormap.copy();
-    #original_depth_colormap=cv2.cvtColor(original_depth_colormap, cv2.COLOR_GRAY2RGB)
-    #original_depth_colormap_s=cv2.resize(original_depth_colormap, (640, 360))
 
     for x in range(640):
         for y in range(360):
             depth_colormap[y][x]=max(0,depth_image[y][x]-minDistance)*(255/(maxDistance-minDistance))
 
-    for x in range(640):
-        for y in range(360):
-            if(depth_image[y][x]==0):
-                depth_colormap[y][x]=[0,0,0];
-            #elif(depth_image[y][x]>400):
-            #    depth_colormap[y][x]=[0,0,0];
-            #else:
-            #    depth_colormap[y][x]=[255,0,0];
+    for p in list(zip(*np.where(depth_image==0))):
+        depth_colormap[p]=[0,0,0]
 
-    #depth_colormap = cv2.cvtColor(depth_colormap, cv2.COLOR_BGR2GRAY)
-    #depth_colormap=cv2.blur(depth_colormap,(5,5))
-
-    #depth_colormap = cv2.Canny(depth_colormap, 50, 110)
-    #depth_colormap = cv2.cvtColor(depth_colormap, cv2.COLOR_GRAY2RGB)
     #画像表示
     color_image_s = cv2.resize(color_image, (640, 360))
     depth_colormap_s = cv2.resize(depth_colormap, (640, 360))
 
-    #sekigai_image=cv2.cvtColor(sekigai_frame,cv2.COLOR_GRAY2RGB)
-
-    #images = np.hstack((depth_colormap_s,sekigai_image))
-    #images = np.hstack((depth_colormap_s,sekigai_image))
     images = np.hstack((depth_colormap_s,original_depth_colormap))
     
     img=images
@@ -519,17 +466,6 @@ def getRealsense():
     timerlabel.configure(text="{0} ms".format(timer))
     branchdata.append([result[1],result[2],timer])
 
-
-    #if(IsBranch(branchdata)):
-    #    print("分岐",entry1.get())
-    #    if(v_auto.get()):
-    #        time.sleep(1.5)
-    #        num=int(branchEntry.get())
-    #        branch(num)
-    #        branchEntry.delete(0,'end')
-    #        if(num==5):branchEntry.insert(0,str(1))
-    #        else:branchEntry.insert(0,str(num+1))
-    #    branchdata.clear();
     if(result[3]>0.1 and result[1]<100):
         print("分岐",entry1.get())
         if(v_auto.get()):
