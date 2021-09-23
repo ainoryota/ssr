@@ -28,10 +28,28 @@ import csv
 #915(sinやcosの計算を1箇所に集約)
 #862(分岐点の初期位置を限定)
 def reg1dim(x, y):
-    n = len(x)
-    a = ((np.dot(x, y) - y.sum() * x.sum() / n) / ((x ** 2).sum() - x.sum() ** 2 / n))
-    b = (y.sum() - a * x.sum()) / n
+    try:
+        n = len(x)
+        under = ((x ** 2).sum() - x.sum() ** 2 / n)
+        if under == 0:a = 0
+        else: a = (np.dot(x, y) - y.sum() * x.sum() / n) / under
+        if n == 0:b = 0
+        else:       b = (y.sum() - a * x.sum()) / n
+    except:
+        print("reg1dim Error")
+        a = 0
+        b = 0
+
     return a, b
+
+def getUnitValue(value,unit):
+    try:
+        if(value > 0):    return int((value + unit / 2) / unit) * unit
+        else:    return int((value - unit / 2) / unit) * unit
+    except:
+        print("getUnitValue Error")
+        return 0
+
 
 @numba.jit(nopython=True)
 def CalcDiffAngle(angle1,angle2):
@@ -68,9 +86,9 @@ def CalcScore(field,x,y):
 
     angleData = np.zeros((num,2))
 
-    i=-1
-    while i<num:
-        i=i+1
+    i = -1
+    while i < num:
+        i = i + 1
         angleData[i,0] = anglestep * i
                 
         cos = math.cos(math.radians(anglestep * i))
@@ -106,7 +124,7 @@ def CalcScore(field,x,y):
         #    continue;
 
 
-        r=0
+        r = 0
         while True:
             r+=1
             originalX = x + r * cos
@@ -167,8 +185,9 @@ def Calc(img):
     height, width, channels = img.shape[:3]
     maxValue = 0
     step = 12
-    field=np.where(np.any(img>0,2)==0,0,1)
-
+    field = np.where(np.any(img > 0,2) == 0,0,1)
+    maxX = 0
+    maxY = 0
     #ざっくり解を調べる
     for x in range(0,width,step):
         for y in range(0,height,step):
@@ -207,6 +226,10 @@ def Calc(img):
     return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel]
 
 fortuneLog = [0,0,0,0,0]
+GammalAngleLog = [0,0,0,0,0]
+TurnAngleLog = [0,0,0,0,0]
+RangleLog = [0,0,0,0,0]
+LangleLog = [0,0,0,0,0]
 
 def getTopAngle(img,x,y,angle1,angle2,angle3):
     
@@ -267,27 +290,136 @@ def getTopAngle(img,x,y,angle1,angle2,angle3):
     return [topAngle1,topAngle2,topAngle3]
 
 
-def ImageReconition(original_img):
-    img = original_img
+def getRobotAngle(img,x,y,angle1,angle2,angle3,rotation):
+    GammalAngle = 0
+    TurnAngle = 0
+    Rangle = 0
+    Langle = 0
     
+
+    height, width, channels = img.shape[:3]
+    field = img.copy()
+
+    newAngles = np.sort(np.abs(np.array([angle1,angle2,angle3])))
+
+    
+    
+    
+    w = width
+    h = height
+
+
+    mat = cv2.getRotationMatrix2D((w / 2, h / 2), newAngles[2] - 270,1)
+    spinField = cv2.warpAffine(field, mat, (w, h))
+
+
+
+    #角度計算
+   #maxAngle1,2,3,x,yを採用した際に各方向を実現する最小二乗法近似の結果
+    minDistance = 100
+    maxDistance = 300
+    gridDistance = 0.36#縦方向が130mmであり360ピクセルであるので1ピクセルあたり0.36mmである
+    height, width, channels = img.shape[:3]
+    length = int(1 + math.sqrt(height ** 2 + width ** 2))
+
+    cable_size = 12
+    checkSize = 100
+    
+    
+    Data1x = np.zeros(1)
+    Data1y = np.zeros(1)
+    Data2x = np.zeros(1)
+    Data2y = np.zeros(1)
+
+    
+    for theta in [newAngles[0],90 - newAngles[0] + (newAngles[2] - 270),newAngles[1] - 90 - (newAngles[2] - 270)]:
+        cos = math.cos(math.radians(theta))
+        sin = math.sin(math.radians(theta))
+
+        for r in range(0,length):
+            for thick in range(-cable_size,cable_size):
+                X = int(x + r * cos - thick * sin)
+                Y = int(y + r * sin + thick * cos)
+                if(X >= width or X < 0 or Y >= height or Y < 0 or spinField[X,Y,0] == 0):continue
+                value = ((maxDistance - minDistance) * spinField[X,Y,0] + minDistance) / 255
+                Data1x = np.append(Data1x,X)
+                Data1y = np.append(Data1y,value)
+                Data2x = np.append(Data2x,Y)
+                Data2y = np.append(Data2y,value)
+
+
+
+    a1,b1 = reg1dim(Data1x,Data1y)
+    a2,b2 = reg1dim(Data2x,Data2y)
+
+    g = 9.8
+    div = min(g,rotation.z) / g
+    tieAngle = math.degrees(math.acos(div))
+    print("仰角:",math.degrees(math.atan(a1)) , tieAngle,"/旋回角:",-math.degrees(math.atan(a2)),"/R角:",newAngles[1] - 90 - (newAngles[2] - 270),"/L角:", 90 - newAngles[0] + (newAngles[2] - 270))   
+    print("new角",newAngles,"/a1,a2:",a1,a2)
+
+    GammalAngle = math.degrees(math.atan(a1)) + tieAngle
+    TurnAngle = -math.degrees(math.atan(a2))
+    Rangle = newAngles[1] - 90 - (newAngles[2] - 270)
+    Langle = 90 - newAngles[0] + (newAngles[2] - 270)
+    
+
+
+    try:
+        GammalAngle = getUnitValue(GammalAngle,5)
+        TurnAngle = getUnitValue(TurnAngle,5)
+        Rangle = getUnitValue(Rangle,5)
+        Langle = getUnitValue(Langle,5)
+        
+    except:
+        print("errorAngle")
+        GammalAngle = 0
+        TurnAngle = 0
+        Rangle = 0
+        Langle = 0
+        
+
+    GammalAngle = min(20,GammalAngle)
+    GammalAngle = max(-20,GammalAngle)
+    TurnAngle = min(20,TurnAngle)
+    TurnAngle = max(-20,TurnAngle)
+    Rangle = max(30,Rangle)
+    Langle = max(30,Langle)
+
+    while abs(Langle + Rangle) < 100:
+        Rangle+=5
+        Langle+=5
+
+
+    
+    print("output",GammalAngle,TurnAngle,Rangle,Langle)
+
+    return (GammalAngle,TurnAngle,Rangle,Langle)
+
+def ImageReconition(original_img,rotation):
+    img = original_img
+    GammalAngle = 0
+    TurnAngle = 0
+    Rangle = 0
+    Langle = 0
+
+
     debugMode = False
     if debugMode:
-        return [img,0,0,0]
+        return [img,0,0,0,GammalAngle,TurnAngle,Rangle,Langle]
 
     img = original_img[0:360, 280:640]
     original_img = original_img[0:360, (640 + 280):1280]
     
     #水平方向角度の取得
-    start = time.time()
     (y,x,angle1,angle2,angle3,value1,value2,value3,doubel_max) = Calc(img)
-    x=int(x)
-    y=int(y)
-    print("calcTime",time.time() - start)
+    x = int(x)
+    y = int(y)
+
 
     #仰角の取得
-    start = time.time()
     (topAngle1,topAngle2,topAngle3) = getTopAngle(img,y,x,angle1,angle2,angle3)
-    print("getTopAngleTime",time.time() - start)
+
 
     #信頼度の導出
     fortunity = min((value1,value2,value3)) / max(1,value1 + value2 + value3)
@@ -295,13 +427,45 @@ def ImageReconition(original_img):
     fortuneLog.pop(0)
     fortuneLog.append(fortunity)
     fortunity = sum(fortuneLog) / 5
+
+
+
     if(fortunity > 0.1 and x < 100):
         for i in range(5):
             fortuneLog[i] = 0
 
 
+    (GammalAngle,TurnAngle,Rangle,Langle) = getRobotAngle(img,y,x,angle1,angle2,angle3,rotation)
+
+
+        
+    GammalAngleLog.pop(0)
+    GammalAngleLog.append(GammalAngle)
+    GammalAngle = sum(GammalAngleLog) / 5
+
+    TurnAngleLog.pop(0)
+    TurnAngleLog.append(TurnAngle)
+    TurnAngle = sum(TurnAngleLog) / 5
+
+    RangleLog.pop(0)
+    RangleLog.append(Rangle)
+    Rangle = sum(RangleLog) / 5
+
+
+    LangleLog.pop(0)
+    LangleLog.append(Langle)
+    Langle = sum(LangleLog) / 5
+
+    GammalAngle = getUnitValue(GammalAngle,5)
+    TurnAngle = getUnitValue(TurnAngle,5)
+    Rangle = getUnitValue(Rangle,5)
+    Langle = getUnitValue(Langle,5)
+
     #描画など
-    print(angle1,angle2,angle3,value1,value2,value3,fortunity)
+    print(x,y,GammalAngle,TurnAngle,Rangle,Langle,fortunity)
+
+
+
     thickness = 1
     try:
         if(fortunity >= 0.1 or True):
@@ -323,4 +487,4 @@ def ImageReconition(original_img):
 
 
     img = np.hstack((original_img,img))
-    return [img,x,y,fortunity]
+    return [img,x,y,fortunity,GammalAngle,TurnAngle,Rangle,Langle]

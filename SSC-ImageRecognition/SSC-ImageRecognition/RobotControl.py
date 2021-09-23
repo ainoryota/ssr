@@ -3,12 +3,12 @@
 #sudo apt -y install python-dev python-pip python-setuptools
 #sudo apt -y install libopencv-dev opencv-data
 #sudo pip3 install opencv-python
-#sudo pip3 install opencv-contrib-python; sudo apt-get install -y libatlas-base-dev libhdf5-dev libhdf5-serial-dev libatlas-base-dev libjasper-dev  libqtgui4  libqt4-test
+#sudo pip3 install opencv-contrib-python; sudo apt-get install -y
+#libatlas-base-dev libhdf5-dev libhdf5-serial-dev libatlas-base-dev
+#libjasper-dev libqtgui4 libqt4-test
 #sudo apt-get install python3-tk
 #sudo pip3 install numba
 #sudo pip3 install pyserial
-
-
 import tkinter as tk
 import GUI_serial as Gs
 import serial#pip install pyserial
@@ -32,15 +32,15 @@ from ctypes import windll
 
 from threading import Thread
 
-VIDEOMODE=False
-MOVEMODE=True
-branchcount=2#start branch No
+VIDEOMODE = False
+MOVEMODE = True
+branchcount = 2#start branch No
 windll.winmm.timeBeginPeriod(1)
 
 class PushButton:
     button = []
     def __init__(self,tk,win,row,column,k,com,num=-1):
-        if(num==-1):button = tk.Button(win,text = k,command = com)
+        if(num == -1):button = tk.Button(win,text = k,command = com)
         else:button = tk.Button(win,text = k,command = partial(com, num))
         button.grid(row = row, column =column, padx = 5, pady = 5)
 class Label:
@@ -97,23 +97,28 @@ def reverse(value):
 
 #前進、後退、停止、フリー、チェックボックス等の設定
 #ボタン関数の定義
-def forward():            
+def forward():   
+    print("○○○Forward○○○")
     v1.set(True) 
     v2.set(False)
     Gs.Forward(ser)
     
 def back():            
+    print("○○○Back○○○")
     v1.set(False) 
     v2.set(True)
     Gs.Back(ser)
     
 def stop():            
+    print("○○○Stop○○○")
     Gs.Stop(ser)
     
 def free():            
+    print("○○○Free○○○")
     Gs.Free(ser)
     
-def change():            
+def change():           
+    print("○○○Change○○○")
     if v3.get() == True:
         if (v5.get() == False) and (v6.get() == False):
             Gs.Branch(ser,"normal_switching.csv",v3.get(),v8.get())
@@ -221,26 +226,48 @@ def branch(num):                    #ボタンがクリックされたら実行
             mode = 1
     
         
-    if(num==1):value=entry1.get();
-    elif(num==2):value=entry2.get();
-    elif(num==3):value=entry3.get();
-    elif(num==4):value=entry4.get();
-    elif(num==5):value=entry5.get();
-    elif(num==6):value=entry6.get();
-    elif(num==7):value=entry7.get();
-    elif(num==8):value=entry8.get();
-    elif(num==9):value=entry9.get();
-    elif(num==10):value=entry10.get();
-    elif(num==11):value=entry11.get();
+    if(num == 1):value = entry1.get()
+    elif(num == 2):value = entry2.get()
+    elif(num == 3):value = entry3.get()
+    elif(num == 4):value = entry4.get()
+    elif(num == 5):value = entry5.get()
+    elif(num == 6):value = entry6.get()
+    elif(num == 7):value = entry7.get()
+    elif(num == 8):value = entry8.get()
+    elif(num == 9):value = entry9.get()
+    elif(num == 10):value = entry10.get()
+    elif(num == 11):value = entry11.get()
 
     csv_name = value + '_' + str(mode) + '.csv'    
     if v7.get() == True:
-        csv_name = value+ '_' + str(mode) + '_T' + '.csv'
+        csv_name = value + '_' + str(mode) + '_T' + '.csv'
         v5.set(reverse(v5.get()))
         v6.set(reverse(v6.get()))
         
     print(csv_name,num)
     Gs.Branch(ser,csv_name,v1.get(),v8.get())
+
+def branchAngle(GammalAngle,TurnAngle,Langle,Rangle):
+    if v3.get() == True:         #右分岐かどうか
+        if v1.get() == True:       #前進中かどうか
+            mode = 1
+        else:
+            mode = 2
+    else:
+        if v1.get() == True:       #前進中かどうか
+            mode = 2
+        else:
+            mode = 1
+    value = str(GammalAngle) + "_" + str(TurnAngle) + "_" + str(Langle) + "_" + str(Rangle)
+    csv_name = value + '_' + str(mode) + '.csv'    
+    if v7.get() == True:
+        csv_name = value + '_' + str(mode) + '_T' + '.csv'
+        v5.set(reverse(v5.get()))
+        v6.set(reverse(v6.get()))
+        
+    print(csv_name,"AngleMode")
+    Gs.Branch(ser,csv_name,v1.get(),v8.get())
+
 
 def getCam():
     start = time.time()
@@ -249,19 +276,19 @@ def getCam():
     rr, img = cc.read()
     image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # imreadはBGRなのでRGBに変換
     image_pil = Image.fromarray(image_rgb) # RGBからPILフォーマットへ変換
-    testImg=ImageTk.PhotoImage( image_pil)
+    testImg = ImageTk.PhotoImage(image_pil)
 
-    result=ImageReconition(image_rgb);
-    testImg=result[0]
+    result = ImageReconition(image_rgb)
+    testImg = result[0]
     testImg = Image.fromarray(testImg)
-    testImg=ImageTk.PhotoImage( testImg)
+    testImg = ImageTk.PhotoImage(testImg)
 
     
 
     il.configure(image=testImg)
-    il.image=testImg;
+    il.image = testImg
     
-    timer=math.floor((time.time()-start)*1000);
+    timer = math.floor((time.time() - start) * 1000)
     timerlabel.configure(text="{0} ms".format(timer))
     branchdata.append([result[1],result[2],timer])
 
@@ -269,12 +296,12 @@ def getCam():
         print("分岐",entry1.get())
         if(v_auto.get()):
             time.sleep(1.5)
-            num=int(branchEntry.get())
+            num = int(branchEntry.get())
             branch(num)
             branchEntry.delete(0,'end')
-            if(num==5):branchEntry.insert(0,str(1))
-            else:branchEntry.insert(0,str(num+1))
-        branchdata.clear();
+            if(num == 5):branchEntry.insert(0,str(1))
+            else:branchEntry.insert(0,str(num + 1))
+        branchdata.clear()
         #for hoge in range(10):
             #branchdata.pop(len(branchdata)-1)
         #branchdata.clear();
@@ -288,31 +315,31 @@ def cam_init():
     if(VIDEOMODE):
         cc = cv2.VideoCapture("robotvideo2.mp4")
     else:
-        if(platform.system()=="Windows"):
+        if(platform.system() == "Windows"):
             cc = cv2.VideoCapture(1)
         else:
             cc = cv2.VideoCapture(0)
         cc.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-        cc.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc("H","2","6","4"));
+        cc.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc("H","2","6","4"))
 
     rr, img = cc.read()
 
     
-    img=Image.open('testResult/test.png')
-    testImg=ImageTk.PhotoImage(img)
-    il=tk.Label(root,image=testImg)
+    img = Image.open('testResult/test.png')
+    testImg = ImageTk.PhotoImage(img)
+    il = tk.Label(root,image=testImg)
     il.grid(row=3, column=4,columnspan=30,rowspan=10)
 
-    timerlabel=tk.Label(root,text="")
+    timerlabel = tk.Label(root,text="")
     timerlabel.grid(row=33, column=7)
-    getCam();
+    getCam()
 
 
 
 
 class VideoStream:
     def __init__(self, resolution=(640, 360), framerate=15):
-        self.debugMode=False
+        self.debugMode = False
         self.color_image = np.zeros((resolution[0], resolution[1]))
         self.depth_image = self.color_image
         self.resolution = resolution
@@ -352,7 +379,7 @@ class VideoStream:
                 # Convert images to numpy arrays
                 self.depth_image = np.asanyarray(depth_frame.get_data())
                 self.color_image = np.asanyarray(color_frame.get_data())
-                if(self.debugMode):break;
+                if(self.debugMode):break
         except:
             self.vid_pipe.stop()
             print("Error in Vision", sys.exc_info())
@@ -367,7 +394,8 @@ class VideoStream:
                 # Wait for a coherent pair of frames: depth and color
                 mot_frames = self.imu_pipe.wait_for_frames()
                 self.acc = mot_frames[0].as_motion_frame().get_motion_data()
-                if(self.debugMode):break;
+                self.gyro = mot_frames[1].as_motion_frame().get_motion_data()
+                if(self.debugMode):break
         except:
             self.imu_pipe.stop()
             print("Error in Vision", sys.exc_info())
@@ -383,20 +411,20 @@ def realsense_init():
     global vs
 
 
-    vs=VideoStream()
+    vs = VideoStream()
     time.sleep(1)
     vs.start_imu()
     vs.start_camera()
     time.sleep(1)
     
-    img=Image.open('testResult/test.png')
-    testImg=ImageTk.PhotoImage(img)
-    il=tk.Label(root,image=testImg)
+    img = Image.open('testResult/test.png')
+    testImg = ImageTk.PhotoImage(img)
+    il = tk.Label(root,image=testImg)
     il.grid(row=3, column=4,columnspan=30,rowspan=10)
 
-    timerlabel=tk.Label(root,text="")
+    timerlabel = tk.Label(root,text="")
     timerlabel.grid(row=33, column=7)
-    getRealsense();
+    getRealsense()
     
 
 
@@ -408,32 +436,32 @@ def getRealsense():
     global cc, il,timerlabel
     global branchdata
     global align,pipeline
-    minDistance=100
-    maxDistance=300
+    minDistance = 100
+    maxDistance = 300
     
     
-    accel=vs.acc;
-    gyro=vs.gyro
+    accel = vs.acc
+    gyro = vs.gyro
     color_image = vs.color_image
-    depth_image = vs.depth_image;
+    depth_image = vs.depth_image
 
 
-    depth_image=np.where(depth_image>5000,0,depth_image)#視認性の観点から5000以上なら0に
+    depth_image = np.where(depth_image > 5000,0,depth_image)#視認性の観点から5000以上なら0に
     original_depth_colormap = cv2.resize(cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.08), cv2.COLORMAP_JET),(640,360)).copy()
-    for p in list(zip(*np.where(depth_image==0))):
-        original_depth_colormap[p]=[0,0,0]
+    for p in list(zip(*np.where(depth_image == 0))):
+        original_depth_colormap[p] = [0,0,0]
 
-    depth_image=np.where(depth_image>maxDistance,0,depth_image)#索道らしくない距離を除去
+    depth_image = np.where(depth_image > maxDistance,0,depth_image)#索道らしくない距離を除去
 
     #これがないと型が合わない。例えばdepth_colormap=depth_image-minDistance;はだめ
     depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0), cv2.COLORMAP_JET)
 
     for x in range(640):
         for y in range(360):
-            depth_colormap[y][x]=max(0,depth_image[y][x]-minDistance)*(255/(maxDistance-minDistance))
+            depth_colormap[y][x] = max(0,depth_image[y][x] - minDistance) * (255 / (maxDistance - minDistance))
 
-    for p in list(zip(*np.where(depth_image==0))):
-        depth_colormap[p]=[0,0,0]
+    for p in list(zip(*np.where(depth_image == 0))):
+        depth_colormap[p] = [0,0,0]
 
     #画像表示
     color_image_s = cv2.resize(color_image, (640, 360))
@@ -441,40 +469,42 @@ def getRealsense():
 
     images = np.hstack((depth_colormap_s,original_depth_colormap))
     
-    img=images
+    img = images
     
 
     image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # imreadはBGRなのでRGBに変換
     image_pil = Image.fromarray(image_rgb) # RGBからPILフォーマットへ変換
-    testImg=ImageTk.PhotoImage( image_pil)
+    testImg = ImageTk.PhotoImage(image_pil)
 
-    result=ImageReconition(image_rgb);
-    testImg=image_rgb
-    testImg=result[0]
-    testImg=cv2.resize(testImg,dsize=(640,360))
+    result = ImageReconition(image_rgb,accel)
+    testImg = image_rgb
+    testImg = result[0]
+    testImg = cv2.resize(testImg,dsize=(640,360))
 
 
     testImg = Image.fromarray(testImg)
-    testImg=ImageTk.PhotoImage( testImg)
+    testImg = ImageTk.PhotoImage(testImg)
 
     
 
     il.configure(image=testImg)
-    il.image=testImg;
+    il.image = testImg
     
-    timer=math.floor((time.time()-start)*1000);
+    timer = math.floor((time.time() - start) * 1000)
     timerlabel.configure(text="{0} ms".format(timer))
     branchdata.append([result[1],result[2],timer])
 
-    if(result[3]>0.1 and result[1]<100):
-        print("分岐",entry1.get())
+    if(result[3] > 0.1 and result[1] < 100):
+        print("■■■■■分岐",result[4],result[5],result[6],result[7])
         if(v_auto.get()):
-            #time.sleep(0.5)
-            num=int(branchEntry.get())
-            branch(num)
-            branchEntry.delete(0,'end')
-            if(num==5):branchEntry.insert(0,str(1))
-            else:branchEntry.insert(0,str(num+1))
+            time.sleep(0.5)
+            branchAngle(result[4],result[5],result[6],result[7])
+
+            #num = int(branchEntry.get())
+            #branch(num)
+            #branchEntry.delete(0,'end')
+            #if(num == 5):branchEntry.insert(0,str(1))
+            #else:branchEntry.insert(0,str(num + 1))
 
     root.after(10,getRealsense)
 
@@ -484,7 +514,7 @@ print()
 
 
 if(MOVEMODE):
-    if(platform.system()!="Windows"):
+    if(platform.system() != "Windows"):
         ser = serial.Serial('/dev/ttyUSB0',115200)    
     else:
         ser = serial.Serial("COM4", 115200)
@@ -612,10 +642,10 @@ branchEntry.grid(row = 12, column =0, padx = 5, pady = 5)
 
 
 
-cc=0;
-il=0;
-timerlabel=0;
-branchdata=[];
+cc = 0
+il = 0
+timerlabel = 0
+branchdata = []
 
 
 sys.stderr.write("*** 開始 ***\n")
