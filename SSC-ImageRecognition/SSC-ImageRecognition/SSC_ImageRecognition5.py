@@ -42,9 +42,9 @@ def CalcDiffAngle(angle1,angle2):
     return ret
 
 @numba.jit(nopython=True)
-def CalcScore(img,x,y):
+def CalcScore(field,x,y):
     circle_diameter = 82
-    height, width, channels = img.shape[:3]
+    height, width = field.shape
     length = int(1 + math.sqrt(height ** 2 + width ** 2))
     maxValue = 0
     maxValue1 = 0
@@ -84,7 +84,7 @@ def CalcScore(img,x,y):
                 if(X >= width or X < 0):break
                 Y = int(originalY + thick * cos)#sin(theta+90)
                 if(Y >= height or Y < 0):break
-                if(img[X,Y,0] == 0):continue
+                if(field[X,Y] == 0):continue
                 angleData[i,1]+=1 - abs(float(thick) / cable_size) ** 2
 
             for thick in range(0,cable_size):
@@ -92,7 +92,7 @@ def CalcScore(img,x,y):
                 if(X >= width or X < 0):break
                 Y = int(originalY + thick * cos)#sin(theta+90)
                 if(Y >= height or Y < 0):break
-                if(img[X,Y,0] == 0):continue
+                if(field[X,Y] == 0):continue
                 angleData[i,1]+=1 - abs(float(thick) / cable_size) ** 2
 
     count = np.count_nonzero(angleData > 0,0)[1]
@@ -131,13 +131,12 @@ def Calc(img):
     height, width, channels = img.shape[:3]
     maxValue = 0
     step = 12
-    field=np.empty((width,height));
-    
+    field=np.where(np.sum(img,2)==0,0,1)
 
     #ざっくり解を調べる
     for x in range(0,width,step):
         for y in range(0,height,step):
-            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(img,x,y)
+            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y)
             if(maxValue < value):
                 maxValue = value
                 maxAngle1 = angle1
@@ -155,7 +154,7 @@ def Calc(img):
     detailanglestep = 1
     for x in range(maxX - step,maxX + step,detailStep):
         for y in range(maxY - step,maxY + step,detailStep):
-            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(img,x,y)
+            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y)
             if(maxValue < value):
                 maxValue = value
                 maxAngle1 = angle1
