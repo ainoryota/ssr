@@ -269,73 +269,6 @@ def branchAngle(GammalAngle,TurnAngle,Langle,Rangle):
     Gs.Branch(ser,csv_name,v1.get(),v8.get())
 
 
-def getCam():
-    start = time.time()
-    global cc, il,timerlabel
-    global branchdata
-    rr, img = cc.read()
-    image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # imreadはBGRなのでRGBに変換
-    image_pil = Image.fromarray(image_rgb) # RGBからPILフォーマットへ変換
-    testImg = ImageTk.PhotoImage(image_pil)
-
-    result = ImageReconition(image_rgb)
-    testImg = result[0]
-    testImg = Image.fromarray(testImg)
-    testImg = ImageTk.PhotoImage(testImg)
-
-    
-
-    il.configure(image=testImg)
-    il.image = testImg
-    
-    timer = math.floor((time.time() - start) * 1000)
-    timerlabel.configure(text="{0} ms".format(timer))
-    branchdata.append([result[1],result[2],timer])
-
-    if(IsBranch(branchdata)):
-        print("分岐",entry1.get())
-        if(v_auto.get()):
-            time.sleep(1.5)
-            num = int(branchEntry.get())
-            branch(num)
-            branchEntry.delete(0,'end')
-            if(num == 5):branchEntry.insert(0,str(1))
-            else:branchEntry.insert(0,str(num + 1))
-        branchdata.clear()
-        #for hoge in range(10):
-            #branchdata.pop(len(branchdata)-1)
-        #branchdata.clear();
-
-    root.after(10,getCam)
-
-def cam_init():
-    global cc
-    global il,timerlabel
-    
-    if(VIDEOMODE):
-        cc = cv2.VideoCapture("robotvideo2.mp4")
-    else:
-        if(platform.system() == "Windows"):
-            cc = cv2.VideoCapture(1)
-        else:
-            cc = cv2.VideoCapture(0)
-        cc.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-        cc.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc("H","2","6","4"))
-
-    rr, img = cc.read()
-
-    
-    img = Image.open('testResult/test.png')
-    testImg = ImageTk.PhotoImage(img)
-    il = tk.Label(root,image=testImg)
-    il.grid(row=3, column=4,columnspan=30,rowspan=10)
-
-    timerlabel = tk.Label(root,text="")
-    timerlabel.grid(row=33, column=7)
-    getCam()
-
-
-
 
 class VideoStream:
     def __init__(self, resolution=(640, 360), framerate=15):
@@ -495,18 +428,28 @@ def getRealsense():
     branchdata.append([result[1],result[2],timer])
 
     if(result[3] > 0.1 and result[1] < 150):
-        print("■■■■■分岐",result[4],result[5],result[6],result[7])
+        print("■■■■■分岐",result[4],result[5],result[6],result[7],result[8])
         if(v_auto.get()):
-            #50で分岐→1.0
-            #0で分岐→0.5
-            time.sleep(0.5+result[1]*1.0/50)
+            SleepLength=0;
+            for i in range(4):
+                SleepLength+=max(0,result[8][i]-result[8][i+1])
+            #700ms×5でSleepLengthだけ進んでいる
+            SleepVel=1000*SleepLength/3500
+
+            SleepTime=result[1]/SleepVel;
+
+            print("Sleep",SleepTime);
+            time.sleep(SleepTime)
+            result[4] = max(-20,result[4])
+            result[4] = min(20,result[4])
+            result[5] = max(-20,result[5])
+            result[5] = min(20,result[5])
+            result[6] = max(-80,result[6])
+            result[6] = min(80,result[6])
+            result[7] = max(-80,result[7])
+            result[7] = min(80,result[7])
             branchAngle(result[4],result[5],result[6],result[7])
 
-            #num = int(branchEntry.get())
-            #branch(num)
-            #branchEntry.delete(0,'end')
-            #if(num == 5):branchEntry.insert(0,str(1))
-            #else:branchEntry.insert(0,str(num + 1))
 
     root.after(10,getRealsense)
 
@@ -578,8 +521,8 @@ cb2 = tk.Checkbutton(root,text='後退　',variable = v2)
 cb3 = tk.Checkbutton(root,text='右分岐',variable = v3)
 cb4 = tk.Checkbutton(root,text='左分岐',variable = v4)
 cb_auto = tk.Checkbutton(root,text='auto分岐',variable = v_auto)
-cb5 = tk.Checkbutton(root,text='前輪　',variable = v5)
-cb6 = tk.Checkbutton(root,text='後輪　',variable = v6)
+cb5 = tk.Checkbutton(root,text='前輪T　',variable = v5)
+cb6 = tk.Checkbutton(root,text='後輪T　',variable = v6)
 cb7 = tk.Checkbutton(root,text='テンション分岐モード',variable = v7)
 cb8 = tk.Checkbutton(root,text='セーブモード',variable = v8)
 
@@ -648,6 +591,7 @@ cc = 0
 il = 0
 timerlabel = 0
 branchdata = []
+
 
 
 sys.stderr.write("*** 開始 ***\n")

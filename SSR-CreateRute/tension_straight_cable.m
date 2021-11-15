@@ -1,21 +1,36 @@
 %% turn_right_comp8に対してのオプション
 
+
 %% 初期設定
 %ケーブル条件
-    setdata=[-10 0 80 30];
-    gamma1 = setdata(1)*pi/180;      %ケーブル斜度
-    phi_n = setdata(2)*pi/180;      %ケーブル平面の回転角
-    the_nR = setdata(3)*pi/180;     %右旋回角
-    the_nL = setdata(4)*pi/180;    %左旋回角
+tic
+i=0
+for a=-20:5:20
+for b=-20:5:20
+    for c=20:5:80
+        for right=20:5:80
+            for mode=1:2
+disp(["clac",a,b,c,right,mode]);
+if(right+c<100)
+    disp("error restart!")
+    continue;
+end
+
+
+i=i+1
+    
+gamma1 = a*pi/180;      %ケーブル斜度
+    phi_n = b*pi/180;      %ケーブル平面の回転角
+    the_nR = c*pi/180;     %右旋回角
+    the_nL = right*pi/180;    %左旋回角
 
 %モード選択
-for mode =1:2
-
+    %mode = e;           %右分岐(1) 左分岐(2)
     save = 1;           %データの保存,CSV書き出しon,off
     animation = 0;      %アニメーションon,off
     workspace = 0;
     robot_plot = 1;
-    switching = 11; 
+    switching = 0; 
     %右分岐モードが基準
     %左分岐時はGUIで解決
     %(0)テンションかけた状態で分岐
@@ -316,7 +331,7 @@ for t = 1:1000
                
 
                %書き出しデータの描画
-               figure(2)
+               %figure(2)
                %ダミーデータの作成
 %                x0 = [1 1];
 %                x1 = [n_count01 n_count01];
@@ -325,7 +340,7 @@ for t = 1:1000
 %                x4 = [t1+t2+n_count01 t1+t2+n_count01];                            
 %                x5 = [t1+t2+t3 t1+t2+t3];
 %                y = [-180 350];
-                            
+               break;
                             
                plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
                hold on
@@ -347,7 +362,7 @@ for t = 1:1000
                xlabel('時間，ステップ')
                ylabel('角度[deg]')
                             
-               figure(3)
+               %figure(3)
                plot(data_r(1:T,1),data(1:T,7),'LineWidth',2)
                hold on
                plot(data_r(1:T,1),data(1:T,8),'LineWidth',2)
@@ -420,7 +435,8 @@ for t = 1:1000
             if save == 1
                 writematrix(data,text+'.csv')
             end
-            figure(2)
+             break;
+            %figure(2)
             plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
             hold on
             plot(data_r(1:T,1),data(1:T,2)*180/pi,'LineWidth',2)
@@ -486,7 +502,8 @@ for t = 1:1000
             if save ==1
                     writematrix(data,text+'.csv')
             end
-            figure(2)
+             break;
+            %figure(2)
             plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
             hold on
             plot(data_r(1:T,1),data(1:T,2)*180/pi,'LineWidth',2)
@@ -533,8 +550,9 @@ for t = 1:1000
             text = "f_tension_r-n";
            if save ==1
                writematrix(data,text+'.csv')
-            end
-            figure(2)
+           end
+             break;
+            %figure(2)
             plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
             hold on
             plot(data_r(1:T,1),data(1:T,2)*180/pi,'LineWidth',2)
@@ -582,8 +600,8 @@ for t = 1:1000
             if save ==1
                 writematrix(data,text+'.csv')
             end
-
-            figure(2)
+ break;
+            %figure(2)
             plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
             hold on
             plot(data_r(1:T,1),data(1:T,2)*180/pi,'LineWidth',2)
@@ -632,7 +650,8 @@ for t = 1:1000
             if save ==1
                 writematrix(data,text+'.csv')
             end
-            figure(2)
+             break;
+            %figure(2)
             plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
             hold on
             plot(data_r(1:T,1),data(1:T,2)*180/pi,'LineWidth',2)
@@ -680,7 +699,8 @@ for t = 1:1000
             if save ==1
                 writematrix(data,text+'.csv')
             end
-            figure(2)
+             break;
+            %figure(2)
             plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
             hold on
             plot(data_r(1:T,1),data(1:T,2)*180/pi,'LineWidth',2)
@@ -728,7 +748,8 @@ for t = 1:1000
             if save ==1
                 writematrix(data,text+'.csv')
             end
-            figure(2)
+             break;
+            %figure(2)
             plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
             hold on
             plot(data_r(1:T,1),data(1:T,2)*180/pi,'LineWidth',2)
@@ -776,7 +797,8 @@ for t = 1:1000
             if save ==1
                 writematrix(data,text+'.csv')
             end
-            figure(2)
+             break;
+            %figure(2)
             plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
             hold on
             plot(data_r(1:T,1),data(1:T,2)*180/pi,'LineWidth',2)
@@ -823,7 +845,8 @@ for t = 1:1000
             if save ==1
                 writematrix(data,text+'.csv')
             end
-            figure(2)
+             break;
+            %figure(2)
             plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
             hold on
             plot(data_r(1:T,1),data(1:T,2)*180/pi,'LineWidth',2)
@@ -871,7 +894,8 @@ for t = 1:1000
             if save ==1
                 writematrix(data,text+'.csv')
             end
-            figure(2)
+             break;
+            %figure(2)
             plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
             hold on
             plot(data_r(1:T,1),data(1:T,2)*180/pi,'LineWidth',2)
@@ -1003,9 +1027,9 @@ for t = 1:1000
                 writematrix(data,text+'.csv')
            end
 
-
+ break;
            %書き出しデータの描画
-           figure(2)
+           %figure(2)
            %ダミーデータの作成
 %                x0 = [1 1];
 %                x1 = [n_count01 n_count01];
@@ -1036,7 +1060,7 @@ for t = 1:1000
            xlabel('時間，ステップ')
            ylabel('角度[deg]')
 
-           figure(3)
+           %figure(3)
            plot(data_r(1:T,1),data(1:T,7),'LineWidth',2)
            hold on
            plot(data_r(1:T,1),data(1:T,8),'LineWidth',2)
@@ -1486,9 +1510,13 @@ for t = 1:1000
     end
 %%         w = waitforbuttonpress;
 end
+
+
+        end
+    end
 end
-
-
+end
+end
 
 
 

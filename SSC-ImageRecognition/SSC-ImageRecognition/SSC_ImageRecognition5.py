@@ -184,11 +184,11 @@ def CalcScore(field,x,y,anglestep):
 def Calc(img):
     height, width, channels = img.shape[:3]
     maxValue = 0
-    step = 12*2
+    step = 12 * 2
     field = np.where(np.any(img > 0,2) == 0,0,1)
     maxX = 0
     maxY = 0
-    anglestep=10
+    anglestep = 10
     #ざっくり解を調べる
     for x in range(0,width,step):
         for y in range(0,height,step):
@@ -231,6 +231,8 @@ GammalAngleLog = [0,0,0,0,0]
 TurnAngleLog = [0,0,0,0,0]
 RangleLog = [0,0,0,0,0]
 LangleLog = [0,0,0,0,0]
+Branched = False;
+XLog=[0,0,0,0,0]
 
 def getTopAngle(img,x,y,angle1,angle2,angle3):
     
@@ -398,6 +400,8 @@ def getRobotAngle(img,x,y,angle1,angle2,angle3,rotation):
     return (GammalAngle,TurnAngle,Rangle,Langle)
 
 def ImageReconition(original_img,rotation):
+    global Branched
+
     img = original_img
     GammalAngle = 0
     TurnAngle = 0
@@ -488,4 +492,13 @@ def ImageReconition(original_img,rotation):
 
 
     img = np.hstack((original_img,img))
-    return [img,x,y,fortunity,GammalAngle,TurnAngle,Rangle,Langle]
+    if(Branched==True):
+        #分岐直後は1回だけ分岐なし
+        if(fortunity>0.1): fortunity =0;
+        Branched=False;
+    else:
+        if(fortunity>0.1): Branched=True;
+
+    XLog.pop(0)
+    XLog.append(x)
+    return [img,x,y,fortunity,GammalAngle,TurnAngle,Rangle,Langle,XLog]
