@@ -188,6 +188,13 @@ def Calc(img):
     field = np.where(np.any(img > 0,2) == 0,0,1)
     maxX = 0
     maxY = 0
+    maxAngle1=-1
+    maxAngle2=-1
+    maxAngle3=-1
+    maxValue1=-1
+    maxValue2=-1
+    maxValue3=-1
+    maxDoubel=-1
     anglestep = 10
     #ざっくり解を調べる
     for x in range(0,width,step):

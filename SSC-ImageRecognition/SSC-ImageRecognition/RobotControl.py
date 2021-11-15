@@ -400,7 +400,7 @@ def getRealsense():
     color_image_s = cv2.resize(color_image, (640, 360))
     depth_colormap_s = cv2.resize(depth_colormap, (640, 360))
 
-    images = np.hstack((depth_colormap_s,original_depth_colormap))
+    images = np.hstack((depth_colormap_s,color_image_s))
     
     img = images
     
@@ -437,6 +437,7 @@ def getRealsense():
             SleepVel=1000*SleepLength/3500
 
             SleepTime=result[1]/SleepVel;
+            SleepTime=max(0,SleepTime-1.5)
 
             print("Sleep",SleepTime);
             time.sleep(SleepTime)
