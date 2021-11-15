@@ -10,6 +10,7 @@ from PIL import Image,ImageTk
 import numba
 import csv
 
+#一次式で最小事情近似する
 def reg1dim(x, y):
     try:
         n = len(x)
@@ -25,6 +26,7 @@ def reg1dim(x, y):
 
     return a, b
 
+#unitの倍数になるようvalueを調節する
 def getUnitValue(value,unit):
     try:
         if(value > 0):    return int((value + unit / 2) / unit) * unit
@@ -34,17 +36,17 @@ def getUnitValue(value,unit):
         return 0
 
 
+#2つの角度の差を求める
 @numba.jit(nopython=True)
 def CalcDiffAngle(angle1,angle2):
-    ret = 1000
-    ret = min(ret,abs(angle1 - angle2))
+    ret = min(360,abs(angle1 - angle2))
     ret = min(ret,abs(angle1 - angle2 - 360))
     ret = min(ret,abs(angle1 - angle2 + 360))
     return ret
 
+#分岐点位置を与えたときにその位置を評価する
 @numba.jit(nopython=True)
 def CalcScore(field,x,y,anglestep):
-    circle_diameter = 82
     height, width = field.shape
     maxValue = 0
     maxValue1 = 0
@@ -76,36 +78,6 @@ def CalcScore(field,x,y,anglestep):
                 
         cos = math.cos(math.radians(anglestep * i))
         sin = math.sin(math.radians(anglestep * i))
-
-
-        #startX=0
-        #startY=0
-        #goalX=0
-        #goalY=0
-        #if(cos>0):
-        #    goalX=width
-        #    startX=max(0,x-cable_size)
-        #elif(cos==0):
-        #    goalX=min(width,x+cable_size)
-        #    startX=max(0,x-cable_size)
-        #else:
-        #    goalX=min(width,x+cable_size)
-        #    startX=0
-
-        #if(sin>0):
-        #    goalY=height
-        #    startY=max(0,y-cable_size)
-        #elif(sin==0):
-        #    goalY=min(height,y+cable_size)
-        #    startY=max(0,y-cable_size)
-        #else:
-        #    goalY=min(height,y+cable_size)
-        #    startY=0
-
-        #if(np.any(field[startX:goalX,startY:goalY])==False):
-        #    i=int(int((angleData[i,0]+90)/90)*90/anglestep)
-        #    continue;
-
 
         r = 0
         while True:
@@ -221,11 +193,9 @@ GammalAngleLog = [0,0,0,0,0]
 TurnAngleLog = [0,0,0,0,0]
 RangleLog = [0,0,0,0,0]
 LangleLog = [0,0,0,0,0]
-Branched = False;
 XLog=[0,0,0,0,0]
 
 def getTopAngle(img,x,y,angle1,angle2,angle3):
-    
     #maxAngle1,2,3,x,yを採用した際に各方向を実現する最小二乗法近似の結果
     minDistance = 100
     maxDistance = 300
@@ -348,8 +318,8 @@ def getRobotAngle(img,x,y,angle1,angle2,angle3,rotation):
     g = 9.8
     div = min(g,rotation.z) / g
     tieAngle = math.degrees(math.acos(div))
-    print("仰角:",math.degrees(math.atan(a1)) , tieAngle,"/旋回角:",-math.degrees(math.atan(a2)),"/R角:",newAngles[1] - 90 - (newAngles[2] - 270),"/L角:", 90 - newAngles[0] + (newAngles[2] - 270))   
-    print("new角",newAngles,"/a1,a2:",a1,a2)
+    #print("仰角:",math.degrees(math.atan(a1)) , tieAngle,"/旋回角:",-math.degrees(math.atan(a2)),"/R角:",newAngles[1] - 90 - (newAngles[2] - 270),"/L角:", 90 - newAngles[0] + (newAngles[2] - 270))   
+    #print("new角",newAngles,"/a1,a2:",a1,a2)
 
     GammalAngle = math.degrees(math.atan(a1)) + tieAngle
     TurnAngle = -math.degrees(math.atan(a2))
@@ -385,19 +355,16 @@ def getRobotAngle(img,x,y,angle1,angle2,angle3,rotation):
 
 
     
-    print("output",GammalAngle,TurnAngle,Rangle,Langle)
+    #print("output",GammalAngle,TurnAngle,Rangle,Langle)
 
     return (GammalAngle,TurnAngle,Rangle,Langle)
 
 def ImageReconition(original_img,rotation):
-    global Branched
-
     img = original_img
     GammalAngle = 0
     TurnAngle = 0
     Rangle = 0
     Langle = 0
-
 
     debugMode = False
     if debugMode:
@@ -411,10 +378,8 @@ def ImageReconition(original_img,rotation):
     x = int(x)
     y = int(y)
 
-
     #仰角の取得
     (topAngle1,topAngle2,topAngle3) = getTopAngle(img,y,x,angle1,angle2,angle3)
-
 
     #信頼度の導出
     fortunity = min((value1,value2,value3)) / max(1,value1 + value2 + value3)
@@ -422,18 +387,9 @@ def ImageReconition(original_img,rotation):
     fortuneLog.pop(0)
     fortuneLog.append(fortunity)
     fortunity = sum(fortuneLog) / 5
-
-
-
-    if(fortunity > 0.1 and x < 100):
-        for i in range(5):
-            fortuneLog[i] = 0
-
-
     (GammalAngle,TurnAngle,Rangle,Langle) = getRobotAngle(img,y,x,angle1,angle2,angle3,rotation)
 
 
-        
     GammalAngleLog.pop(0)
     GammalAngleLog.append(GammalAngle)
     GammalAngle = sum(GammalAngleLog) / 5
@@ -446,7 +402,6 @@ def ImageReconition(original_img,rotation):
     RangleLog.append(Rangle)
     Rangle = sum(RangleLog) / 5
 
-
     LangleLog.pop(0)
     LangleLog.append(Langle)
     Langle = sum(LangleLog) / 5
@@ -457,9 +412,7 @@ def ImageReconition(original_img,rotation):
     Langle = getUnitValue(Langle,5)
 
     #描画など
-    print(x,y,GammalAngle,TurnAngle,Rangle,Langle,fortunity)
-
-
+    print(x,y,GammalAngle,TurnAngle,Rangle,Langle,'{:.2f}'.format(fortunity))
 
     thickness = 1
     try:
@@ -482,13 +435,16 @@ def ImageReconition(original_img,rotation):
 
 
     img = np.hstack((original_img,img))
-    if(Branched==True):
-        #分岐直後は1回だけ分岐なし
-        if(fortunity>0.1): fortunity =0;
-        Branched=False;
-    else:
-        if(fortunity>0.1): Branched=True;
 
     XLog.pop(0)
     XLog.append(x)
     return [img,x,y,fortunity,GammalAngle,TurnAngle,Rangle,Langle,XLog]
+
+def ResetLog():
+    for i in range(5):
+        fortuneLog[i]=0
+        GammalAngleLog[i]=0
+        TurnAngleLog[i]=0
+        RangleLog[i]=0
+        LangleLog[i]=0
+        XLog[i]=0

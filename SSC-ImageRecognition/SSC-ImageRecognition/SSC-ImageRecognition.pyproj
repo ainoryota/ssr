@@ -30,6 +30,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SSC_ImageRecognition1.py" />
+    <Compile Include="SSC_ImageRecognition6.py" />
     <Compile Include="SSC_ImageRecognition5.py" />
     <Compile Include="SSC_ImageRecognition4.py" />
     <Compile Include="SSC_ImageRecognition3.py" />

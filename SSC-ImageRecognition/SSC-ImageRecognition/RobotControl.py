@@ -14,13 +14,16 @@ import GUI_serial as Gs
 import serial#pip install pyserial
 import platform
 from functools import partial
+import threading
 
 import sys
 import cv2
 import time
 import tkinter as tk
 from PIL import Image,ImageTk #udo pip install pillow
-from SSC_ImageRecognition5 import ImageReconition
+from SSC_ImageRecognition6 import ImageReconition
+from SSC_ImageRecognition6 import ResetLog
+
 from CalcBranch import IsBranch
 import math
 import pyrealsense2 as rs
@@ -265,8 +268,10 @@ def branchAngle(GammalAngle,TurnAngle,Langle,Rangle):
         v5.set(reverse(v5.get()))
         v6.set(reverse(v6.get()))
         
-    print(csv_name,"AngleMode")
-    Gs.Branch(ser,csv_name,v1.get(),v8.get())
+    # print(csv_name,"AngleMode")
+    t2 = threading.Thread(target=Gs.Branch, args=(csv_name,v1.get(),v8.get()))
+    t2.start();
+    #Gs.Branch(ser,csv_name,v1.get(),v8.get())
 
 
 
@@ -426,20 +431,24 @@ def getRealsense():
     timer = math.floor((time.time() - start) * 1000)
     timerlabel.configure(text="{0} ms".format(timer))
     branchdata.append([result[1],result[2],timer])
-
+    print("★",'{:.2f}'.format(result[3]),result[1],result[8])
     if(result[3] > 0.1 and result[1] < 150):
         print("■■■■■分岐",result[4],result[5],result[6],result[7],result[8])
         if(v_auto.get()):
             SleepLength=0;
+            TimeCounter=1;
             for i in range(4):
                 SleepLength+=max(0,result[8][i]-result[8][i+1])
-            #700ms×5でSleepLengthだけ進んでいる
-            SleepVel=1000*SleepLength/3500
+                if(result[8][i]-result[8][i+1]>0):TimeCounter+=700;
+            #TimeCounterでSleepLengthだけ進んでいる
+            SleepVel=1000*SleepLength/TimeCounter
 
             SleepTime=result[1]/SleepVel;
             SleepTime=max(0,SleepTime-1.5)
 
             print("Sleep",SleepTime);
+            ResetLog();
+
             time.sleep(SleepTime)
             result[4] = max(-20,result[4])
             result[4] = min(20,result[4])
