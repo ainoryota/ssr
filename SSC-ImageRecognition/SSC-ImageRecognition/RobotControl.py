@@ -14,7 +14,6 @@ import GUI_serial as Gs
 import serial#pip install pyserial
 import platform
 from functools import partial
-import threading
 
 import sys
 import cv2
@@ -34,11 +33,13 @@ from numba import jit
 from ctypes import windll
 
 from threading import Thread
+import threading
 
 VIDEOMODE = False
 MOVEMODE = True
 branchcount = 2#start branch No
 windll.winmm.timeBeginPeriod(1)
+
 
 class PushButton:
     button = []
@@ -251,6 +252,8 @@ def branch(num):                    #ボタンがクリックされたら実行
     Gs.Branch(ser,csv_name,v1.get(),v8.get())
 
 def branchAngle(GammalAngle,TurnAngle,Langle,Rangle):
+    global IsMovingNow;
+    IsMovingNow=True;
     if v3.get() == True:         #右分岐かどうか
         if v1.get() == True:       #前進中かどうか
             mode = 1
@@ -269,9 +272,9 @@ def branchAngle(GammalAngle,TurnAngle,Langle,Rangle):
         v6.set(reverse(v6.get()))
         
     # print(csv_name,"AngleMode")
-    t2 = threading.Thread(target=Gs.Branch, args=(csv_name,v1.get(),v8.get()))
-    t2.start();
-    #Gs.Branch(ser,csv_name,v1.get(),v8.get())
+
+    Gs.Branch(ser,csv_name,v1.get(),v8.get())
+    IsMovingNow=False;
 
 
 
@@ -356,8 +359,8 @@ def realsense_init():
     time.sleep(1)
     
     img = Image.open('testResult/test.png')
-    testImg = ImageTk.PhotoImage(img)
-    il = tk.Label(root,image=testImg)
+    testImgA = ImageTk.PhotoImage(img)
+    il = tk.Label(root,image=testImgA)
     il.grid(row=3, column=4,columnspan=30,rowspan=10)
 
     timerlabel = tk.Label(root,text="")
@@ -367,7 +370,7 @@ def realsense_init():
 
 
 
-@jit("f8[:,:]()")
+#@jit("f8[:,:]()")
 def getRealsense():
 
     start = time.time()
@@ -432,22 +435,22 @@ def getRealsense():
     timerlabel.configure(text="{0} ms".format(timer))
     branchdata.append([result[1],result[2],timer])
     print("★",'{:.2f}'.format(result[3]),result[1],result[8])
-    if(result[3] > 0.1 and result[1] < 150):
+    if(result[3] > 0.1 and result[1] < 150 and IsMovingNow==False):
         print("■■■■■分岐",result[4],result[5],result[6],result[7],result[8])
         if(v_auto.get()):
-            SleepLength=0;
-            TimeCounter=1;
+            SleepLength = 0
+            TimeCounter = 1
             for i in range(4):
-                SleepLength+=max(0,result[8][i]-result[8][i+1])
-                if(result[8][i]-result[8][i+1]>0):TimeCounter+=700;
+                SleepLength+=max(0,result[8][i] - result[8][i + 1])
+                if(result[8][i] - result[8][i + 1] > 0):TimeCounter+=700
             #TimeCounterでSleepLengthだけ進んでいる
-            SleepVel=1000*SleepLength/TimeCounter
+            SleepVel = 1000 * SleepLength / TimeCounter
 
-            SleepTime=result[1]/SleepVel;
-            SleepTime=max(0,SleepTime-1.5)
+            SleepTime = result[1] / SleepVel
+            SleepTime = max(0,SleepTime - 1.5)
 
-            print("Sleep",SleepTime);
-            ResetLog();
+            print("Sleep",SleepTime)
+            ResetLog()
 
             time.sleep(SleepTime)
             result[4] = max(-20,result[4])
@@ -458,7 +461,10 @@ def getRealsense():
             result[6] = min(80,result[6])
             result[7] = max(-80,result[7])
             result[7] = min(80,result[7])
-            branchAngle(result[4],result[5],result[6],result[7])
+            t2 = threading.Thread(target=branchAngle, args=(result[4],result[5],result[6],result[7]))
+            t2.start()
+            
+
 
 
     root.after(10,getRealsense)
@@ -601,7 +607,7 @@ cc = 0
 il = 0
 timerlabel = 0
 branchdata = []
-
+IsMovingNow=False;
 
 
 sys.stderr.write("*** 開始 ***\n")

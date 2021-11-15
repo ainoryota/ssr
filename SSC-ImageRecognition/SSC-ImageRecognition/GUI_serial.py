@@ -7,6 +7,7 @@ import Control
 import numpy as np
 import math
 import csv
+import tkinter as tk
 
 #円周率
 pi = math.pi
@@ -76,7 +77,7 @@ def Free(ser):
     Control.Motor_Reset(ser,4,5,9,10)
     
     
-    
+
 def Branch(ser,csvfile,value,save):
     #分岐データの読み込み
     csvfile="Data/"+csvfile;
@@ -134,4 +135,7 @@ def Branch(ser,csvfile,value,save):
 
 
     
+def Move(id,data,direct,log):
 
+
+    return log;
