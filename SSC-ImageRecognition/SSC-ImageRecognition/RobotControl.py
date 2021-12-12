@@ -54,11 +54,11 @@ class Label:
         label.grid(row = row, column =column, padx = 5, pady = 5)        
 def init():
     entry1.delete(0,'end')
-    entry1.insert(0,'10_-10_50_70_T')
+    entry1.insert(0,'0_-15_75_45')
     entry2.delete(0,'end')
-    entry2.insert(0,'5_10_30_90')
+    entry2.insert(0,'15_0_75_45')
     entry3.delete(0,'end')
-    entry3.insert(0,'-10_0_80_30')
+    entry3.insert(0,'-15_0_40_10')
     entry4.delete(0,'end')
     entry4.insert(0,'-5_0_60_80')
     entry5.delete(0,'end')
@@ -264,6 +264,10 @@ def branchAngle(GammalAngle,TurnAngle,Langle,Rangle):
             mode = 2
         else:
             mode = 1
+    while Langle+Rangle<100:
+        if Langle<80:Langle=Langle+5
+        if Rangle<80:Rangle=Rangle+5
+    
     value = str(GammalAngle) + "_" + str(TurnAngle) + "_" + str(Langle) + "_" + str(Rangle)
     csv_name = value + '_' + str(mode) + '.csv'    
     if v7.get() == True:
@@ -271,7 +275,7 @@ def branchAngle(GammalAngle,TurnAngle,Langle,Rangle):
         v5.set(reverse(v5.get()))
         v6.set(reverse(v6.get()))
         
-    # print(csv_name,"AngleMode")
+    print(csv_name,"AngleMode")
 
     Gs.Branch(ser,csv_name,v1.get(),v8.get())
     IsMovingNow=False;
@@ -435,7 +439,7 @@ def getRealsense():
     timerlabel.configure(text="{0} ms".format(timer))
     branchdata.append([result[1],result[2],timer])
     print("★",'{:.2f}'.format(result[3]),result[1],result[8])
-    if(result[3] > 0.1 and result[1] < 150 and IsMovingNow==False):
+    if(result[3] > 0.13 and result[1] < 150 and IsMovingNow==False):
         print("■■■■■分岐",result[4],result[5],result[6],result[7],result[8])
         if(v_auto.get()):
             SleepLength = 0
@@ -526,9 +530,9 @@ v1.set(True)
 v2.set(False) 
 v3.set(True) 
 v4.set(False)
-v5.set(False) 
-v6.set(False)
-v7.set(False)
+v5.set(True) 
+v6.set(True)
+v7.set(True)
 v8.set(False)
 v_auto.set(False)
 
