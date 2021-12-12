@@ -408,7 +408,7 @@ def getRealsense():
     color_image_s = cv2.resize(color_image, (640, 360))
     depth_colormap_s = cv2.resize(depth_colormap, (640, 360))
 
-    images = np.hstack((depth_colormap_s,color_image_s))
+    images = np.hstack((depth_colormap_s,original_depth_colormap))
     
     img = images
     
@@ -446,11 +446,15 @@ def getRealsense():
             #TimeCounterでSleepLengthだけ進んでいる
             SleepVel = 1000 * SleepLength / TimeCounter
 
+<<<<<<< HEAD
             SleepTime = result[1] / SleepVel
             SleepTime = max(0,SleepTime - 1.5)
 
             print("Sleep",SleepTime)
             ResetLog()
+=======
+            SleepTime=result[1]/SleepVel;
+>>>>>>> parent of 934cdf34 (WIP)
 
             time.sleep(SleepTime)
             result[4] = max(-20,result[4])
