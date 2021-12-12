@@ -54,7 +54,7 @@ class Label:
         label.grid(row = row, column =column, padx = 5, pady = 5)        
 def init():
     entry1.delete(0,'end')
-    entry1.insert(0,'20_0_20_70')
+    entry1.insert(0,'10_-10_50_70_T')
     entry2.delete(0,'end')
     entry2.insert(0,'5_10_30_90')
     entry3.delete(0,'end')
@@ -462,8 +462,7 @@ def getRealsense():
             result[6] = min(80,result[6])
             result[7] = max(-80,result[7])
             result[7] = min(80,result[7])
-            t2 = threading.Thread(target=branchAngle, args=(result[4],result[5],result[6],result[7]))
-            t2.start()
+            branchAngle(result[4],result[5],result[6],result[7])
             
 
 
