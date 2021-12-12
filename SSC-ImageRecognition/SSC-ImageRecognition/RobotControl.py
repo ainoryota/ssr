@@ -451,7 +451,7 @@ def getRealsense():
             SleepVel = 1000 * SleepLength / TimeCounter
 
             SleepTime = result[1] / SleepVel
-            SleepTime = max(0,SleepTime - 1.5)
+            SleepTime = max(0,SleepTime)
 
             print("Sleep",SleepTime)
             ResetLog()

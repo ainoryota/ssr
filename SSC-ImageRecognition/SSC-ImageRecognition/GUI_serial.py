@@ -95,6 +95,7 @@ def Branch(ser,csvfile,value,save):
         direct = -1
 
     for t in range(0,n-1):#行数-1
+        if(t%4==1):continue;#早めに後輪を分岐する
         log[t][0] = time.perf_counter() - time_start
         Control.Motor_pos6(ser,id[1],id[2],id[3],id[6],id[7],id[8],round(data[t,0]/pi*180,2),round(data[t,1]/pi*180,2),round(data[t,2]/pi*180,2),round(data[t,3]/pi*180,2),round(data[t,4]/pi*180,2),round(data[t,5]/pi*180,2))    
         Control.Motor_vel2(ser,id[4],id[5],round(-direct*data[t,6]),round(direct*data[t,6]))
