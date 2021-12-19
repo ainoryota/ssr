@@ -20,8 +20,8 @@ import cv2
 import time
 import tkinter as tk
 from PIL import Image,ImageTk #udo pip install pillow
-from SSC_ImageRecognition6 import ImageReconition
-from SSC_ImageRecognition6 import ResetLog
+from SSC_ImageRecognition7 import ImageReconition
+from SSC_ImageRecognition7 import ResetLog
 
 from CalcBranch import IsBranch
 import math
@@ -382,7 +382,7 @@ def getRealsense():
     global branchdata
     global align,pipeline
     minDistance = 0
-    maxDistance = 1500
+    maxDistance = 500
     
     
     accel = vs.acc
