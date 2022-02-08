@@ -382,7 +382,7 @@ def getRealsense():
     global branchdata
     global align,pipeline
     minDistance = 0
-    maxDistance = 500
+    maxDistance = 1500
     
     
     accel = vs.acc

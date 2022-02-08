@@ -221,7 +221,7 @@ def getTopAngle(img,x,y,angle1,angle2,angle3):
     
     #maxAngle1,2,3,x,yを採用した際に各方向を実現する最小二乗法近似の結果
     minDistance = 100
-    maxDistance = 300
+    maxDistance = 1500
     gridDistance = 0.36#縦方向が130mmであり360ピクセルであるので1ピクセルあたり0.36mmである
     height, width, channels = img.shape[:3]
     length = int(1 + math.sqrt(height ** 2 + width ** 2))
