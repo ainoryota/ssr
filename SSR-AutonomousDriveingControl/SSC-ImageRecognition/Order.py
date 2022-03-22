@@ -23,11 +23,11 @@ class PosOrder(Order):#角度はdegree
         super().__init__(delay,sleepTime)
         self.pos = pos
 
-class SpeedOrder(Order):
-    def __init__(self,speed,delay,sleepTime=0.01):
+class VelocityOrder(Order):
+    def __init__(self,velocity,delay,sleepTime=0.01):
         super().__init__(delay,sleepTime)
-        self.speed = speed
+        self.velocity = velocity
 
 class Mode(Enum):
     Pos = 0
-    Speed = 1
+    Velocity = 1

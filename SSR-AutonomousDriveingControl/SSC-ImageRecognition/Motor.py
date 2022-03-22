@@ -4,12 +4,12 @@ import time
 from Order import Mode
 from Order import InitOrder
 from Order import PosOrder
-from Order import SpeedOrder
+from Order import VelocityOrder
 
 class Motor(object):
     def __init__(self,id,status):
         self.id=id;        
-        self.insertOrder(InitOrder(Mode.Pos,0))
+        self.insertOrder(InitOrder(status,0))
         
     def insertOrder(self,order):
         order.setID(self.id);

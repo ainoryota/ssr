@@ -3,7 +3,7 @@ import serial#pip install pyserial
 from Order import Mode
 from Order import InitOrder
 from Order import PosOrder
-from Order import SpeedOrder
+from Order import VelocityOrder
 import math
 
 class OutputController(object):
@@ -46,8 +46,13 @@ class OutputController(object):
                 print("Pos",dataList)
                 self.output.outputPos(dataList)
 
-            elif(isinstance(data,SpeedOrder)):
-                print("Speed")
+            elif(isinstance(data,VelocityOrder)):#速度に関する司令は複数同時に送信することができる
+                dataList = [data];
+                while(len(self.orderList)>0 and isinstance(self.orderList[-1],VelocityOrder) and self.orderList[-1].delay==data.delay):
+                    dataList.append(self.orderList.pop())
+                print("Velocity")
+                self.output.outputVelocity(dataList)
+                
 
             
         
@@ -62,7 +67,7 @@ class Serial(object):
         if order.mode == Mode.Pos:
             data1 = 0X02 #位置制御モードかつフリー
             data2 = 0X00 #位置制御モードかつノーマル
-        elif order.mode == Mode.Speed:
+        elif order.mode == Mode.Velocity:
             data1 = 0X06 #速度制御モードかつフリー
             data2 = 0X04 #速度制御モードかつノーマル
         else:
@@ -99,4 +104,17 @@ class Serial(object):
         self.write(list)
         time.sleep(sleepTime)
 
+    def outputVelocity(self,orderList):
+        dataList = []
+        count = len(orderList)
+        sleepTime = 0
+        while(len(orderList) > 0):
+            data = orderList.pop()
+            dataList+=[data.id,(0X10000+int(data.velocity*100))&0XFF, ((0X10000+int(data.velocity*100))//256)&0XFF]
+            sleepTime = max(sleepTime,data.sleepTime)
 
+        #       Size CMD OP ID/Data1/Data2 ADR CNT
+        list = [6 + count * 3,0X04,0X00] + dataList + [0X30,count]
+        list.append(sum(list) & 0XFF)
+        self.write(list)
+        time.sleep(sleepTime)

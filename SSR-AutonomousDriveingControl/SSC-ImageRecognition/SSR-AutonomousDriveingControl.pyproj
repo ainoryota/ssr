@@ -36,6 +36,7 @@
     <Compile Include="Motor.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MultiProcess.py" />
     <Compile Include="OldMain.py">
       <SubType>Code</SubType>
     </Compile>
@@ -60,6 +61,7 @@
     <Compile Include="System.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Utilty.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
