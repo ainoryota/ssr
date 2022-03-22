@@ -1,0 +1,73 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>d586afa5-f9e4-4de4-b4f6-c666ee761802</ProjectGuid>
+    <ProjectHome>
+    </ProjectHome>
+    <StartupFile>Main.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <Name>SSR-AutonomousDriveingControl</Name>
+    <RootNamespace>SSC-ImageRecognition</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="CalcBranch.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Control.py" />
+    <Compile Include="Form.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GUI_serial.py" />
+    <Compile Include="Main.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Motor.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OldMain.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Order.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OutputController.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Robot.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SSC_ImageRecognition1.py" />
+    <Compile Include="SSC_ImageRecognition7.py" />
+    <Compile Include="SSC_ImageRecognition6.py" />
+    <Compile Include="SSC_ImageRecognition5.py" />
+    <Compile Include="SSC_ImageRecognition4.py" />
+    <Compile Include="SSC_ImageRecognition3.py" />
+    <Compile Include="SSC_ImageRecognition2.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="System.py">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+  <!-- Uncomment the CoreCompile target to enable the Build command in
+       Visual Studio and specify your pre- and post-build commands in
+       the BeforeBuild and AfterBuild targets below. -->
+  <!--<Target Name="CoreCompile" />-->
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+</Project>
