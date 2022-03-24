@@ -8,47 +8,6 @@ def sleep(timer):
     time.sleep(timer)
     #print("sleep end",time.perf_counter()-start)
 
-#2つのモータをノーマルモードにする（駆動部）
-def Motor_vel_normal2(ser,ID1,ID2,w1,w2):
-    #       Size CMD   OP  ID  Data ID  Data ADR  CNT
-    list = [0X0A,0X04,0X00,ID1,0X04,ID2,0X04,0X28,0X02]#速度モードかつノーマル
-    list.insert(9,sum(list)&0XFF)
-    ser.write(list)
-    sleep(0.1)
-
-#モータをホールドモードにする（駆動部）
-def Motor_vel_hold(ser,ID1):
-    #       Size CMD   OP  ID  Data ADR  CNT
-    list = [0X08,0X04,0X00,ID1,0X07,0X28,0X01]#速度モードかつホールド
-    list.insert(8,sum(list)&0XFF)
-    ser.write(list)
-    sleep(0.1)
-    
-#2つのモータをホールドモードにする（駆動部）
-def Motor_vel_hold2(ser,ID1,ID2,w1,w2):
-    #       Size CMD   OP  ID  Data ID  Data ADR  CNT
-    list = [0X0A,0X04,0X00,ID1,0X07,ID2,0X07,0X28,0X02]#速度モードかつホールド
-    list.insert(9,sum(list)&0XFF)
-    ser.write(list)
-    sleep(0.1)
-    
-#モータをフリーモードに
-def Motor_Free(ser,ID):
-    #       Size CMD   OP     Data ADR  CNT
-    list = [0X08,0X04,0X00,ID,0X02,0X28,0X01]
-    list.insert(7,sum(list)&0XFF)
-    ser.write(list)
-    sleep(0.1)
-
-#エンコーダの初期化
-def Enc_Init(ser,ID):
-     #       Size CMD  OP  ID  Data Data Data Data ADR  CNT
-    list = [0X0B,0X04,0X00,ID,0X00,0X00,0X00,0X00,0X52,0X01]
-    list.insert(10,sum(list)&0XFF)
-    ser.write(list)
-    sleep(0.1)
-
-
 
 
 def Position_Read2(ser,ID):
@@ -79,12 +38,3 @@ def Velocity_Read3(ser,ID):
     sleep(0.004)
     return list2
 
-
-
-def Motor_Reset(ser,ID1,ID2,ID3,ID4):
-    #       Size CMD  OP  ID                Time 
-    list = [0X09,0X05,0X00,ID1,ID2,ID3,ID4,0X01]
-    list.insert(8,sum(list)&0XFF)
-    ser.write(list)
-    sleep(0.003)
-    

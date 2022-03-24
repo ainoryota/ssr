@@ -4,7 +4,11 @@ import GUI_serial as Gs
 from Robot import Robot
 from Order import PosOrder
 from Order import VelocityOrder
+from Order import MotorModeOrder
+from Order import ResetMotorOrder
+from Order import ResetEncoderOrder
 from OutputController import OutputController
+from OutputController import MotorMode
 
 class PushButton:
     button = []
@@ -41,14 +45,12 @@ class Form(object):
         PushButton(tk,self.root,0,9,' 前輪切り替え',self.change_f)
         PushButton(tk,self.root,0,10,' 後輪切り替え',self.change_r)
         
-        PushButton(tk,self.root,1,8,' 巻取り ',self.wind)
-        PushButton(tk,self.root,1,9,' 繰り出し',self.feed)
-        PushButton(tk,self.root,1,10,' 停止  ',self.stop2)
+        PushButton(tk,self.root,1,8,' 巻取り ',self.wintchWind)
+        PushButton(tk,self.root,1,9,' 繰り出し',self.wintchFeed)
+        PushButton(tk,self.root,1,10,' 停止  ',self.wintchStop)
         
         PushButton(tk,self.root,2,8,' 初期化 ',self.init)
         PushButton(tk,self.root,2,9,' 終了',self.fin)
-        PushButton(tk,self.root,3,8,'テスト1',self.test1)
-        PushButton(tk,self.root,3,9,'テスト2',self.test2)
 
         #チェックボックスの作成
         self.v1 = tk.BooleanVar()
@@ -188,30 +190,51 @@ class Form(object):
         print("○○○Forward○○○")
         self.v1.set(True) 
         self.v2.set(False)
-        Gs.Forward(self.robot.serial)
+        self.robot.motors[4].insertOrder(VelocityOrder(-212,0))
+        self.robot.motors[5].insertOrder(VelocityOrder(212,0))
+        self.robot.motors[9].insertOrder(VelocityOrder(-212,0))
+        self.robot.motors[10].insertOrder(VelocityOrder(212,0))
+        OutputController().pushStep()
     
     def back(self):            
         print("○○○Back○○○")
         self.v1.set(False) 
         self.v2.set(True)
-        Gs.Back(self.robot.serial)
+        self.robot.motors[4].insertOrder(VelocityOrder(212,0))
+        self.robot.motors[5].insertOrder(VelocityOrder(-212,0))
+        self.robot.motors[9].insertOrder(VelocityOrder(212,0))
+        self.robot.motors[10].insertOrder(VelocityOrder(-212,0))
+        OutputController().pushStep()
     
     def stop(self):            
         print("○○○Stop○○○")
-        Gs.Stop(self.robot.serial)
+        self.robot.motors[4].insertOrder(VelocityOrder(0,0))
+        self.robot.motors[5].insertOrder(VelocityOrder(0,0))
+        self.robot.motors[9].insertOrder(VelocityOrder(0,0))
+        self.robot.motors[10].insertOrder(VelocityOrder(0,0))
+        OutputController().pushStep()
     
-    def free(self):            
+    def free(self):       
         print("○○○Free○○○")
-        Gs.Free(self.robot.serial)
-
-        
-    def test1(self):
-        self.robot.motors[0].insertOrder(PosOrder(-150,0,0))
+        for motor in self.robot.motors:
+            motor.insertOrder(MotorModeOrder(MotorMode.Free,0))
+        self.robot.motors[4].insertOrder(ResetMotorOrder(0))
+        self.robot.motors[5].insertOrder(ResetMotorOrder(0))
+        self.robot.motors[9].insertOrder(ResetMotorOrder(0))
+        self.robot.motors[10].insertOrder(ResetMotorOrder(0))
         OutputController().pushStep()
 
-        
-    def test2(self):
-        self.robot.motors[0].insertOrder(PosOrder(150,0,0))
+    
+    def wintchWind(self):
+        self.robot.motors[11].insertOrder(VelocityOrder(-200,0))
+        OutputController().pushStep()
+    
+    def wintchFeed(self):
+        self.robot.motors[11].insertOrder(VelocityOrder(200,0))
+        OutputController().pushStep()
+
+    def wintchStop(self):
+        self.robot.motors[11].insertOrder(VelocityOrder(0,0))
         OutputController().pushStep()
     
     def change(self):           

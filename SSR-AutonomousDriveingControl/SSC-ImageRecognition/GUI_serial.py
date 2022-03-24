@@ -12,54 +12,7 @@ import tkinter as tk
 #円周率
 pi = math.pi
 
-
 importlib.reload(Control) #モジュールの再読み込み
-
-def Init(ser):
-    #モータの初期設定
-    print("Init")
-    
-    
-
-def Fin(ser):
-    ser.close
-    
-def Forward(ser):
-    Control.Motor_vel2(ser,4,5,-212,212)
-    Control.Motor_vel2(ser,9,10,-212,212)    
-
-def Back(ser):
-    Control.Motor_vel2(ser,4,5,212,-212)
-    Control.Motor_vel2(ser,9,10,212,-212)
-    
-def Stop(ser):
-    Control.Motor_vel2(ser,4,5,0,0)
-    Control.Motor_vel2(ser,9,10,0,0)
-
-def Wind(ser):
-    Control.Motor_vel(ser,11,-200)
-    
-def Feed(ser):
-    Control.Motor_vel(ser,11,200)
-
-def Stop2(ser):
-    Control.Motor_vel(ser,11,0)
-
-def Free(ser):
-    Control.Motor_Free(ser,1)
-    Control.Motor_Free(ser,2)
-    Control.Motor_Free(ser,3)
-    Control.Motor_Free(ser,4)
-    Control.Motor_Free(ser,5)
-    Control.Motor_Free(ser,6)
-    Control.Motor_Free(ser,7)
-    Control.Motor_Free(ser,8)
-    Control.Motor_Free(ser,9)
-    Control.Motor_Free(ser,10)
-    #Control.Motor_vel_hold(ser,11)
-    Control.Motor_Reset(ser,4,5,9,10)
-    
-    
 
 def Branch(ser,csvfile,value,save):
     #分岐データの読み込み

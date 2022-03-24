@@ -28,6 +28,20 @@ class VelocityOrder(Order):
         super().__init__(delay,sleepTime)
         self.velocity = velocity
 
+class MotorModeOrder(Order):
+    def __init__(self,motorMode,delay,sleepTime=0.01):
+        super().__init__(delay,sleepTime)
+        self.motorMode=motorMode
+
+class ResetMotorOrder(Order):
+    def __init__(self,delay,sleepTime=0.01):
+        super().__init__(delay,sleepTime)
+
+class ResetEncoderOrder(Order):
+    def __init__(self,delay,sleepTime=0.01):
+        super().__init__(delay,sleepTime)
+
+
 class Mode(Enum):
     Pos = 0
     Velocity = 1

@@ -4,9 +4,13 @@ from Order import Mode
 from Order import InitOrder
 from Order import PosOrder
 from Order import VelocityOrder
+from Order import MotorModeOrder
+from Order import ResetMotorOrder
+from Order import ResetEncoderOrder
 import math
 import copy
 import threading
+from enum import Enum
 import queue
 from multiprocessing import Process
 import platform
@@ -61,25 +65,50 @@ def OutputDone(stepQueue):
             time.sleep(max(data.delay - timer,0))
             timer = data.delay + data.sleepTime
 
-            if(isinstance(data,InitOrder)):#初期化に関する司令は1つずつしか送れない
+            if(isinstance(data,InitOrder)):#初期化に関する司令を1つのみ処理
                 print("　Init",data)
                 output.outputInit(data)
 
-            elif(isinstance(data,PosOrder)):#位置に関する司令は複数同時に送信することができる
+            elif(isinstance(data,PosOrder)):#位置に関する司令を複数個同時に処理
                 dataList = [data]
                 while(len(orderList) > 0 and isinstance(orderList[-1],PosOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
                 print("　Move Pos:",len(dataList),"motors")
                 output.outputPos(dataList)
 
-            elif(isinstance(data,VelocityOrder)):#速度に関する司令は複数同時に送信することができる
+            elif(isinstance(data,VelocityOrder)):#速度に関する司令を複数個同時に処理
                 dataList = [data]
                 while(len(orderList) > 0 and isinstance(orderList[-1],VelocityOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
                 print("　Move Velocity:",len(dataList),"motors")
                 output.outputVelocity(dataList)
+
+            elif(isinstance(data,MotorModeOrder)):#ノーマルモードへの変更に関する司令を複数個同時に処理
+                dataList = [data]
+                while(len(orderList) > 0 and isinstance(orderList[-1],MotorModeOrder) and orderList[-1].delay == data.delay):
+                    dataList.append(orderList.pop())
+                print("　Set MotorMode:",len(dataList),"motors")
+                output.setMotorMode(dataList)
+
+            elif(isinstance(data,ResetMotorOrder)):#モータのリセット
+                dataList = [data]
+                while(len(orderList) > 0 and isinstance(orderList[-1],ResetMotorOrder) and orderList[-1].delay == data.delay):
+                    dataList.append(orderList.pop())
+                print("　Reset Motor:",len(dataList),"motors")
+                output.resetMotor(dataList)
+
+            elif(isinstance(data,ResetEncoderOrder)):#エンコーダのリセット
+                dataList = [data]
+                while(len(orderList) > 0 and isinstance(orderList[-1],ResetEncoderOrder) and orderList[-1].delay == data.delay):
+                    dataList.append(orderList.pop())
+                print("　Reset Encoder:",len(dataList),"motors")
+                output.resetEncoder(dataList)
         print("End Output")
                                                 
+class MotorMode(Enum):
+    Normal = 0
+    Hold = 1
+    Free = 2
 
         
 class Serial(object):
@@ -149,6 +178,66 @@ class Serial(object):
 
         #       Size CMD OP ID/Data1/Data2 ADR CNT
         list = [6 + count * 3,0X04,0X00] + dataList + [0X30,count]
+        list.append(sum(list) & 0XFF)
+        self.write(list)
+        time.sleep(sleepTime)
+
+
+    def setMotorMode(self,orderList):
+        dataList = []
+        count = len(orderList)
+        sleepTime = 0
+        while(len(orderList) > 0):
+            data = orderList.pop()
+            print("　　id:",data.id,"motorMode:",data.motorMode)
+            modeData = 0
+            if(data.motorMode == MotorMode.Normal):
+                modeData = 0x04
+            elif(data.motorMode == MotorMode.Hold):
+                modeData = 0x07#速度モードかつホールド
+            elif(data.motorMode == MotorMode.Free):
+                modeData = 0X02
+            dataList+=[data.id,modeData]
+            sleepTime = max(sleepTime,data.sleepTime)
+
+        #       Size CMD OP ID/Data1 ADR CNT
+        list = [6 + count * 2,0X04,0X00] + dataList + [0X28,count]
+        list.append(sum(list) & 0XFF)
+        self.write(list)
+        time.sleep(sleepTime)
+    
+    #エンコーダの初期化
+    def resetEncoder(self,orderList):
+        dataList = []
+        count = len(orderList)
+        sleepTime = 0
+        while(len(orderList) > 0):
+            data = orderList.pop()
+            print("　　id:",data.id)
+            dataList+=[data.id,0x00,0x00,0x00,0x00]
+            sleepTime = max(sleepTime,data.sleepTime)
+
+        #       Size CMD OP ID/Data/Data/Data/Data ADR CNT
+        list = [6 + count * 5,0X05,0X00] + dataList + [0X28,count]
+        list.append(sum(list) & 0XFF)
+        self.write(list)
+        time.sleep(sleepTime)
+
+
+
+
+    def resetMotor(self,orderList):
+        dataList = []
+        count = len(orderList)
+        sleepTime = 0
+        while(len(orderList) > 0):
+            data = orderList.pop()
+            print("　　id:",data.id)
+            dataList+=[data.id]
+            sleepTime = max(sleepTime,data.sleepTime)
+
+        #       Size CMD OP ID ADR CNT
+        list = [5 + count * 1,0X05,0X00] + dataList + [0X28,count]
         list.append(sum(list) & 0XFF)
         self.write(list)
         time.sleep(sleepTime)

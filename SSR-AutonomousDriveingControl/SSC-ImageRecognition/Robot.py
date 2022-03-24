@@ -5,7 +5,10 @@ from Order import Mode
 from Order import InitOrder
 from Order import PosOrder
 from Order import VelocityOrder
+from Order import MotorModeOrder
 from OutputController import OutputController
+from OutputController import MotorMode
+
 import numpy as np
 import math
 
@@ -48,5 +51,6 @@ class RealRobot(Robot):
         self.motors[9].insertOrder(VelocityOrder(0,0))
         self.motors[10].insertOrder(VelocityOrder(0,0))
         self.motors[11].insertOrder(VelocityOrder(0,0))
+        self.motors[2].insertOrder(MotorModeOrder(MotorMode.Free,0))
         OutputController().pushStep()
         
