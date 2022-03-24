@@ -1,7 +1,7 @@
 
 import GUI_serial as Gs
 
-import platform
+
 from functools import partial
 
 import sys
@@ -38,12 +38,8 @@ def startSystem(stepQueue):
     robot = RealRobot()
     form = Form(robot)
 
-
 if __name__ == '__main__':
-    print("Start")
-
-    
-
+    print("Start") 
     with Manager() as manager:
         stepQueue = manager.Queue()
         p1 = Process(target=OutputDone, args=(stepQueue,))
@@ -53,10 +49,6 @@ if __name__ == '__main__':
 
         p1.join()
         p2.join()
-
-    time.sleep(3)
-
-
     quit()
 
 
@@ -339,13 +331,6 @@ if __name__ == '__main__':
 
 
 
-    if(MOVEMODE):
-        if(platform.system() != "Windows"):
-            ser = serial.Serial('/dev/ttyUSB0',115200)    
-        else:
-            ser = serial.Serial("COM4", 115200)
-
-
 
 
 
@@ -356,8 +341,4 @@ if __name__ == '__main__':
     IsMovingNow = False
 
 
-    sys.stderr.write("*** 開始 ***\n")
-    #cam_init()
     realsense_init()
-    root.mainloop()
-    sys.stderr.write("*** 終了 ***\n")

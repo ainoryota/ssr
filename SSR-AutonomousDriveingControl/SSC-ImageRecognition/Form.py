@@ -206,12 +206,12 @@ class Form(object):
 
         
     def test1(self):
-        self.robot.motor0.insertOrder(PosOrder(-150,0,0))
+        self.robot.motors[0].insertOrder(PosOrder(-150,0,0))
         OutputController().pushStep()
 
         
     def test2(self):
-        self.robot.motor0.insertOrder(PosOrder(150,0,0))
+        self.robot.motors[0].insertOrder(PosOrder(150,0,0))
         OutputController().pushStep()
     
     def change(self):           

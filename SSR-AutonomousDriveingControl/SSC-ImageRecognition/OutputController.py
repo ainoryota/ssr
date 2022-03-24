@@ -6,8 +6,10 @@ from Order import PosOrder
 from Order import VelocityOrder
 import math
 import copy
-import threading, queue
+import threading
+import queue
 from multiprocessing import Process
+import platform
 
 import threading
 
@@ -22,11 +24,11 @@ class OutputController(object):
                 print("New Singleton is OutputController")
                 cls._instance = super().__new__(cls)
                 cls.orderList = []
-                cls.stepQueue=queue.Queue()
-        return cls._instance;
+                cls.stepQueue = queue.Queue()
+        return cls._instance
 
     def setStepQueue(self,stepQueue):
-        self.stepQueue=stepQueue
+        self.stepQueue = stepQueue
 
     def insertOrder(self,order):
         self.orderList.insert(0,order)
@@ -37,20 +39,20 @@ class OutputController(object):
         self.serial.write(command)
 
     def pushStep(self):
-        self.stepQueue.put(sorted(self.orderList,key=lambda x: -x.delay))
-        self.orderList.clear();
+        self.stepQueue.put(sorted(self.orderList,key=lambda x: -x.delay - (0.001 if isinstance(x,PosOrder) else 0.002 if  isinstance(x,VelocityOrder) else 0)))
+        self.orderList.clear()
 
 
 
 def OutputDone(stepQueue):
-    output=Serial();
+    output = Serial()
 
     while(True):
         if(stepQueue.empty()):
-            time.sleep(0.1);
-            continue;
-        orderList=stepQueue.get();
-        print("Start Output:",len(orderList),"datas");
+            time.sleep(0.1)
+            continue
+        orderList = stepQueue.get()
+        print("Start Output:",len(orderList),"datas")
 
 
         timer = 0
@@ -64,15 +66,15 @@ def OutputDone(stepQueue):
                 output.outputInit(data)
 
             elif(isinstance(data,PosOrder)):#位置に関する司令は複数同時に送信することができる
-                dataList = [data];
-                while(len(orderList)>0 and isinstance(orderList[-1],PosOrder) and orderList[-1].delay==data.delay):
+                dataList = [data]
+                while(len(orderList) > 0 and isinstance(orderList[-1],PosOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
                 print("　Move Pos:",len(dataList),"motors")
                 output.outputPos(dataList)
 
             elif(isinstance(data,VelocityOrder)):#速度に関する司令は複数同時に送信することができる
-                dataList = [data];
-                while(len(orderList)>0 and isinstance(orderList[-1],VelocityOrder) and  orderList[-1].delay==data.delay):
+                dataList = [data]
+                while(len(orderList) > 0 and isinstance(orderList[-1],VelocityOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
                 print("　Move Velocity:",len(dataList),"motors")
                 output.outputVelocity(dataList)
@@ -83,7 +85,10 @@ def OutputDone(stepQueue):
 class Serial(object):
     def __init__(self):
         print("Open Serial Port")
-        self.serial = serial.Serial("COM4", 115200)
+        if(platform.system() != "Windows"):
+            self.serial = serial.Serial('/dev/ttyUSB0',115200)    
+        else:
+            self.serial = serial.Serial("COM4", 115200)
 
     def write(self,command):
         self.serial.write(command)
@@ -122,7 +127,7 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
-            print("　　id:",data.id,"pos:",data.pos);
+            print("　　id:",data.id,"pos:",data.pos)
             dataList+=[data.id,(0X10000 + int(data.pos * 100)) & 0XFF,((0X10000 + int(data.pos * 100)) // 256) & 0XFF]
             sleepTime = max(sleepTime,data.sleepTime)
    
@@ -138,8 +143,8 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
-            print("　　id:",data.id,"pos:",data.velocity);
-            dataList+=[data.id,(0X10000+int(data.velocity*100))&0XFF, ((0X10000+int(data.velocity*100))//256)&0XFF]
+            print("　　id:",data.id,"pos:",data.velocity)
+            dataList+=[data.id,(0X10000 + int(data.velocity * 100)) & 0XFF, ((0X10000 + int(data.velocity * 100)) // 256) & 0XFF]
             sleepTime = max(sleepTime,data.sleepTime)
 
         #       Size CMD OP ID/Data1/Data2 ADR CNT

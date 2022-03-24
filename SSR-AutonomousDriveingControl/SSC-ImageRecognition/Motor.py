@@ -7,7 +7,8 @@ from OutputController import OutputController
 
 class Motor(object):
     def __init__(self,id,status):
-        self.id=id;        
+        self.id=id;     
+        self.status=status;
         self.insertOrder(InitOrder(status,0))
         
     def insertOrder(self,order):
