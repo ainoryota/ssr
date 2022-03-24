@@ -27,12 +27,36 @@ import threading
 from System import System
 from Robot import RealRobot
 from Form import Form
+from OutputController import OutputDone
+from OutputController import OutputController
+
+from multiprocessing import Process, Manager
+
+def startSystem(stepQueue):
+    OutputController().setStepQueue(stepQueue)
+    system = System()
+    robot = RealRobot()
+    form = Form(robot)
+
 
 if __name__ == '__main__':
     print("Start")
-    system=System();
-    robot=RealRobot();
-    form=Form(robot);
+
+    
+
+    with Manager() as manager:
+        stepQueue = manager.Queue()
+        p1 = Process(target=OutputDone, args=(stepQueue,))
+        p2 = Process(target=startSystem,args=(stepQueue,))
+        p1.start()
+        p2.start()
+
+        p1.join()
+        p2.join()
+
+    time.sleep(3)
+
+
     quit()
 
 
@@ -87,8 +111,8 @@ if __name__ == '__main__':
         Gs.Branch(ser,csv_name,v1.get(),v8.get())
 
     def branchAngle(GammalAngle,TurnAngle,Langle,Rangle):
-        global IsMovingNow;
-        IsMovingNow=True;
+        global IsMovingNow
+        IsMovingNow = True
         if v3.get() == True:         #右分岐かどうか
             if v1.get() == True:       #前進中かどうか
                 mode = 1
@@ -99,9 +123,9 @@ if __name__ == '__main__':
                 mode = 2
             else:
                 mode = 1
-        while Langle+Rangle<100:
-            if Langle<80:Langle=Langle+5
-            if Rangle<80:Rangle=Rangle+5
+        while Langle + Rangle < 100:
+            if Langle < 80:Langle = Langle + 5
+            if Rangle < 80:Rangle = Rangle + 5
     
         value = str(GammalAngle) + "_" + str(TurnAngle) + "_" + str(Langle) + "_" + str(Rangle)
         csv_name = value + '_' + str(mode) + '.csv'    
@@ -113,7 +137,7 @@ if __name__ == '__main__':
         print(csv_name,"AngleMode")
 
         Gs.Branch(ser,csv_name,v1.get(),v8.get())
-        IsMovingNow=False;
+        IsMovingNow = False
 
 
 
@@ -275,7 +299,7 @@ if __name__ == '__main__':
         timerlabel.configure(text="{0} ms".format(timer))
         branchdata.append([result[1],result[2],timer])
         print("★",'{:.2f}'.format(result[3]),result[1],result[8])
-        if(result[3] > 0.13 and result[1] < 150 and IsMovingNow==False):
+        if(result[3] > 0.13 and result[1] < 150 and IsMovingNow == False):
             print("■■■■■分岐",result[4],result[5],result[6],result[7],result[8])
             if(v_auto.get()):
                 SleepLength = 0
@@ -329,7 +353,7 @@ if __name__ == '__main__':
     il = 0
     timerlabel = 0
     branchdata = []
-    IsMovingNow=False;
+    IsMovingNow = False
 
 
     sys.stderr.write("*** 開始 ***\n")

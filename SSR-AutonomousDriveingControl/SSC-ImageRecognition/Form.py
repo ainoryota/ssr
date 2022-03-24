@@ -2,6 +2,9 @@ import tkinter as tk
 from functools import partial
 import GUI_serial as Gs
 from Robot import Robot
+from Order import PosOrder
+from Order import VelocityOrder
+from OutputController import OutputController
 
 class PushButton:
     button = []
@@ -44,6 +47,8 @@ class Form(object):
         
         PushButton(tk,self.root,2,8,' 初期化 ',self.init)
         PushButton(tk,self.root,2,9,' 終了',self.fin)
+        PushButton(tk,self.root,3,8,'テスト1',self.test1)
+        PushButton(tk,self.root,3,9,'テスト2',self.test2)
 
         #チェックボックスの作成
         self.v1 = tk.BooleanVar()
@@ -198,6 +203,16 @@ class Form(object):
     def free(self):            
         print("○○○Free○○○")
         Gs.Free(self.robot.serial)
+
+        
+    def test1(self):
+        self.robot.motor0.insertOrder(PosOrder(-150,0,0))
+        OutputController().pushStep()
+
+        
+    def test2(self):
+        self.robot.motor0.insertOrder(PosOrder(150,0,0))
+        OutputController().pushStep()
     
     def change(self):           
         print("○○○Change○○○")

@@ -5,59 +5,84 @@ from Order import InitOrder
 from Order import PosOrder
 from Order import VelocityOrder
 import math
+import copy
+import threading, queue
+from multiprocessing import Process
+
+import threading
 
 class OutputController(object):
-    @classmethod
-    def get_instance(self):
-        if not hasattr(self, "_instance"):
-            print("new singleton")
-            self._instance = self()
-        return self._instance
 
-    def __init__(self):
-        self.orderList = []
-        self.output = Serial()
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls):
+        with cls._lock:
+            if cls._instance is None:
+                print("New Singleton is OutputController")
+                cls._instance = super().__new__(cls)
+                cls.orderList = []
+                cls.stepQueue=queue.Queue()
+        return cls._instance;
+
+    def setStepQueue(self,stepQueue):
+        self.stepQueue=stepQueue
 
     def insertOrder(self,order):
         self.orderList.insert(0,order)
-        print("Set:",order)
+        print("Order Set:",order)
 
     def write(self,command,timer):
         print("Warn: Debug Command is used")
         self.serial.write(command)
 
-    def done(self):
-        self.orderList.sort(key=lambda x: -x.delay)
+    def pushStep(self):
+        self.stepQueue.put(sorted(self.orderList,key=lambda x: -x.delay))
+        self.orderList.clear();
+
+
+
+def OutputDone(stepQueue):
+    output=Serial();
+
+    while(True):
+        if(stepQueue.empty()):
+            time.sleep(0.1);
+            continue;
+        orderList=stepQueue.get();
+        print("Start Output:",len(orderList),"datas");
+
 
         timer = 0
-        while(len(self.orderList) > 0):
-            data = self.orderList.pop()
+        while(len(orderList) > 0):
+            data = orderList.pop()
             time.sleep(max(data.delay - timer,0))
             timer = data.delay + data.sleepTime
 
             if(isinstance(data,InitOrder)):#初期化に関する司令は1つずつしか送れない
-                print("Init",data)
-                self.output.outputInit(data)
+                print("　Init",data)
+                output.outputInit(data)
 
             elif(isinstance(data,PosOrder)):#位置に関する司令は複数同時に送信することができる
                 dataList = [data];
-                while(len(self.orderList)>0 and isinstance(self.orderList[-1],PosOrder) and self.orderList[-1].delay==data.delay):
-                    dataList.append(self.orderList.pop())
-                print("Pos",dataList)
-                self.output.outputPos(dataList)
+                while(len(orderList)>0 and isinstance(orderList[-1],PosOrder) and orderList[-1].delay==data.delay):
+                    dataList.append(orderList.pop())
+                print("　Move Pos:",len(dataList),"motors")
+                output.outputPos(dataList)
 
             elif(isinstance(data,VelocityOrder)):#速度に関する司令は複数同時に送信することができる
                 dataList = [data];
-                while(len(self.orderList)>0 and isinstance(self.orderList[-1],VelocityOrder) and self.orderList[-1].delay==data.delay):
-                    dataList.append(self.orderList.pop())
-                print("Velocity")
-                self.output.outputVelocity(dataList)
-                
+                while(len(orderList)>0 and isinstance(orderList[-1],VelocityOrder) and  orderList[-1].delay==data.delay):
+                    dataList.append(orderList.pop())
+                print("　Move Velocity:",len(dataList),"motors")
+                output.outputVelocity(dataList)
+        print("End Output")
+                                                
 
-            
         
 class Serial(object):
     def __init__(self):
+        print("Open Serial Port")
         self.serial = serial.Serial("COM4", 115200)
 
     def write(self,command):
@@ -72,6 +97,8 @@ class Serial(object):
             data2 = 0X04 #速度制御モードかつノーマル
         else:
             print("statusの値が不正")
+
+        print("　　id:",order.id,"mode",order.mode)
 
                 #        Size CMD OP Data ADR CNT
         list1 = [0X08,0X04,0X00,order.id,data1,0X28,0X01]#制御モードの変更
@@ -95,6 +122,7 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
+            print("　　id:",data.id,"pos:",data.pos);
             dataList+=[data.id,(0X10000 + int(data.pos * 100)) & 0XFF,((0X10000 + int(data.pos * 100)) // 256) & 0XFF]
             sleepTime = max(sleepTime,data.sleepTime)
    
@@ -110,6 +138,7 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
+            print("　　id:",data.id,"pos:",data.velocity);
             dataList+=[data.id,(0X10000+int(data.velocity*100))&0XFF, ((0X10000+int(data.velocity*100))//256)&0XFF]
             sleepTime = max(sleepTime,data.sleepTime)
 

@@ -50,7 +50,8 @@ class MyProcessor(Process):
     def run(self):
         self.fizz_buzz(self.__num)
 
-
+def startMultiProcess(obj):
+    obj.start();
 
 if __name__ == '__main__':
     start = time.time()

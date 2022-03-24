@@ -1,11 +1,11 @@
 from abc import ABC
 from Motor import Motor
 import time
-from OutputController import OutputController
 from Order import Mode
 from Order import InitOrder
 from Order import PosOrder
 from Order import VelocityOrder
+from OutputController import OutputController
 
 class Robot(ABC):
     """description of class"""
@@ -16,38 +16,21 @@ class RealRobot(Robot):
     """description of class"""
     def __init__(self):
         print("realrobot set")
-        
-        self.motor1=Motor(1,Mode.Velocity)
-        self.motor2=Motor(2,Mode.Velocity)
-        OutputController.get_instance().done();
+       
+        self.motor0=Motor(0,Mode.Pos)
+        self.motor2=Motor(2,Mode.Pos)
+        OutputController().pushStep()
 
         t=0
-        self.motor1.insertOrder(VelocityOrder(1,t));
-        self.motor2.insertOrder(VelocityOrder(1,t));
-        t+=1
-        self.motor1.insertOrder(VelocityOrder(5,t));
-        self.motor2.insertOrder(VelocityOrder(5,t));
-        t+=1
-        self.motor1.insertOrder(VelocityOrder(1,t));
-        self.motor2.insertOrder(VelocityOrder(1,t));
-        t+=1
-        self.motor1.insertOrder(VelocityOrder(5,t));
-        self.motor2.insertOrder(VelocityOrder(5,t));
-        t+=1
-        self.motor1.insertOrder(VelocityOrder(1,t));
-        self.motor2.insertOrder(VelocityOrder(1,t));
-        t+=1
-        self.motor1.insertOrder(VelocityOrder(5,t));
-        self.motor2.insertOrder(VelocityOrder(5,t));
-        t+=1
-        self.motor1.insertOrder(VelocityOrder(180,t));
-        self.motor2.insertOrder(VelocityOrder(180,t));
-        t+=1
-        self.motor1.insertOrder(VelocityOrder(-180,t));
-        self.motor2.insertOrder(VelocityOrder(-180,t));
-        t+=1
+        self.motor0.insertOrder(PosOrder(180,t));
+        self.motor2.insertOrder(PosOrder(180,t));
+        t+=2
+        self.motor0.insertOrder(PosOrder(-180,t));
+        self.motor2.insertOrder(PosOrder(-180,t));
+        t+=2
+        OutputController().pushStep()
 
-        OutputController.get_instance().done();
+
         #self.motor3=Motor(3,0)
         #self.motor4=Motor(4,1)
         #self.motor5=Motor(5,1)
@@ -55,8 +38,8 @@ class RealRobot(Robot):
         #self.motor7=Motor(7,0)
         #self.motor8=Motor(8,0)
         #self.motor9=Motor(9,1)
-        #self.motor10=Motor(10,1)
-        #self.motor11=Motor(11,1)
+        #self.motor00=Motor(10,1)
+        #self.motor01=Motor(11,1)
         
         #初期姿勢テスト
         
