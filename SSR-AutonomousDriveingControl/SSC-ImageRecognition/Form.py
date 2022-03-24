@@ -53,7 +53,6 @@ class Form(object):
         PushButton(tk,self.root,1,10,' 停止  ',self.wintchStop)
         
         PushButton(tk,self.root,2,8,' 初期化 ',self.init)
-        PushButton(tk,self.root,2,9,' 終了',self.fin)
 
         #チェックボックスの作成
         self.v1 = tk.BooleanVar()
@@ -144,11 +143,7 @@ class Form(object):
 
         self.branchEntry = tk.Entry(self.root,width = 25)
         self.branchEntry.grid(row = 12, column =0, padx = 5, pady = 5)
-        self.root.mainloop()
-
-
-    #ボタン関数の定義
-    def init(self):
+        
         self.entry1.delete(0,'end')
         self.entry1.insert(0,'0_-15_75_45')
         self.entry2.delete(0,'end')
@@ -181,11 +176,13 @@ class Form(object):
         #self.#entry11.insert(0,'-3_0_45_65')
         self.branchEntry.delete(0,'end')
         self.branchEntry.insert(0,'1')
-
-        self.robotInit();
-
-    def robotInit(self):
         
+        self.root.mainloop()
+
+
+
+    #ボタン関数の定義
+    def init(self):
         self.robot.motors[0].insertOrder(MotorModeOrder(MotorMode.PosNormal,0))
         self.robot.motors[1].insertOrder(MotorModeOrder(MotorMode.PosNormal,0))
         self.robot.motors[2].insertOrder(MotorModeOrder(MotorMode.PosNormal,0))
@@ -213,11 +210,8 @@ class Form(object):
         self.robot.motors[9].insertOrder(VelocityOrder(0,0))
         self.robot.motors[10].insertOrder(VelocityOrder(0,0))
         self.robot.motors[11].insertOrder(VelocityOrder(0,0))
-        OutputController().pushStep()
+        OutputController().pushStep()       
 
-
-    def fin(self):
-        Gs.Fin(self.robot.serial)
     
     def forward(self):   
         print("○○○Forward○○○")
@@ -284,90 +278,90 @@ class Form(object):
     
     def change(self):           
         print("○○○Change○○○")
-        if v3.get() == True:
-            if (v5.get() == False) and (v6.get() == False):
-                Gs.Branch(ser,"normal_switching.csv",v3.get(),v8.get())
-                v3.set(False) 
-                v4.set(True) 
-            elif (v5.get() == True) and (v6.get() == True):
-                Gs.Branch(ser,"tension_switching.csv",v3.get(),v8.get())
-                v3.set(False) 
-                v4.set(True)
+        if self.v3.get() == True:
+            if (self.v5.get() == False) and (self.v6.get() == False):
+                self.Branch("normal_switching.csv",self.v3.get(),self.v8.get())
+                self.v3.set(False) 
+                self.v4.set(True) 
+            elif (self.v5.get() == True) and (self.v6.get() == True):
+                self.Branch("tension_switching.csv",self.v3.get(),self.v8.get())
+                self.v3.set(False) 
+                self.v4.set(True)
             else:
                 print("左右分岐モードの切り替えはできません")
             
         else:
-            if (v5.get() == False) and (v6.get() == False):
-                Gs.Branch(ser,"normal_switching.csv",v3.get(),v8.get())
-                v3.set(True) 
-                v4.set(False)
-            elif (v5.get() == True) and (v6.get() == True):
-                Gs.Branch(ser,"tension_switching.csv",v3.get(),v8.get())
-                v3.set(True) 
-                v4.set(False)
+            if (self.v5.get() == False) and (self.v6.get() == False):
+                self.Branch("normal_switching.csv",self.v3.get(),self.v8.get())
+                self.v3.set(True) 
+                self.v4.set(False)
+            elif (self.v5.get() == True) and (self.v6.get() == True):
+                self.Branch("tension_switching.csv",self.v3.get(),self.v8.get())
+                self.v3.set(True) 
+                self.v4.set(False)
             else:
                 print("左右分岐モードの切り替えはできません")
         
     def change_f(self):            
-        if v3.get() == True:                                     #通常どおりにプログラムを流すか(右分岐モードのとき)
-            if v5.get() == False:                                    #前輪にテンションがかかっていないとき
-                if v6.get() == False:                                    #後輪にテンションがかかっていないとき
-                    Gs.Branch(ser,"f_tension_r-n.csv",v3.get(),False)
+        if self.v3.get() == True:                                     #通常どおりにプログラムを流すか(右分岐モードのとき)
+            if self.v5.get() == False:                                    #前輪にテンションがかかっていないとき
+                if self.v6.get() == False:                                    #後輪にテンションがかかっていないとき
+                    self.Branch("f_tension_r-n.csv",self.v3.get(),False)
                 else:                                                    #後輪にテンションがかかっているとき
-                    Gs.Branch(ser,"f_tension_r-t.csv",v3.get(),False)
-                v5.set(True)
+                    self.Branch("f_tension_r-t.csv",self.v3.get(),False)
+                self.v5.set(True)
             else:                                                    #前輪にテンションがかかっているとき
-                if v6.get() == False:                                    #後輪にテンションがかかっていないとき
-                    Gs.Branch(ser,"f_normal_r-n.csv",v3.get(),False)
+                if self.v6.get() == False:                                    #後輪にテンションがかかっていないとき
+                    self.Branch("f_normal_r-n.csv",self.v3.get(),False)
                 else:                                                    #後輪にテンションがかかっているとき
-                    Gs.Branch(ser,"f_normal_r-t.csv",v3.get(),False)
-                v5.set(False)     
+                    self.Branch("f_normal_r-t.csv",self.v3.get(),False)
+                self.v5.set(False)     
         else:                                                    #逆向きにプログラムを流すか(左分岐モードのとき)
-            if v5.get() == False:                                    #前輪にテンションがかかっていないとき
-                if v6.get() == False:                                    #後輪にテンションがかかっていないとき
-                    Gs.Branch(ser,"r_tension_f-n.csv",v3.get(),False)
+            if self.v5.get() == False:                                    #前輪にテンションがかかっていないとき
+                if self.v6.get() == False:                                    #後輪にテンションがかかっていないとき
+                    self.Branch("r_tension_f-n.csv",self.v3.get(),False)
                 else:                                                    #後輪にテンションがかかっているとき
-                    Gs.Branch(ser,"r_tension_f-t.csv",v3.get(),False)
-                v5.set(True)
+                    self.Branch("r_tension_f-t.csv",self.v3.get(),False)
+                self.v5.set(True)
             else:                                                    #前輪にテンションがかかっているとき
-                if v6.get() == False:                                    #後輪にテンションがかかっていないとき
-                    Gs.Branch(ser,"r_normal_f-n.csv",v3.get(),False)
+                if self.v6.get() == False:                                    #後輪にテンションがかかっていないとき
+                    self.Branch("r_normal_f-n.csv",self.v3.get(),False)
                 else:                                                    #後輪にテンションがかかっているとき
-                    Gs.Branch(ser,"r_normal_f-t.csv",v3.get(),False)
-                v5.set(False)     
+                    self.Branch("r_normal_f-t.csv",self.v3.get(),False)
+                self.v5.set(False)     
         
     def change_r(self):            
-        if v3.get() == True:                                     #通常どおりにプログラムを流すか(右分岐モードのとき)
-            if v5.get() == False:                                    #前輪にテンションがかかっていないとき
-                if v6.get() == False:                                    #後輪にテンションがかかっていないとき
-                    Gs.Branch(ser,"r_tension_f-n.csv",v3.get(),False)
-                    v6.set(True) 
+        if self.v3.get() == True:                                     #通常どおりにプログラムを流すか(右分岐モードのとき)
+            if self.v5.get() == False:                                    #前輪にテンションがかかっていないとき
+                if self.v6.get() == False:                                    #後輪にテンションがかかっていないとき
+                    self.Branch("r_tension_f-n.csv",self.v3.get(),False)
+                    self.v6.set(True) 
                 else:                                                    #後輪にテンションがかかっているとき
-                    Gs.Branch(ser,"r_normal_f-n.csv",v3.get(),False)
-                    v6.set(False)
+                    self.Branch("r_normal_f-n.csv",self.v3.get(),False)
+                    self.v6.set(False)
             else:                                                    #前輪にテンションがかかっているとき
-                if v6.get() == False:                                    #後輪にテンションがかかっていないとき
-                    Gs.Branch(ser,"r_tension_f-t.csv",v3.get(),False)
-                    v6.set(True)
+                if self.v6.get() == False:                                    #後輪にテンションがかかっていないとき
+                    self.Branch("r_tension_f-t.csv",self.v3.get(),False)
+                    self.v6.set(True)
                 else:                                                    #後輪にテンションがかかっているとき
-                    Gs.Branch(ser,"r_normal_f-t.csv",v3.get(),False)
-                    v6.set(False)
+                    self.Branch("r_normal_f-t.csv",self.v3.get(),False)
+                    self.v6.set(False)
                 
         else:                                                    #逆向きにプログラムを流すか(左分岐モードのとき)
-            if v5.get() == False:                                    #前輪にテンションがかかっていないとき
-                if v6.get() == False:                                    #後輪にテンションがかかっていないとき
-                    Gs.Branch(ser,"f_tension_r-n.csv",v3.get(),False)
-                    v6.set(True)
+            if self.v5.get() == False:                                    #前輪にテンションがかかっていないとき
+                if self.v6.get() == False:                                    #後輪にテンションがかかっていないとき
+                    self.Branch("f_tension_r-n.csv",self.v3.get(),False)
+                    self.v6.set(True)
                 else:                                                    #後輪にテンションがかかっているとき
-                    Gs.Branch(ser,"f_normal_r-n.csv",v3.get(),False)
-                    v6.set(False)
+                    self.Branch("f_normal_r-n.csv",self.v3.get(),False)
+                    self.v6.set(False)
             else:                                                    #前輪にテンションがかかっているとき
-                if v6.get() == False:                                    #後輪にテンションがかかっていないとき
-                    Gs.Branch(ser,"f_tension_r-t.csv",v3.get(),False)
-                    v6.set(True)
+                if self.v6.get() == False:                                    #後輪にテンションがかかっていないとき
+                    self.Branch("f_tension_r-t.csv",self.v3.get(),False)
+                    self.v6.set(True)
                 else:                                                    #後輪にテンションがかかっているとき
-                    Gs.Branch(ser,"f_normal_r-t.csv",v3.get(),False)
-                    v6.set(False)
+                    self.Branch("f_normal_r-t.csv",self.v3.get(),False)
+                    self.v6.set(False)
 
     def branch(self,num):
         if self.v3.get() == True:         #右分岐かどうか
@@ -419,59 +413,61 @@ class Form(object):
             id = [0,6,7,8,9,10,1,2,3,4,5]
             direct = -1
 
-        for t in range(0,n-1):#行数-1
+        t=0
+        for line in range(0,n-1):#行数-1
             #if(t%4==1):continue;#早めに後輪を分岐する
             #log[t][0] = time.perf_counter() - time_start
 
 
-            self.robot.motors[id[1]].insertOrder(PosOrder(round(data[t,0]/math.pi*180,2),0))
-            self.robot.motors[id[2]].insertOrder(PosOrder(round(data[t,1]/math.pi*180,2),0))
-            self.robot.motors[id[3]].insertOrder(PosOrder(round(data[t,2]/math.pi*180,2),0))
-            self.robot.motors[id[6]].insertOrder(PosOrder(round(data[t,3]/math.pi*180,2),0))
-            self.robot.motors[id[7]].insertOrder(PosOrder(round(data[t,4]/math.pi*180,2),0))
-            self.robot.motors[id[8]].insertOrder(PosOrder(round(data[t,5]/math.pi*180,2),0))
+            self.robot.motors[id[1]].insertOrder(PosOrder(round(data[line,0]/math.pi*180,2),t))
+            self.robot.motors[id[2]].insertOrder(PosOrder(round(data[line,1]/math.pi*180,2),t))
+            self.robot.motors[id[3]].insertOrder(PosOrder(round(data[line,2]/math.pi*180,2),t))
+            self.robot.motors[id[6]].insertOrder(PosOrder(round(data[line,3]/math.pi*180,2),t))
+            self.robot.motors[id[7]].insertOrder(PosOrder(round(data[line,4]/math.pi*180,2),t))
+            self.robot.motors[id[8]].insertOrder(PosOrder(round(data[line,5]/math.pi*180,2),t))
 
-            self.robot.motors[id[4]].insertOrder(VelocityOrder(round(-direct*data[t,6]),0))
-            self.robot.motors[id[5]].insertOrder(VelocityOrder(round(direct*data[t,6]),0))
-            self.robot.motors[id[9]].insertOrder(VelocityOrder(round(-direct*data[t,7]),0))
-            self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct*data[t,7]),0))
+            self.robot.motors[id[4]].insertOrder(VelocityOrder(round(-direct*data[line,6]),t))
+            self.robot.motors[id[5]].insertOrder(VelocityOrder(round(direct*data[line,6]),t))
+            self.robot.motors[id[9]].insertOrder(VelocityOrder(round(-direct*data[line,7]),t))
+            self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct*data[line,7]),t))
             
-            OutputController().pushStep()
+            t+=0.048
+
+        OutputController().pushStep()
 
 
-        
-            #log[t][1] = data[t,0]/pi*180;log[t][2] = data[t,1]/pi*180;log[t][3] = data[t,2]/pi*180;log[t][4] = data[t,3]/pi*180;log[t][5] = data[t,4]/pi*180;log[t][6] = data[t,5]/pi*180
-            #log[t][7] = 0;log[t][8] = 0;log[t][9] = 0;log[t][10] = 0;
-            #
-            #ser.flushInput()#バッファのクリア
-            #Control.Position_Read2(ser,1)#バッファに返信データを順に貯める
-            #Control.Position_Read2(ser,2)
-            #Control.Position_Read2(ser,3)
-            #Control.Velocity_Read2(ser,4)
-            #Control.Velocity_Read2(ser,5)
-            #Control.Position_Read2(ser,6)
-            #Control.Position_Read2(ser,7)
-            #Control.Position_Read2(ser,8)
-            #Control.Velocity_Read2(ser,9)
-            #a = Control.Velocity_Read3(ser,10)#バッファから返信データを引き出す
-            #
-            #log[t][11] = Control.Position_Read4(a,1)#返信データを角度データに変換する
-            #log[t][12] = Control.Position_Read4(a,2)
-            #log[t][13] = Control.Position_Read4(a,3)
-            #log[t][14] = Control.Position_Read4(a,6)
-            #log[t][15] = Control.Position_Read4(a,7)
-            #log[t][16] = Control.Position_Read4(a,8)
-            #log[t][17] = Control.Position_Read4(a,4)
-            #log[t][18] = Control.Position_Read4(a,5)
-            #log[t][19] = Control.Position_Read4(a,9)
-            #log[t][20] = Control.Position_Read4(a,10)
+        #log[t][1] = data[t,0]/pi*180;log[t][2] = data[t,1]/pi*180;log[t][3] = data[t,2]/pi*180;log[t][4] = data[t,3]/pi*180;log[t][5] = data[t,4]/pi*180;log[t][6] = data[t,5]/pi*180
+        #log[t][7] = 0;log[t][8] = 0;log[t][9] = 0;log[t][10] = 0;
+        #
+        #ser.flushInput()#バッファのクリア
+        #Control.Position_Read2(ser,1)#バッファに返信データを順に貯める
+        #Control.Position_Read2(ser,2)
+        #Control.Position_Read2(ser,3)
+        #Control.Velocity_Read2(ser,4)
+        #Control.Velocity_Read2(ser,5)
+        #Control.Position_Read2(ser,6)
+        #Control.Position_Read2(ser,7)
+        #Control.Position_Read2(ser,8)
+        #Control.Velocity_Read2(ser,9)
+        #a = Control.Velocity_Read3(ser,10)#バッファから返信データを引き出す
+        #
+        #log[t][11] = Control.Position_Read4(a,1)#返信データを角度データに変換する
+        #log[t][12] = Control.Position_Read4(a,2)
+        #log[t][13] = Control.Position_Read4(a,3)
+        #log[t][14] = Control.Position_Read4(a,6)
+        #log[t][15] = Control.Position_Read4(a,7)
+        #log[t][16] = Control.Position_Read4(a,8)
+        #log[t][17] = Control.Position_Read4(a,4)
+        #log[t][18] = Control.Position_Read4(a,5)
+        #log[t][19] = Control.Position_Read4(a,9)
+        #log[t][20] = Control.Position_Read4(a,10)
   
-        if save == True:
-            #ファイルに書き出し
-            #print("abc")
-            with open('log_'+csvfile,'w') as f:
-                writer = csv.writer(f,lineterminator='\n')
-                writer.writerows(log)
+        #if save == True:
+        #    #ファイルに書き出し
+        #    #print("abc")
+        #    with open('log_'+csvfile,'w') as f:
+        #        writer = csv.writer(f,lineterminator='\n')
+        #        writer.writerows(log)
 
     def reverse(self,value):
         if value == True:
