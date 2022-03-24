@@ -1,7 +1,4 @@
 
-import GUI_serial as Gs
-
-
 from functools import partial
 
 import sys
@@ -12,7 +9,6 @@ from PIL import Image,ImageTk #udo pip install pillow
 from SSC_ImageRecognition7 import ImageReconition
 from SSC_ImageRecognition7 import ResetLog
 
-from CalcBranch import IsBranch
 import math
 import pyrealsense2 as rs
 import numpy as np
@@ -58,49 +54,12 @@ if __name__ == '__main__':
 
 
 
-    def reverse(value):
-        if value == True:
-            ret = False
-        else:
-            ret = True
-        return ret
 
 
 
 
-    def branch(num):                    #ボタンがクリックされたら実行
-        if v3.get() == True:         #右分岐かどうか
-            if v1.get() == True:       #前進中かどうか
-                mode = 1
-            else:
-                mode = 2
-        else:
-            if v1.get() == True:       #前進中かどうか
-                mode = 2
-            else:
-                mode = 1
-    
-        
-        if(num == 1):value = entry1.get()
-        elif(num == 2):value = entry2.get()
-        elif(num == 3):value = entry3.get()
-        elif(num == 4):value = entry4.get()
-        elif(num == 5):value = entry5.get()
-        elif(num == 6):value = entry6.get()
-        elif(num == 7):value = entry7.get()
-        elif(num == 8):value = entry8.get()
-        elif(num == 9):value = entry9.get()
-        elif(num == 10):value = entry10.get()
-        elif(num == 11):value = entry11.get()
 
-        csv_name = value + '_' + str(mode) + '.csv'    
-        if v7.get() == True:
-            csv_name = value + '_' + str(mode) + '_T' + '.csv'
-            v5.set(reverse(v5.get()))
-            v6.set(reverse(v6.get()))
-        
-        print(csv_name,num)
-        Gs.Branch(ser,csv_name,v1.get(),v8.get())
+
 
     def branchAngle(GammalAngle,TurnAngle,Langle,Rangle):
         global IsMovingNow

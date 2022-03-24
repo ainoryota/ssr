@@ -1,6 +1,6 @@
 import tkinter as tk
 from functools import partial
-import GUI_serial as Gs
+
 from Robot import Robot
 from Order import PosOrder
 from Order import VelocityOrder
@@ -9,6 +9,9 @@ from Order import ResetMotorOrder
 from Order import ResetEncoderOrder
 from OutputController import OutputController
 from OutputController import MotorMode
+import numpy as np
+import math
+import time
 
 class PushButton:
     button = []
@@ -143,46 +146,76 @@ class Form(object):
         self.branchEntry.grid(row = 12, column =0, padx = 5, pady = 5)
         self.root.mainloop()
 
-    def setRobot(self,robot):
-        self.robot=robot
 
     #ボタン関数の定義
     def init(self):
-        entry1.delete(0,'end')
-        entry1.insert(0,'0_-15_75_45')
-        entry2.delete(0,'end')
-        entry2.insert(0,'15_0_75_45')
-        entry3.delete(0,'end')
-        entry3.insert(0,'-15_0_40_10')
-        entry4.delete(0,'end')
-        entry4.insert(0,'-5_0_60_80')
-        entry5.delete(0,'end')
-        entry5.insert(0,'5_10_85_85')
-        entry6.delete(0,'end')
-        #entry6.insert(0,'-2_4_80_51')
-        entry7.delete(0,'end')
-        #entry7.insert(0,'5_0_55_60')
-        entry8.delete(0,'end')
-        entry8.insert(0,'2_6_70_53.5')
-        entry9.delete(0,'end')
-        entry9.insert(0,'6_35_70_22.5')
-        entry10.delete(0,'end')
-        entry10.insert(0,'-30_0_80_92')
-        #entry7.delete(0,'end')
-        #entry7.insert(0,'5_0_55_60')
-        #entry8.delete(0,'end')
-        #entry8.insert(0,'2_5_65_65')
-        #entry9.delete(0,'end')
-        #entry9.insert(0,'5_-28_45_60')
-        #entry10.delete(0,'end')
-        #entry10.insert(0,'-10_5_35_87.5')
-        entry11.delete(0,'end')
-        #entry11.insert(0,'-3_0_45_65')
-        branchEntry.delete(0,'end')
-        branchEntry.insert(0,'1')
+        self.entry1.delete(0,'end')
+        self.entry1.insert(0,'0_-15_75_45')
+        self.entry2.delete(0,'end')
+        self.entry2.insert(0,'15_0_75_45')
+        self.entry3.delete(0,'end')
+        self.entry3.insert(0,'-15_0_40_10')
+        self.entry4.delete(0,'end')
+        self.entry4.insert(0,'-5_0_60_80')
+        self.entry5.delete(0,'end')
+        self.entry5.insert(0,'5_10_85_85')
+        self.entry6.delete(0,'end')
+        #self.#entry6.insert(0,'-2_4_80_51')
+        self.entry7.delete(0,'end')
+        #self.#entry7.insert(0,'5_0_55_60')
+        self.entry8.delete(0,'end')
+        self.entry8.insert(0,'2_6_70_53.5')
+        self.entry9.delete(0,'end')
+        self.entry9.insert(0,'6_35_70_22.5')
+        self.entry10.delete(0,'end')
+        self.entry10.insert(0,'-30_0_80_92')
+        #self.#entry7.delete(0,'end')
+        #self.#entry7.insert(0,'5_0_55_60')
+        #self.#entry8.delete(0,'end')
+        #self.#entry8.insert(0,'2_5_65_65')
+        #self.#entry9.delete(0,'end')
+        #self.#entry9.insert(0,'5_-28_45_60')
+        #self.#entry10.delete(0,'end')
+        #self.#entry10.insert(0,'-10_5_35_87.5')
+        self.entry11.delete(0,'end')
+        #self.#entry11.insert(0,'-3_0_45_65')
+        self.branchEntry.delete(0,'end')
+        self.branchEntry.insert(0,'1')
 
-        Gs.Init(self.robot.serial)
-    
+        self.robotInit();
+
+    def robotInit(self):
+        
+        self.robot.motors[0].insertOrder(MotorModeOrder(MotorMode.PosNormal,0))
+        self.robot.motors[1].insertOrder(MotorModeOrder(MotorMode.PosNormal,0))
+        self.robot.motors[2].insertOrder(MotorModeOrder(MotorMode.PosNormal,0))
+        self.robot.motors[3].insertOrder(MotorModeOrder(MotorMode.PosNormal,0))
+        self.robot.motors[4].insertOrder(MotorModeOrder(MotorMode.VelocityNormal,0))
+        self.robot.motors[5].insertOrder(MotorModeOrder(MotorMode.VelocityNormal,0))
+        self.robot.motors[6].insertOrder(MotorModeOrder(MotorMode.PosNormal,0))
+        self.robot.motors[7].insertOrder(MotorModeOrder(MotorMode.PosNormal,0))
+        self.robot.motors[8].insertOrder(MotorModeOrder(MotorMode.PosNormal,0))
+        self.robot.motors[9].insertOrder(MotorModeOrder(MotorMode.VelocityNormal,0))
+        self.robot.motors[10].insertOrder(MotorModeOrder(MotorMode.VelocityNormal,0))
+        self.robot.motors[11].insertOrder(MotorModeOrder(MotorMode.VelocityNormal,0))
+
+        #初期姿勢
+        data = np.loadtxt("Data/normal_switching.csv",delimiter=",")
+        self.robot.motors[0].insertOrder(PosOrder(0,0))
+        self.robot.motors[1].insertOrder(PosOrder(round(data[0,0] / math.pi * 180,2),0))
+        self.robot.motors[2].insertOrder(PosOrder(round(data[0,1] / math.pi * 180,2),0))
+        self.robot.motors[3].insertOrder(PosOrder(round(data[0,2] / math.pi * 180,2),0))
+        self.robot.motors[4].insertOrder(VelocityOrder(0,0))
+        self.robot.motors[5].insertOrder(VelocityOrder(0,0))
+        self.robot.motors[6].insertOrder(PosOrder(round(data[0,3] / math.pi * 180,2),0))
+        self.robot.motors[7].insertOrder(PosOrder(round(data[0,4] / math.pi * 180,2),0))
+        self.robot.motors[8].insertOrder(PosOrder(round(data[0,5] / math.pi * 180,2),0))
+        self.robot.motors[9].insertOrder(VelocityOrder(0,0))
+        self.robot.motors[10].insertOrder(VelocityOrder(0,0))
+        self.robot.motors[11].insertOrder(VelocityOrder(0,0))
+        OutputController().pushStep()
+
+
     def fin(self):
         Gs.Fin(self.robot.serial)
     
@@ -216,8 +249,20 @@ class Form(object):
     
     def free(self):       
         print("○○○Free○○○")
-        for motor in self.robot.motors:
-            motor.insertOrder(MotorModeOrder(MotorMode.Free,0))
+        
+        self.robot.motors[0].insertOrder(MotorModeOrder(MotorMode.PosFree,0))
+        self.robot.motors[1].insertOrder(MotorModeOrder(MotorMode.PosFree,0))
+        self.robot.motors[2].insertOrder(MotorModeOrder(MotorMode.PosFree,0))
+        self.robot.motors[3].insertOrder(MotorModeOrder(MotorMode.PosFree,0))
+        self.robot.motors[4].insertOrder(MotorModeOrder(MotorMode.VelocityFree,0))
+        self.robot.motors[5].insertOrder(MotorModeOrder(MotorMode.VelocityFree,0))
+        self.robot.motors[6].insertOrder(MotorModeOrder(MotorMode.PosFree,0))
+        self.robot.motors[7].insertOrder(MotorModeOrder(MotorMode.PosFree,0))
+        self.robot.motors[8].insertOrder(MotorModeOrder(MotorMode.PosFree,0))
+        self.robot.motors[9].insertOrder(MotorModeOrder(MotorMode.VelocityFree,0))
+        self.robot.motors[10].insertOrder(MotorModeOrder(MotorMode.VelocityFree,0))
+        self.robot.motors[11].insertOrder(MotorModeOrder(MotorMode.VelocityFree,0))
+
         self.robot.motors[4].insertOrder(ResetMotorOrder(0))
         self.robot.motors[5].insertOrder(ResetMotorOrder(0))
         self.robot.motors[9].insertOrder(ResetMotorOrder(0))
@@ -323,18 +368,114 @@ class Form(object):
                 else:                                                    #後輪にテンションがかかっているとき
                     Gs.Branch(ser,"f_normal_r-t.csv",v3.get(),False)
                     v6.set(False)
-    #ウィンチ用のボタン
-    def wind(self):            
-        Gs.Wind(self.robot.serial)
-    
-    def feed(self):            
-        Gs.Feed(self.robot.serial)
-    
-    def stop2(self):            
-        Gs.Stop2(self.robot.serial)
-
 
     def branch(self,num):
-        print(num)
+        if self.v3.get() == True:         #右分岐かどうか
+            if self.v1.get() == True:       #前進中かどうか
+                mode = 1
+            else:
+                mode = 2
+        else:
+            if self.v1.get() == True:       #前進中かどうか
+                mode = 2
+            else:
+                mode = 1
+    
         
+        if(num == 1):value = self.entry1.get()
+        elif(num == 2):value = self.entry2.get()
+        elif(num == 3):value = self.entry3.get()
+        elif(num == 4):value = self.entry4.get()
+        elif(num == 5):value = self.entry5.get()
+        elif(num == 6):value = self.entry6.get()
+        elif(num == 7):value = self.entry7.get()
+        elif(num == 8):value = self.entry8.get()
+        elif(num == 9):value = self.entry9.get()
+        elif(num == 10):value = self.entry10.get()
+        elif(num == 11):value = self.entry11.get()
 
+        csv_name = value + '_' + str(mode) + '.csv'    
+        if self.v7.get() == True:
+            csv_name = value + '_' + str(mode) + '_T' + '.csv'
+            self.v5.set(self.reverse(self.v5.get()))
+            self.v6.set(self.reverse(self.v6.get()))
+        
+        print(csv_name,num)
+        self.Branch(csv_name,self.v1.get(),self.v8.get())
+
+    def Branch(self,csvfile,value,save):
+        #分岐データの読み込み
+        csvfile="Data/"+csvfile;
+        data = np.loadtxt(csvfile,delimiter=",")
+        (n,m)=data.shape
+        log = [[0]*21for i in range(n)]#初期化
+        time_start = time.perf_counter()
+    
+        #前進後退でモータに流す入力を変えるため
+        if value == True:
+            id = [0,1,2,3,4,5,6,7,8,9,10]
+            direct = 1
+        else:
+            id = [0,6,7,8,9,10,1,2,3,4,5]
+            direct = -1
+
+        for t in range(0,n-1):#行数-1
+            #if(t%4==1):continue;#早めに後輪を分岐する
+            #log[t][0] = time.perf_counter() - time_start
+
+
+            self.robot.motors[id[1]].insertOrder(PosOrder(round(data[t,0]/math.pi*180,2),0))
+            self.robot.motors[id[2]].insertOrder(PosOrder(round(data[t,1]/math.pi*180,2),0))
+            self.robot.motors[id[3]].insertOrder(PosOrder(round(data[t,2]/math.pi*180,2),0))
+            self.robot.motors[id[6]].insertOrder(PosOrder(round(data[t,3]/math.pi*180,2),0))
+            self.robot.motors[id[7]].insertOrder(PosOrder(round(data[t,4]/math.pi*180,2),0))
+            self.robot.motors[id[8]].insertOrder(PosOrder(round(data[t,5]/math.pi*180,2),0))
+
+            self.robot.motors[id[4]].insertOrder(VelocityOrder(round(-direct*data[t,6]),0))
+            self.robot.motors[id[5]].insertOrder(VelocityOrder(round(direct*data[t,6]),0))
+            self.robot.motors[id[9]].insertOrder(VelocityOrder(round(-direct*data[t,7]),0))
+            self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct*data[t,7]),0))
+            
+            OutputController().pushStep()
+
+
+        
+            #log[t][1] = data[t,0]/pi*180;log[t][2] = data[t,1]/pi*180;log[t][3] = data[t,2]/pi*180;log[t][4] = data[t,3]/pi*180;log[t][5] = data[t,4]/pi*180;log[t][6] = data[t,5]/pi*180
+            #log[t][7] = 0;log[t][8] = 0;log[t][9] = 0;log[t][10] = 0;
+            #
+            #ser.flushInput()#バッファのクリア
+            #Control.Position_Read2(ser,1)#バッファに返信データを順に貯める
+            #Control.Position_Read2(ser,2)
+            #Control.Position_Read2(ser,3)
+            #Control.Velocity_Read2(ser,4)
+            #Control.Velocity_Read2(ser,5)
+            #Control.Position_Read2(ser,6)
+            #Control.Position_Read2(ser,7)
+            #Control.Position_Read2(ser,8)
+            #Control.Velocity_Read2(ser,9)
+            #a = Control.Velocity_Read3(ser,10)#バッファから返信データを引き出す
+            #
+            #log[t][11] = Control.Position_Read4(a,1)#返信データを角度データに変換する
+            #log[t][12] = Control.Position_Read4(a,2)
+            #log[t][13] = Control.Position_Read4(a,3)
+            #log[t][14] = Control.Position_Read4(a,6)
+            #log[t][15] = Control.Position_Read4(a,7)
+            #log[t][16] = Control.Position_Read4(a,8)
+            #log[t][17] = Control.Position_Read4(a,4)
+            #log[t][18] = Control.Position_Read4(a,5)
+            #log[t][19] = Control.Position_Read4(a,9)
+            #log[t][20] = Control.Position_Read4(a,10)
+  
+        if save == True:
+            #ファイルに書き出し
+            #print("abc")
+            with open('log_'+csvfile,'w') as f:
+                writer = csv.writer(f,lineterminator='\n')
+                writer.writerows(log)
+
+    def reverse(self,value):
+        if value == True:
+            ret = False
+        else:
+            ret = True
+        return ret

@@ -41,7 +41,3 @@ class ResetEncoderOrder(Order):
     def __init__(self,delay,sleepTime=0.01):
         super().__init__(delay,sleepTime)
 
-
-class Mode(Enum):
-    Pos = 0
-    Velocity = 1

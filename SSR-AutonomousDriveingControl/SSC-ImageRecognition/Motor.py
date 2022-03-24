@@ -1,5 +1,4 @@
 import time
-from Order import Mode
 from Order import InitOrder
 from Order import PosOrder
 from Order import VelocityOrder

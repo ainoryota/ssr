@@ -1,6 +1,5 @@
 import time
 import serial#pip install pyserial
-from Order import Mode
 from Order import InitOrder
 from Order import PosOrder
 from Order import VelocityOrder
@@ -10,7 +9,7 @@ from Order import ResetEncoderOrder
 import math
 import copy
 import threading
-from enum import Enum
+from enum import IntEnum
 import queue
 from multiprocessing import Process
 import platform
@@ -105,10 +104,16 @@ def OutputDone(stepQueue):
                 output.resetEncoder(dataList)
         print("End Output")
                                                 
-class MotorMode(Enum):
-    Normal = 0
-    Hold = 1
-    Free = 2
+class MotorMode(IntEnum):
+    PosNormal=0x00
+    PosHold=0x01
+    PosFree=0x02
+    VelocityNormal=0x04
+    VelocityFree=0x06
+    VelocityHold=0x07
+    Pos=100
+    Velocity=200
+    
 
         
 class Serial(object):
@@ -123,12 +128,12 @@ class Serial(object):
         self.serial.write(command)
 
     def outputInit(self,order):
-        if order.mode == Mode.Pos:
-            data1 = 0X02 #位置制御モードかつフリー
-            data2 = 0X00 #位置制御モードかつノーマル
-        elif order.mode == Mode.Velocity:
-            data1 = 0X06 #速度制御モードかつフリー
-            data2 = 0X04 #速度制御モードかつノーマル
+        if order.mode == MotorMode.Pos:
+            data1 = int(MotorMode.PosFree)
+            data2 = int(MotorMode.PosNormal)
+        elif order.mode == MotorMode.Velocity:
+            data1 = int(MotorMode.VelocityFree)
+            data2 = int(MotorMode.VelocityNormal)
         else:
             print("statusの値が不正")
 
@@ -190,14 +195,7 @@ class Serial(object):
         while(len(orderList) > 0):
             data = orderList.pop()
             print("　　id:",data.id,"motorMode:",data.motorMode)
-            modeData = 0
-            if(data.motorMode == MotorMode.Normal):
-                modeData = 0x04
-            elif(data.motorMode == MotorMode.Hold):
-                modeData = 0x07#速度モードかつホールド
-            elif(data.motorMode == MotorMode.Free):
-                modeData = 0X02
-            dataList+=[data.id,modeData]
+            dataList+=[data.id,int(data.motorMode)]
             sleepTime = max(sleepTime,data.sleepTime)
 
         #       Size CMD OP ID/Data1 ADR CNT
@@ -241,3 +239,33 @@ class Serial(object):
         list.append(sum(list) & 0XFF)
         self.write(list)
         time.sleep(sleepTime)
+
+
+    #def Position_Read2(ser,ID):
+    #     #       Size CMD  OP  ID ADR  Len
+    #    list = [0X07,0X03,0X00,ID,0X2C,0X02]
+    #    list.insert(6,sum(list)&0XFF)
+    #    ser.write(list)
+    #    sleep(0.003)
+    #
+    #def Position_Read4(list2,n):
+    #  
+    #    pos = (256*list2[5+7*(n-1)]+list2[4+7*(n-1)])/100
+    #    return pos
+    #
+    #def Velocity_Read2(ser,ID):
+    #     #       Size CMD  OP  ID ADR  Len
+    #    list = [0X07,0X03,0X00,ID,0X32,0X02]
+    #    list.insert(6,sum(list)&0XFF)
+    #    ser.write(list)
+    #    sleep(0.003)    
+    #
+    #def Velocity_Read3(ser,ID):
+    #     #       Size CMD  OP  ID ADR  Len
+    #    list = [0X07,0X03,0X00,ID,0X32,0X02]
+    #    list.insert(6,sum(list)&0XFF)
+    #    ser.write(list)     
+    #    list2 = ser.read(70)
+    #    sleep(0.004)
+    #    return list2
+    

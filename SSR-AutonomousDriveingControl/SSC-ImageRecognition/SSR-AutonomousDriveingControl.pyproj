@@ -22,21 +22,15 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CalcBranch.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Control.py" />
     <Compile Include="Form.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="GUI_serial.py" />
     <Compile Include="Main.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Motor.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MultiProcess.py" />
     <Compile Include="OldMain.py">
       <SubType>Code</SubType>
     </Compile>
@@ -59,9 +53,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="System.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="test.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Utilty.py" />

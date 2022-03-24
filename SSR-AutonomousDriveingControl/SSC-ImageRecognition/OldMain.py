@@ -10,7 +10,7 @@
 #sudo pip3 install numba
 #sudo pip3 install pyserial
 import tkinter as tk
-import GUI_serial as Gs
+
 import serial#pip install pyserial
 import platform
 from functools import partial
@@ -22,8 +22,6 @@ import tkinter as tk
 from PIL import Image,ImageTk #udo pip install pillow
 from SSC_ImageRecognition7 import ImageReconition
 from SSC_ImageRecognition7 import ResetLog
-
-from CalcBranch import IsBranch
 import math
 import pyrealsense2 as rs
 import numpy as np
