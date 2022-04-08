@@ -40,6 +40,9 @@
     <Compile Include="OutputController.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="RealSense.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Robot.py">
       <SubType>Code</SubType>
     </Compile>
@@ -56,6 +59,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Utilty.py" />
+    <Compile Include="VideoStream.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

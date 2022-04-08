@@ -475,3 +475,30 @@ class Form(object):
         else:
             ret = True
         return ret
+
+    
+    def branchAngle(self,GammalAngle,TurnAngle,Langle,Rangle):
+        if self.v3.get() == True:         #右分岐かどうか
+            if self.v1.get() == True:       #前進中かどうか
+                mode = 1
+            else:
+                mode = 2
+        else:
+            if self.v1.get() == True:       #前進中かどうか
+                mode = 2
+            else:
+                mode = 1
+        while Langle + Rangle < 100:
+            if Langle < 80:Langle = Langle + 5
+            if Rangle < 80:Rangle = Rangle + 5
+    
+        value = str(GammalAngle) + "_" + str(TurnAngle) + "_" + str(Langle) + "_" + str(Rangle)
+        csv_name = value + '_' + str(mode) + '.csv'    
+        if self.v7.get() == True:
+            csv_name = value + '_' + str(mode) + '_T' + '.csv'
+            self.v5.set(reverse(self.v5.get()))
+            self.v6.set(reverse(self.v6.get()))
+        
+        print(csv_name,"AngleMode")
+        Branch(csv_name,self.v1.get(),self.v8.get())
+
