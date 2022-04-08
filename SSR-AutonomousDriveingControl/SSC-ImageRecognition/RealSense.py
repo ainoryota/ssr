@@ -2,20 +2,51 @@ import time
 from VideoStream import VideoStream
 from PIL import Image,ImageTk #udo pip install pillow
 import tkinter as tk
+import cv2
+import time
+
+###
+import platform
+from functools import partial
+
+import sys
+import tkinter as tk
+from PIL import Image,ImageTk #udo pip install pillow
+from SSC_ImageRecognition7 import ImageReconition
+from SSC_ImageRecognition7 import ResetLog
+import math
+import pyrealsense2 as rs
+import numpy as np
+
+import sys
+from numba import jit
+from ctypes import windll
+
+
+
 
 class RealSense(object):
-    def __init__(self):
-        vs = VideoStream()
+    def __init__(self,root,branch):
+        self.root=root
+        self.br=branch
+        self.vs = VideoStream()
         time.sleep(1)
-        vs.start_imu()
-        vs.start_camera()
+        self.vs.start_imu()
+        self.vs.start_camera()
         time.sleep(1)
     
         img = Image.open('testResult/test.png')
         testImgA = ImageTk.PhotoImage(img)
-        getRealsense()
-        return testImgA;
-        
+        self.il = tk.Label(self.root,image=testImgA)
+        self.il.grid(row=3, column=4,columnspan=30,rowspan=10)
+
+        self.timerlabel = tk.Label(self.root,text="")
+        self.timerlabel.grid(row=33, column=7)
+
+        self.branchdata = []
+
+        self.getRealsense()
+       
 
     #@jit("f8[:,:]()")
     def getRealsense(self):
@@ -24,10 +55,10 @@ class RealSense(object):
         maxDistance = 1500
     
     
-        accel = vs.acc
-        gyro = vs.gyro
-        color_image = vs.color_image
-        depth_image = vs.depth_image
+        accel = self.vs.acc
+        gyro = self.vs.gyro
+        color_image = self.vs.color_image
+        depth_image = self.vs.depth_image
 
 
         depth_image = np.where(depth_image > 5000,0,depth_image)#視認性の観点から5000以上なら0に
@@ -71,12 +102,13 @@ class RealSense(object):
 
     
 
-        il.configure(image=testImg)
-        il.image = testImg
+        self.il.configure(image=testImg)
+        self.il.image = testImg
     
         timer = math.floor((time.time() - start) * 1000)
-        timerlabel.configure(text="{0} ms".format(timer))
-        branchdata.append([result[1],result[2],timer])
+        self.timerlabel.configure(text="{0} ms".format(timer))
+        self.branchdata.append([result[1],result[2],timer])
+
         print("★",'{:.2f}'.format(result[3]),result[1],result[8])
         if(result[3] > 0.13 and result[1] < 150 and IsMovingNow == False):
             print("■■■■■分岐",result[4],result[5],result[6],result[7],result[8])
@@ -105,9 +137,9 @@ class RealSense(object):
                 result[6] = min(80,result[6])
                 result[7] = max(-80,result[7])
                 result[7] = min(80,result[7])
-                branchAngle(result[4],result[5],result[6],result[7])
+                self.br.branchAngle(result[4],result[5],result[6],result[7],self.root.v1.get(),self.root.v3.get(),self.root.v7.get(),self.root.v8.get())
             
 
 
 
-        root.after(10,getRealsense)
+        self.root.after(10,self.getRealsense)
