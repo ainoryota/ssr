@@ -116,7 +116,7 @@ class Branch(object):
             csv_name = value + '_' + str(mode) + '_T' + '.csv'
         
         print(csv_name,"AngleMode")
-        self.Branch(csv_name,self.runDirection,save)
+        self.FileBranch(csv_name,runDirection,save)
 
 
 

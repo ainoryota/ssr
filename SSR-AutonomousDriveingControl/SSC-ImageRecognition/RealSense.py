@@ -26,9 +26,10 @@ from ctypes import windll
 
 
 class RealSense(object):
-    def __init__(self,root,branch):
-        self.root=root
-        self.br=branch
+    def __init__(self,root,branch,data):
+        self.root = root
+        self.br = branch
+        self.data = data
         self.vs = VideoStream()
         time.sleep(1)
         self.vs.start_imu()
@@ -110,9 +111,10 @@ class RealSense(object):
         self.branchdata.append([result[1],result[2],timer])
 
         print("★",'{:.2f}'.format(result[3]),result[1],result[8])
-        if(result[3] > 0.13 and result[1] < 150 and IsMovingNow == False):
+        if(result[3] > 0.13 and result[1] < 150):
             print("■■■■■分岐",result[4],result[5],result[6],result[7],result[8])
-            if(v_auto.get()):
+            
+            if(self.data["v_auto"].get()):
                 SleepLength = 0
                 TimeCounter = 1
                 for i in range(4):
@@ -137,7 +139,9 @@ class RealSense(object):
                 result[6] = min(80,result[6])
                 result[7] = max(-80,result[7])
                 result[7] = min(80,result[7])
-                self.br.branchAngle(result[4],result[5],result[6],result[7],self.root.v1.get(),self.root.v3.get(),self.root.v7.get(),self.root.v8.get())
+                print("Branch Angle:",result[4],result[5],result[6],result[7],self.data["v1"].get(),self.data["v3"].get(),self.data["v7"].get(),self.data["v8"].get())
+                #Branch Angle:Exception in Tkinter callback 4:-5 5:-10 6:75 7:70 v1:True v3:True v7:True v8:False
+                self.br.branchAngle(result[4],result[5],result[6],result[7],self.data["v1"].get(),self.data["v3"].get(),self.data["v7"].get(),self.data["v8"].get())
             
 
 
