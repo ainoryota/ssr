@@ -6,9 +6,6 @@ import cv2
 import time
 
 
-from SSC_ImageRecognition7 import ImageReconition
-from SSC_ImageRecognition7 import ResetLog
-
 import math
 import pyrealsense2 as rs
 import numpy as np

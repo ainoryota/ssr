@@ -12,8 +12,9 @@ from functools import partial
 import sys
 import tkinter as tk
 from PIL import Image,ImageTk #udo pip install pillow
-from SSC_ImageRecognition7 import ImageReconition
-from SSC_ImageRecognition7 import ResetLog
+from SSC_ImageRecognition8 import ImageReconition
+from SSC_ImageRecognition8 import IR
+from SSC_ImageRecognition8 import ResetLog
 import math
 import pyrealsense2 as rs
 import numpy as np
@@ -32,8 +33,9 @@ class RealSense(object):
         self.data = data
         self.vs = VideoStream()
         time.sleep(1)
-        self.vs.start_imu()
-        self.vs.start_camera()
+        self.vs.start();
+
+        
         time.sleep(1)
     
         img = Image.open('testResult/test.png')
@@ -52,49 +54,22 @@ class RealSense(object):
     #@jit("f8[:,:]()")
     def getRealsense(self):
         start = time.time()
-        minDistance = 0
-        maxDistance = 1500
     
     
         accel = self.vs.acc
         gyro = self.vs.gyro
         color_image = self.vs.color_image
         depth_image = self.vs.depth_image
+        ir_image1 = self.vs.ir_image1
+        ir_image2 = self.vs.ir_image2
 
 
-        depth_image = np.where(depth_image > 5000,0,depth_image)#視認性の観点から5000以上なら0に
-        original_depth_colormap = cv2.resize(cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.08), cv2.COLORMAP_JET),(640,360)).copy()
-        for p in list(zip(*np.where(depth_image == 0))):
-            original_depth_colormap[p] = [0,0,0]
+        
 
-        depth_image = np.where(depth_image > maxDistance,0,depth_image)#索道らしくない距離を除去
+        result=IR(color_image,depth_image,depth_image,accel)
 
-        #これがないと型が合わない。例えばdepth_colormap=depth_image-minDistance;はだめ
-        depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0), cv2.COLORMAP_JET)
-
-        for x in range(640):
-            for y in range(360):
-                depth_colormap[y][x] = max(0,depth_image[y][x] - minDistance) * (255 / (maxDistance - minDistance))
-
-        for p in list(zip(*np.where(depth_image == 0))):
-            depth_colormap[p] = [0,0,0]
-
-        #画像表示
-        color_image_s = cv2.resize(color_image, (640, 360))
-        depth_colormap_s = cv2.resize(depth_colormap, (640, 360))
-
-        images = np.hstack((depth_colormap_s,original_depth_colormap))
-    
-        img = images
-    
-
-        image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # imreadはBGRなのでRGBに変換
-        image_pil = Image.fromarray(image_rgb) # RGBからPILフォーマットへ変換
-        testImg = ImageTk.PhotoImage(image_pil)
-
-        result = ImageReconition(image_rgb,accel)
-        testImg = image_rgb
         testImg = result[0]
+        #testImg=color_image
         testImg = cv2.resize(testImg,dsize=(640,360))
 
 
@@ -113,7 +88,6 @@ class RealSense(object):
         print("★",'{:.2f}'.format(result[3]),result[1],result[8])
         if(result[3] > 0.13 and result[1] < 150):
             print("■■■■■分岐",result[4],result[5],result[6],result[7],result[8])
-            
             if(self.data["v_auto"].get()):
                 SleepLength = 0
                 TimeCounter = 1
