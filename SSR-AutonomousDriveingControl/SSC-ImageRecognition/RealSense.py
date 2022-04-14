@@ -66,7 +66,7 @@ class RealSense(object):
 
         
 
-        result=IR(color_image,depth_image,depth_image,accel)
+        result=IR(color_image,depth_image,ir_image1,accel)
 
         testImg = result[0]
         #testImg=color_image

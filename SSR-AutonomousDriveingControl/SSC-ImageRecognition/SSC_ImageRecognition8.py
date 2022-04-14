@@ -461,6 +461,10 @@ def IR(color_image,depth_image,ir_image,robot_rotation):
 
     color_image = cv2.resize(color_image, (640, 360))
     depth_image = cv2.resize(depth_image, (640, 360))
+    ir_image = cv2.resize(ir_image, (640, 360))
+    color_image=color_image[0:360,360:640]
+    depth_image=depth_image[0:360,360:640]
+    ir_image=ir_image[0:360,360:640]
 
     #depth情報をカラーマップとして表現する
     depth_colormap = cv2.cvtColor(cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.08), cv2.COLORMAP_JET),cv2.COLOR_BGR2RGB)
@@ -472,10 +476,11 @@ def IR(color_image,depth_image,ir_image,robot_rotation):
     _,depth_view=cv2.threshold(depth_view,38,255,cv2.THRESH_TOZERO)
     depth_view=cv2.cvtColor(depth_view,cv2.COLOR_GRAY2RGB)
 
-    double_image = np.hstack((depth_view,depth_colormap))
-    image_pil =  Image.fromarray(cv2.cvtColor(double_image,cv2.COLOR_BGR2RGB)) #BGRなのでRGBに変換
-    result=ImageReconition(image_pil,robot_rotation)
-    double_image = np.hstack((result[0],depth_colormap))
+    ir_image=cv2.cvtColor(ir_image,cv2.COLOR_GRAY2RGB)
+    double_image = np.hstack((depth_view,ir_image))
+    #image_pil =  Image.fromarray(cv2.cvtColor(double_image,cv2.COLOR_BGR2RGB)) #BGRなのでRGBに変換
+    #result=ImageReconition(image_pil,robot_rotation)
+    #double_image = np.hstack((result[0],depth_colormap))
 
     return [double_image,0,0,0,GammalAngle,TurnAngle,Rangle,Langle,XLog]
 
