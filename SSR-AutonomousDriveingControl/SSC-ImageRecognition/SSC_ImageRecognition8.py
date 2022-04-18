@@ -373,7 +373,7 @@ def ImageReconition(original_img,rotation):
     Rangle = 0
     Langle = 0
     
-    img = original_img.crop((0,0,360,360))
+    img = original_img.crop((0,0,320,320))
     img=original_img
     #original_img = original_img[0:360, (640 + 280):1280]
     
@@ -462,9 +462,9 @@ def IR(color_image,depth_image,ir_image,robot_rotation):
     color_image = cv2.resize(color_image, (640, 360))
     depth_image = cv2.resize(depth_image, (640, 360))
     ir_image = cv2.resize(ir_image, (640, 360))
-    color_image=color_image[0:360,360:640]
-    depth_image=depth_image[0:360,360:640]
-    ir_image=ir_image[0:360,360:640]
+    color_image=color_image[0:320,320:640]
+    depth_image=depth_image[0:320,320:640]
+    ir_image=ir_image[0:320,320:640]
 
     #depth情報をカラーマップとして表現する
     depth_colormap = cv2.cvtColor(cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.08), cv2.COLORMAP_JET),cv2.COLOR_BGR2RGB)
@@ -477,7 +477,77 @@ def IR(color_image,depth_image,ir_image,robot_rotation):
     depth_view=cv2.cvtColor(depth_view,cv2.COLOR_GRAY2RGB)
 
     ir_image=cv2.cvtColor(ir_image,cv2.COLOR_GRAY2RGB)
-    double_image = np.hstack((depth_view,ir_image))
+
+
+    #for x in range(320):
+        #for y in range(320):
+            #if(depth_image[x][y]>0):
+                #ir_image[x][y]=255;
+
+
+    width=320
+    height=320
+
+    start_position = [int(width/2),int(height/2)]
+    threshold = 127#分割領域の閾値
+    pix = ir_image[start_position[0]][start_position[1]][0]#グループ化させる領域の画素値
+
+    frag = np.zeros(ir_image.shape)#領域分割フラグ
+    ir_image2=ir_image.copy();
+
+    # 8 Neighborhood 
+    directs = [(-1,-1), (0,-1), (1,-1), (1,0), (1,1), (0,1),(-1,1),(-1,0)]
+    visited = np.zeros(shape=(ir_image.shape), dtype=np.uint8)
+    seeds = []
+    ir_image=cv2.medianBlur(ir_image,9)
+
+
+
+    #領域拡張法
+    for y in range(0,int(height)):
+        for x in range(0,int(width)):
+            if(depth_image[y][x]>0):
+                seeds.append((x,y))
+
+    for seed in seeds:
+        x = seed[0]
+        y = seed[1]
+        frag[y][x] = 2
+    
+
+    while len(seeds):
+        seed = seeds.pop(0)
+        x = seed[0]
+        y = seed[1]
+        # visit point (x,y)
+        visited[y][x] = 1
+        for direct in directs:
+            cur_x = x + direct[0]
+            cur_y = y + direct[1]
+            # illegal 
+            if cur_x <0 or cur_y<0 or cur_x >= width or cur_y >=height:
+                continue
+            # Not visited and belong to the same target 
+            if (not visited[cur_y][cur_x][0]) and (abs(ir_image[cur_y][cur_x][0]-ir_image[y][x][0])<=50) :
+                if(frag[cur_y][cur_x][0]==0):
+                    frag[cur_y][cur_x] = 1
+                visited[cur_y][cur_x] = 1
+                seeds.append((cur_x,cur_y))
+
+
+
+
+    for y in range(0,int(height)):
+        for x in range(0,int(width)):
+            if(frag[x][y][0]==1):
+                ir_image2[x][y]=[255,0,0]
+            elif(frag[x][y][0]==2):
+                ir_image2[x][y]=[0,255,0]
+            else:
+                ir_image2[x][y]=ir_image[x][y]
+
+   # double_image = np.hstack((depth_view,ir_image))
+    double_image = np.hstack((ir_image2,ir_image))
     #image_pil =  Image.fromarray(cv2.cvtColor(double_image,cv2.COLOR_BGR2RGB)) #BGRなのでRGBに変換
     #result=ImageReconition(image_pil,robot_rotation)
     #double_image = np.hstack((result[0],depth_colormap))

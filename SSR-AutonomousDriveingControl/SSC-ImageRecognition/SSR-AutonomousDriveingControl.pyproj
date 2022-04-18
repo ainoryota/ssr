@@ -59,6 +59,9 @@
     <Compile Include="System.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Test.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Utilty.py" />
     <Compile Include="VideoStream.py">
       <SubType>Code</SubType>

@@ -70,7 +70,7 @@ class RealSense(object):
 
         testImg = result[0]
         #testImg=color_image
-        testImg = cv2.resize(testImg,dsize=(640,360))
+        testImg = cv2.resize(testImg,dsize=(640,320))
 
 
         testImg = Image.fromarray(testImg)
