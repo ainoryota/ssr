@@ -12,9 +12,9 @@ from functools import partial
 import sys
 import tkinter as tk
 from PIL import Image,ImageTk #udo pip install pillow
-from SSC_ImageRecognition8 import ImageReconition
-from SSC_ImageRecognition8 import IR
-from SSC_ImageRecognition8 import ResetLog
+from SSC_ImageRecognition9 import ImageReconition
+from SSC_ImageRecognition9 import IR
+from SSC_ImageRecognition9 import ResetLog
 import math
 import pyrealsense2 as rs
 import numpy as np

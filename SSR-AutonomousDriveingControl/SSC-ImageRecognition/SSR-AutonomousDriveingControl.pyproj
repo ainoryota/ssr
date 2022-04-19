@@ -56,6 +56,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SSC_ImageRecognition8.py" />
+    <Compile Include="SSC_ImageRecognition9.py" />
     <Compile Include="System.py">
       <SubType>Code</SubType>
     </Compile>
