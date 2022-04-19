@@ -9,8 +9,256 @@ import time
 from PIL import Image,ImageTk
 import numba
 import csv
+from numba import jit, f8, i8, b1, void
 
-#一次式で最小事情近似する
+def IR(color_image,depth_image,ir_image,robot_rotation):
+
+    minDistance = 0
+    maxDistance = 600
+
+    #640×320で入力された画像を切り出し
+    color_image = color_image[0:320,320:640]
+    depth_image = depth_image[0:320,320:640]
+    ir_image = ir_image[0:320,320:640]
+
+    if(False):
+        return [np.hstack((depth_image,ir_image)),0,0,0,0,0,0,0,XLog]
+    
+    #OpenCV形式に変換
+    depth_image = np.where(depth_image > maxDistance,0,depth_image)#一定以上の距離のデータは無視
+    depth_image = cv2.cvtColor((cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.08,beta =0), cv2.COLORMAP_JET)),cv2.COLOR_RGB2GRAY)
+    _,depth_image = cv2.threshold(depth_image,38,255,cv2.THRESH_TOZERO)
+    depth_image = cv2.cvtColor(depth_image,cv2.COLOR_GRAY2RGB)
+    ir_image = cv2.cvtColor(ir_image,cv2.COLOR_GRAY2RGB)
+    
+    #フィルタ
+    color_image = cv2.medianBlur(color_image,9)
+    depth_image = cv2.medianBlur(depth_image,9)
+    ir_image = cv2.medianBlur(ir_image,9)
+    
+    #画像処理
+    result = ImageReconition(depth_image,ir_image,robot_rotation)
+    double_image = np.hstack((result[0],ir_image))
+    x = result[1]
+    y = result[2]
+    fortunity = result[3]
+    GammalAngle = result[4]
+    TurnAngle = result[5]
+    Rangle = result[6]
+    Langle = result[7]
+
+    return [double_image,x,y,fortunity,GammalAngle,TurnAngle,Rangle,Langle,XLog]
+
+
+def ImageReconition(depth_img,ir_img,rotation):
+    img = depth_img
+
+    #水平方向角度の取得
+    (value,angle1,angle2,angle3,value1,value2,value3,y,x,doubel_max) = getTurnAngle(img)
+
+
+
+    #仰角の取得
+    (topAngle1,topAngle2,topAngle3) = getTopAngle(img,y,x,angle1,angle2,angle3)
+
+    #信頼度の導出
+    fortunity = min((value1,value2,value3)) / max(1,value1 + value2 + value3)
+    fortunity = 1 - doubel_max / max(1,value1 + value2 + value3)
+    fortuneLog.pop(0)
+    fortuneLog.append(fortunity)
+    fortunity = sum(fortuneLog) / 5
+    (GammalAngle,TurnAngle,Rangle,Langle) = getRobotAngle(img,y,x,angle1,angle2,angle3,rotation)
+
+    #角度の平均化
+    GammalAngleLog.pop(0)
+    GammalAngleLog.append(GammalAngle)
+    GammalAngle = sum(GammalAngleLog) / 5
+
+    TurnAngleLog.pop(0)
+    TurnAngleLog.append(TurnAngle)
+    TurnAngle = sum(TurnAngleLog) / 5
+
+    RangleLog.pop(0)
+    RangleLog.append(Rangle)
+    Rangle = sum(RangleLog) / 5
+
+    LangleLog.pop(0)
+    LangleLog.append(Langle)
+    Langle = sum(LangleLog) / 5
+
+    GammalAngle = getUnitValue(GammalAngle,5)
+    TurnAngle = getUnitValue(TurnAngle,5)
+    Rangle = getUnitValue(Rangle,5)
+    Langle = getUnitValue(Langle,5)
+
+    #描画
+    thickness = 1
+    try:
+        if(fortunity >= 0.1 or True):
+            theta = angle1
+            img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(255,100,100,50),thickness=thickness)
+            img = cv2.putText(img,str(int(topAngle1)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(255,100,100))
+            theta = angle2
+            img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(100,255,100,50),thickness=thickness)#緑
+            img = cv2.putText(img,str(int(topAngle2)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,255,100))
+            theta = angle3
+            img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(100,100,255,50),thickness=thickness)
+            img = cv2.putText(img,str(int(topAngle3)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,100,255))
+            img = cv2.putText(img,str(int(topAngle1)) + "/" + str(int(topAngle2)) + "/" + str(int(topAngle3)),(0,100),cv2.FONT_HERSHEY_PLAIN,3,(255,255,255))
+        else:
+            for theta in [angle1]:
+                img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(255,0,0,50),thickness=thickness)
+    except:
+        print("error")
+
+
+    XLog.pop(0)
+    XLog.append(x)
+    return [img,x,y,fortunity,GammalAngle,TurnAngle,Rangle,Langle,XLog]
+
+def getTurnAngle(img):
+    height, width, channels = img.shape[:3]
+    #field=img
+    field = np.where(np.any(img > 0,2) == 0,0,1)
+
+
+
+    value=-10000
+    angle1=-1
+    angle2=-1
+    angle3=-1
+    value1=-1
+    value2=-1
+    value3=-1
+    x=0
+    y=0
+    doubel=-1
+
+
+    #解を調べる
+    (value,angle1,angle2,angle3,value1,value2,value3,x,y,doubel) = solveOptimizedScore(field,0,width,0,height,24,10)
+    (value,angle1,angle2,angle3,value1,value2,value3,x,y,doubel) = solveOptimizedScore(field,x-24,x+24,y-24,y+24,5,5)
+
+    return (value,angle1,angle2,angle3,value1,value2,value3,int(x),int(y),doubel) 
+
+def solveOptimizedScore(field,minX,maxX,minY,maxY,gridStep,angleStep):
+    bestValue=-10000
+    bestAngle1=-1
+    bestAngle2=-1
+    bestAngle3=-1
+    bestValue1=-1
+    bestValue2=-1
+    bestValue3=-1
+    bestX=0
+    bestY=0
+    bestDoubel=-1
+
+    for x in range(minX,maxX,gridStep):
+        for y in range(minY,maxY,gridStep):
+            (value,angle1,angle2,angle3,value1,value2,value3,x,y,doubel)=CalcScore(field,x,y,angleStep)
+            if(bestValue<value):
+                bestValue=value
+                bestAngle1=angle1
+                bestAngle2=angle2
+                bestAngle3=angle3
+                bestValue1=value1
+                bestValue2=value2
+                bestValue3=value3
+                bestX=x
+                bestY=y
+                bestDoubel=doubel
+    return [bestValue,bestAngle1,bestAngle2,bestAngle3,bestValue1,bestValue2,bestValue3,bestX,bestY,bestDoubel]
+
+#分岐点位置を与えたときにその位置を評価する
+@jit(nopython=True)
+def CalcScore(field,x,y,angleStep):
+    doubel_max = 0
+    angleData=getAngleData(field,x,y,angleStep)
+
+    count = np.count_nonzero(angleData > 0,0)[1]
+    angleData = angleData[np.argsort(angleData[:,1])][::-1]
+    angle270Score = 0
+
+    bestValue=-10000
+    bestAngle1=-1
+    bestAngle2=-1
+    bestAngle3=-1
+    bestValue1=-1
+    bestValue2=-1
+    bestValue3=-1
+    bestX=0
+    bestY=0
+    bestDoubel=-1
+
+    for i in range(count):
+        if(angleData[i,0] == 270):
+            angle270Score = angleData[i,1]
+            break
+
+    for i in range(count):
+        angle1 = int(angleData[i,0])            
+        for j in range(i,count):
+            angle2 = int(angleData[j,0])
+            if(CalcDiffAngle(angle1,angle2) < 60):continue
+            if(angleData[i,1] + angleData[j,1] > doubel_max):
+                doubel_max = angleData[i,1] + angleData[j,1]
+            if(angleData[i,1] + angleData[j,1] + angleData[0,1] < bestValue):break
+            angle3 = 270
+            if(CalcDiffAngle(angle2,angle3) < 60 or CalcDiffAngle(angle1,angle3) < 60):continue
+
+            value = angleData[i,1] + angleData[j,1] + angle270Score
+            if(bestValue<value):
+                bestValue=value
+                bestAngle1=angle1
+                bestAngle2=angle2
+                bestAngle3=angle3
+                bestValue1=angleData[i,1]
+                bestValue2=angleData[j,1]
+                bestValue3=angle270Score
+                bestX=x
+                bestY=y
+                bestDoubel=doubel_max
+                break
+    return [bestValue,bestAngle1,bestAngle2,bestAngle3,bestValue1,bestValue2,bestValue3,bestX,bestY,bestDoubel]
+
+#ある(x,y)に対してすべての角度に対する評価値のlistを返す
+@jit(f8[:,:](f8[:,:],i8,i8,i8))
+def getAngleData(field,x,y,angleStep):
+    height, width = field.shape
+
+    cable_size = 24
+    num = int(360 / angleStep)
+    angleData = np.zeros((num,2))
+
+    i = -1
+    while i < num-1:
+        i = i + 1
+        angleData[i,0] = angleStep * i
+                
+        cos = math.cos(math.radians(angleStep * i))
+        sin = math.sin(math.radians(angleStep * i))
+
+        r = 0
+        while True:
+            r+=1
+            originalX = x + r * cos
+            originalY = y + r * sin
+            if(originalX >= width or originalX < 0 or originalY >= height or originalY < 0):
+                break
+
+            for direction in [-1,1]:
+                for thick in range(0,direction*cable_size,direction):
+                    X = int(originalX - thick * sin)#cos(theta+90)
+                    if(X >= width or X < 0):break
+                    Y = int(originalY + thick * cos)#sin(theta+90)
+                    if(Y >= height or Y < 0):break
+                    if(field[X,Y] == 0):continue
+                    angleData[i,1]+=1 - abs(float(thick) / cable_size) ** 2
+
+    return angleData
+
+
+#一次式で最小二乗近似する
 def reg1dim(x, y):
     try:
         n = len(x)
@@ -27,6 +275,7 @@ def reg1dim(x, y):
     return a, b
 
 #unitの倍数になるようvalueを調節する
+@jit(i8(f8,f8))
 def getUnitValue(value,unit):
     try:
         if(value > 0):    return int((value + unit / 2) / unit) * unit
@@ -37,161 +286,15 @@ def getUnitValue(value,unit):
 
 
 #2つの角度の差を求める
-@numba.jit(nopython=True)
+@jit(f8(f8,f8))
 def CalcDiffAngle(angle1,angle2):
     ret = min(360,abs(angle1 - angle2))
     ret = min(ret,abs(angle1 - angle2 - 360))
     ret = min(ret,abs(angle1 - angle2 + 360))
     return ret
 
-#分岐点位置を与えたときにその位置を評価する
-@numba.jit(nopython=True)
-def CalcScore(field,x,y,anglestep):
-    height, width = field.shape
-    maxValue = 0
-    maxValue1 = 0
-    maxValue2 = 0
-    maxValue3 = 0
-    maxX = -1
-    maxY = -1
-    maxAngle1 = -1
-    maxAngle2 = -1
-    maxAngle3 = -1
-    step = 12
-    cable_size = 12
-    checkSize = 100
-    W = math.floor(checkSize / 2)
-
-    doubel_max = 0
-    topAngle1 = 0
-    topAngle2 = 0
-    topAngle3 = 0
-
-    num = int(360 / anglestep)
-
-    angleData = np.zeros((num,2))
-
-    i = -1
-    while i < num:
-        i = i + 1
-        angleData[i,0] = anglestep * i
-                
-        cos = math.cos(math.radians(anglestep * i))
-        sin = math.sin(math.radians(anglestep * i))
-
-        r = 0
-        while True:
-            r+=1
-            originalX = x + r * cos
-            originalY = y + r * sin
-            if(originalX >= width or originalX < 0 or originalY >= height or originalY < 0):
-                break
 
 
-            for thick in range(0,-cable_size,-1):
-                X = int(originalX - thick * sin)#cos(theta+90)
-                if(X >= width or X < 0):break
-                Y = int(originalY + thick * cos)#sin(theta+90)
-                if(Y >= height or Y < 0):break
-                if(field[X,Y] == 0):continue
-                angleData[i,1]+=1 - abs(float(thick) / cable_size) ** 2
-
-            for thick in range(0,cable_size):
-                X = int(originalX - thick * sin)#cos(theta+90)
-                if(X >= width or X < 0):break
-                Y = int(originalY + thick * cos)#sin(theta+90)
-                if(Y >= height or Y < 0):break
-                if(field[X,Y] == 0):continue
-                angleData[i,1]+=1 - abs(float(thick) / cable_size) ** 2
-
-    count = np.count_nonzero(angleData > 0,0)[1]
-    angleData = angleData[np.argsort(angleData[:,1])][::-1]
-
-
-    angle270Score = 0
-    for i in range(count):
-        if(angleData[i,0] == 270):
-            angle270Score = angleData[i,1]
-            break
-
-    for i in range(count):
-        angle1 = int(angleData[i,0])            
-        for j in range(i,count):
-            angle2 = int(angleData[j,0])
-            if(CalcDiffAngle(angle1,angle2) < 60):continue
-            if(angleData[i,1] + angleData[j,1] > doubel_max):
-                doubel_max = angleData[i,1] + angleData[j,1]
-            if(angleData[i,1] + angleData[j,1] + angleData[0,1] < maxValue):break
-                    
-            angle3 = 270
-            if(CalcDiffAngle(angle2,angle3) < 60 or CalcDiffAngle(angle1,angle3) < 60):continue
-
-            value = angleData[i,1] + angleData[j,1] + angle270Score
-
-            if(value > maxValue):
-                maxValue = value
-                maxAngle1 = angle1
-                maxAngle2 = angle2
-                maxAngle3 = angle3
-                maxValue1 = angleData[i,1]
-                maxValue2 = angleData[j,1]
-                maxValue3 = angle270Score
-                            
-                break#ソートされているのでbreakしてOK
-    return [maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3,doubel_max]
-
-
-def Calc(img):
-    height, width, channels = img.shape[:3]
-    maxValue = 0
-    step = 12 * 2
-    field = np.where(np.any(img > 0,2) == 0,0,1)
-    maxX = 0
-    maxY = 0
-    maxAngle1 = -1
-    maxAngle2 = -1
-    maxAngle3 = -1
-    maxValue1 = -1
-    maxValue2 = -1
-    maxValue3 = -1
-    maxDoubel = -1
-    anglestep = 10
-    #ざっくり解を調べる
-    for x in range(0,width,step):
-        for y in range(0,height,step):
-            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,anglestep)
-            if(maxValue < value):
-                maxValue = value
-                maxAngle1 = angle1
-                maxAngle2 = angle2
-                maxAngle3 = angle3
-                maxValue1 = value1
-                maxValue2 = value2
-                maxValue3 = value3
-                maxX = x
-                maxY = y
-                maxDoubel = doubel
-
-    #解の周辺をさらに調べる
-    detailStep = 5
-    detailanglestep = 5
-    for x in range(maxX - step,maxX + step,detailStep):
-        for y in range(maxY - step,maxY + step,detailStep):
-            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,detailanglestep)
-            if(maxValue < value):
-                maxValue = value
-                maxAngle1 = angle1
-                maxAngle2 = angle2
-                maxAngle3 = angle3
-                maxValue1 = value1
-                maxValue2 = value2
-                maxValue3 = value3
-                maxX = x
-                maxY = y
-                maxDoubel = doubel
-
-
-    return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel]
 
 fortuneLog = [0,0,0,0,0]
 GammalAngleLog = [0,0,0,0,0]
@@ -366,146 +469,8 @@ def getRobotAngle(img,x,y,angle1,angle2,angle3,rotation):
 
     return (GammalAngle,TurnAngle,Rangle,Langle)
 
-def ImageReconition(depth_img,ir_img,rotation):
-    GammalAngle = 0
-    TurnAngle = 0
-    Rangle = 0
-    Langle = 0
-    
-    img =depth_img
-  
 
 
-    debugMode = False
-    if debugMode:
-        return [img,0,0,0,GammalAngle,TurnAngle,Rangle,Langle,XLog]
-
-    #水平方向角度の取得
-    (y,x,angle1,angle2,angle3,value1,value2,value3,doubel_max) = Calc(img)
-    x = int(x)
-    y = int(y)
-
-    #仰角の取得
-    (topAngle1,topAngle2,topAngle3) = getTopAngle(img,y,x,angle1,angle2,angle3)
-
-    #信頼度の導出
-    fortunity = min((value1,value2,value3)) / max(1,value1 + value2 + value3)
-    fortunity = 1 - doubel_max / max(1,value1 + value2 + value3)
-    fortuneLog.pop(0)
-    fortuneLog.append(fortunity)
-    fortunity = sum(fortuneLog) / 5
-    print("angle1",angle1,angle2,angle3)
-    (GammalAngle,TurnAngle,Rangle,Langle) = getRobotAngle(img,y,x,angle1,angle2,angle3,rotation)
-    print("Newangle1",GammalAngle,TurnAngle,Rangle,Langle)
-
-    GammalAngleLog.pop(0)
-    GammalAngleLog.append(GammalAngle)
-    GammalAngle = sum(GammalAngleLog) / 5
-
-    TurnAngleLog.pop(0)
-    TurnAngleLog.append(TurnAngle)
-    TurnAngle = sum(TurnAngleLog) / 5
-
-    RangleLog.pop(0)
-    RangleLog.append(Rangle)
-    Rangle = sum(RangleLog) / 5
-
-    LangleLog.pop(0)
-    LangleLog.append(Langle)
-    Langle = sum(LangleLog) / 5
-
-    GammalAngle = getUnitValue(GammalAngle,5)
-    TurnAngle = getUnitValue(TurnAngle,5)
-    Rangle = getUnitValue(Rangle,5)
-    Langle = getUnitValue(Langle,5)
-
-    #描画など
-    print(x,y,GammalAngle,TurnAngle,Rangle,Langle,'{:.2f}'.format(fortunity))
-
-    thickness = 1
-    try:
-        if(fortunity >= 0.1 or True):
-            theta = angle1
-            img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(255,100,100,50),thickness=thickness)
-            img = cv2.putText(img,str(int(topAngle1)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(255,100,100))
-            theta = angle2
-            img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(100,255,100,50),thickness=thickness)#緑
-            img = cv2.putText(img,str(int(topAngle2)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,255,100))
-            theta = angle3
-            img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(100,100,255,50),thickness=thickness)
-            img = cv2.putText(img,str(int(topAngle3)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,100,255))
-            img = cv2.putText(img,str(int(topAngle1)) + "/" + str(int(topAngle2)) + "/" + str(int(topAngle3)),(0,100),cv2.FONT_HERSHEY_PLAIN,3,(255,255,255))
-        else:
-            for theta in [angle1]:
-                img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(255,0,0,50),thickness=thickness)
-    except:
-        print("error")
-
-
-    XLog.pop(0)
-    XLog.append(x)
-    return [img,x,y,fortunity,GammalAngle,TurnAngle,Rangle,Langle,XLog]
-
-def IR(color_image,depth_image,ir_image,robot_rotation):
-
-    minDistance = 0
-    maxDistance = 600
-
-    GammalAngle = 0
-    TurnAngle = 0
-    Rangle = 0
-    Langle = 0
-
-    color_image = cv2.resize(color_image, (640, 360))
-    depth_image = cv2.resize(depth_image, (640, 360))
-    ir_image = cv2.resize(ir_image, (640, 360))
-    color_image = color_image[0:320,320:640]
-    depth_image = depth_image[0:320,320:640]
-    ir_image = ir_image[0:320,320:640]
-
-    #depth情報をカラーマップとして表現する
-    depth_colormap = cv2.cvtColor(cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.08), cv2.COLORMAP_JET),cv2.COLOR_BGR2RGB)
-    #_,depth_colormap=cv2.threshold(depth_colormap,50,255,cv2.THRESH_TOZERO)
-
-    #depth情報から一定距離以上離れたものを除去したものをグレースケールで描画する
-    depth_image = np.where(depth_image > maxDistance,0,depth_image)#一定以上の距離のデータは無視
-    depth_view = cv2.cvtColor((cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.08,beta =0), cv2.COLORMAP_JET)),cv2.COLOR_RGB2GRAY)
-    _,depth_view = cv2.threshold(depth_view,38,255,cv2.THRESH_TOZERO)
-    depth_view = cv2.cvtColor(depth_view,cv2.COLOR_GRAY2RGB)
-
-    ir_image = cv2.cvtColor(ir_image,cv2.COLOR_GRAY2RGB)
-
-
-    #for x in range(320):
-        #for y in range(320):
-            #if(depth_image[x][y]>0):
-                #ir_image[x][y]=255;
-
-
-    width = 320
-    height = 320
-
-    start_position = [int(width / 2),int(height / 2)]
-    threshold = 127#分割領域の閾値
-    pix = ir_image[start_position[0]][start_position[1]][0]#グループ化させる領域の画素値
-
-    frag = np.zeros(ir_image.shape)#領域分割フラグ
-    ir_image2 = ir_image.copy()
-
-    # 8 Neighborhood
-    directs = [(-1,-1), (0,-1), (1,-1), (1,0), (1,1), (0,1),(-1,1),(-1,0)]
-    visited = np.zeros(shape=(ir_image.shape), dtype=np.uint8)
-    seeds = []
-    ir_image = cv2.medianBlur(ir_image,9)
-
-   # double_image = np.hstack((depth_view,ir_image))
-    double_image = np.hstack((ir_image2,ir_image))
-    #image_pil = Image.fromarray(cv2.cvtColor(double_image,cv2.COLOR_BGR2RGB))
-    ##BGRなのでRGBに変換
-    result=ImageReconition(depth_view,ir_image,robot_rotation)
-    double_image = np.hstack((result[0],ir_image))
-
-    return [double_image,0,0,0,GammalAngle,TurnAngle,Rangle,Langle,XLog]
 
 
 def ResetLog():

@@ -85,7 +85,7 @@ class RealSense(object):
         self.timerlabel.configure(text="{0} ms".format(timer))
         self.branchdata.append([result[1],result[2],timer])
 
-        print("★",'{:.2f}'.format(result[3]),result[1],result[8])
+        #print("★",'{:.2f}'.format(result[3]),result[1],result[8])
         if(result[3] > 0.13 and result[1] < 150):
             print("■■■■■分岐",result[4],result[5],result[6],result[7],result[8])
             if(self.data["v_auto"].get()):
