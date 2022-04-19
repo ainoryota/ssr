@@ -11,6 +11,7 @@ import numba
 import csv
 from numba import jit, f8, i8, b1, void
 
+@jit(nopython=False)
 def IR(color_image,depth_image,ir_image,robot_rotation):
 
     minDistance = 0
@@ -48,6 +49,7 @@ def IR(color_image,depth_image,ir_image,robot_rotation):
     Langle = result[7]
 
     return [double_image,x,y,fortunity,GammalAngle,TurnAngle,Rangle,Langle,XLog]
+
 
 
 def ImageReconition(depth_img,ir_img,rotation):
@@ -116,12 +118,11 @@ def ImageReconition(depth_img,ir_img,rotation):
     XLog.append(x)
     return [img,x,y,fortunity,GammalAngle,TurnAngle,Rangle,Langle,XLog]
 
+@jit(nopython=False)
 def getTurnAngle(img):
     height, width, channels = img.shape[:3]
     #field=img
     field = np.where(np.any(img > 0,2) == 0,0,1)
-
-
 
     value=-10000
     angle1=-1
@@ -141,6 +142,7 @@ def getTurnAngle(img):
 
     return (value,angle1,angle2,angle3,value1,value2,value3,int(x),int(y),doubel) 
 
+@jit(nopython=False)
 def solveOptimizedScore(field,minX,maxX,minY,maxY,gridStep,angleStep):
     bestValue=-10000
     bestAngle1=-1
@@ -153,8 +155,8 @@ def solveOptimizedScore(field,minX,maxX,minY,maxY,gridStep,angleStep):
     bestY=0
     bestDoubel=-1
 
-    for x in range(minX,maxX,gridStep):
-        for y in range(minY,maxY,gridStep):
+    for x in range(int(minX),int(maxX),gridStep):
+        for y in range(int(minY),int(maxY),gridStep):
             (value,angle1,angle2,angle3,value1,value2,value3,x,y,doubel)=CalcScore(field,x,y,angleStep)
             if(bestValue<value):
                 bestValue=value
@@ -170,7 +172,7 @@ def solveOptimizedScore(field,minX,maxX,minY,maxY,gridStep,angleStep):
     return [bestValue,bestAngle1,bestAngle2,bestAngle3,bestValue1,bestValue2,bestValue3,bestX,bestY,bestDoubel]
 
 #分岐点位置を与えたときにその位置を評価する
-@jit(nopython=True)
+@jit(nopython=False)
 def CalcScore(field,x,y,angleStep):
     doubel_max = 0
     angleData=getAngleData(field,x,y,angleStep)
@@ -222,7 +224,7 @@ def CalcScore(field,x,y,angleStep):
     return [bestValue,bestAngle1,bestAngle2,bestAngle3,bestValue1,bestValue2,bestValue3,bestX,bestY,bestDoubel]
 
 #ある(x,y)に対してすべての角度に対する評価値のlistを返す
-@jit(f8[:,:](f8[:,:],i8,i8,i8))
+@jit(nopython=False)
 def getAngleData(field,x,y,angleStep):
     height, width = field.shape
 
@@ -303,6 +305,7 @@ RangleLog = [0,0,0,0,0]
 LangleLog = [0,0,0,0,0]
 XLog = [0,0,0,0,0]
 
+@jit(nopython=False)
 def getTopAngle(img,x,y,angle1,angle2,angle3):
     #maxAngle1,2,3,x,yを採用した際に各方向を実現する最小二乗法近似の結果
     minDistance = 100
@@ -359,7 +362,6 @@ def getTopAngle(img,x,y,angle1,angle2,angle3):
     topAngle2 = math.degrees(math.atan(a2))
     topAngle3 = math.degrees(math.atan(a3))
     return [topAngle1,topAngle2,topAngle3]
-
 
 def getRobotAngle(img,x,y,angle1,angle2,angle3,rotation):
     GammalAngle = 0
