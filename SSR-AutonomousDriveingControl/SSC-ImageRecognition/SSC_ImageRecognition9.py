@@ -37,6 +37,7 @@ def IR(color_image,depth_image,ir_image,robot_rotation):
     depth_image = cv2.medianBlur(depth_image,9)
     ir_image = cv2.medianBlur(ir_image,9)
     
+
     #画像処理
     result = ImageReconition(depth_image,ir_image,robot_rotation)
     double_image = np.hstack((result[0],ir_image))
@@ -50,15 +51,43 @@ def IR(color_image,depth_image,ir_image,robot_rotation):
 
     return [double_image,x,y,fortunity,GammalAngle,TurnAngle,Rangle,Langle,XLog]
 
+def cv2pil(image):
+    ''' OpenCV型 -> PIL型 '''
+    new_image = image.copy()
+    if new_image.ndim == 2:  # モノクロ
+        pass
+    elif new_image.shape[2] == 3:  # カラー
+        new_image = cv2.cvtColor(new_image, cv2.COLOR_BGR2RGB)
+    elif new_image.shape[2] == 4:  # 透過
+        new_image = cv2.cvtColor(new_image, cv2.COLOR_BGRA2RGBA)
+    new_image = Image.fromarray(new_image)
+    return new_image
 
+def IRRecognition(ir_image):
+    ir_image = cv2.medianBlur(ir_image,9)
+    #画像処理
+
+
+    result = ImageReconition(ir_image,ir_image,0)
+    double_image = np.hstack((result[0],ir_image))
+    x = result[1]
+    y = result[2]
+    fortunity = result[3]
+    GammalAngle = result[4]
+    TurnAngle = result[5]
+    Rangle = result[6]
+    Langle = result[7]
+    cv2.imshow("title",double_image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 def ImageReconition(depth_img,ir_img,rotation):
-    img = depth_img
+    img = ir_img
 
     #水平方向角度の取得
     (value,angle1,angle2,angle3,value1,value2,value3,y,x,doubel_max) = getTurnAngle(img)
 
-
+    print(angle1,angle2,angle3,value)
 
     #仰角の取得
     (topAngle1,topAngle2,topAngle3) = getTopAngle(img,y,x,angle1,angle2,angle3)
@@ -106,6 +135,7 @@ def ImageReconition(depth_img,ir_img,rotation):
             theta = angle3
             img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(100,100,255,50),thickness=thickness)
             img = cv2.putText(img,str(int(topAngle3)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,100,255))
+            
             img = cv2.putText(img,str(int(topAngle1)) + "/" + str(int(topAngle2)) + "/" + str(int(topAngle3)),(0,100),cv2.FONT_HERSHEY_PLAIN,3,(255,255,255))
         else:
             for theta in [angle1]:
@@ -121,8 +151,8 @@ def ImageReconition(depth_img,ir_img,rotation):
 @jit(nopython=False)
 def getTurnAngle(img):
     height, width, channels = img.shape[:3]
-    #field=img
-    field = np.where(np.any(img > 0,2) == 0,0,1)
+    field = img[:,:,0]
+    #field = np.where(np.any(img > 0,2) == 0,0,1)
 
     value=-10000
     angle1=-1
@@ -138,6 +168,7 @@ def getTurnAngle(img):
 
     #解を調べる
     (value,angle1,angle2,angle3,value1,value2,value3,x,y,doubel) = solveOptimizedScore(field,0,width,0,height,24,10)
+    print("aaaa",x,y,width,height)
     (value,angle1,angle2,angle3,value1,value2,value3,x,y,doubel) = solveOptimizedScore(field,x-24,x+24,y-24,y+24,5,5)
 
     return (value,angle1,angle2,angle3,value1,value2,value3,int(x),int(y),doubel) 
@@ -158,6 +189,7 @@ def solveOptimizedScore(field,minX,maxX,minY,maxY,gridStep,angleStep):
     for x in range(int(minX),int(maxX),gridStep):
         for y in range(int(minY),int(maxY),gridStep):
             (value,angle1,angle2,angle3,value1,value2,value3,x,y,doubel)=CalcScore(field,x,y,angleStep)
+            #print(x,y,value,bestValue)
             if(bestValue<value):
                 bestValue=value
                 bestAngle1=angle1
@@ -221,6 +253,7 @@ def CalcScore(field,x,y,angleStep):
                 bestY=y
                 bestDoubel=doubel_max
                 break
+    print("■",bestValue,bestX,bestY,bestAngle1,bestAngle2,bestAngle3,bestValue1,bestValue2,bestValue3)
     return [bestValue,bestAngle1,bestAngle2,bestAngle3,bestValue1,bestValue2,bestValue3,bestX,bestY,bestDoubel]
 
 #ある(x,y)に対してすべての角度に対する評価値のlistを返す
@@ -241,6 +274,7 @@ def getAngleData(field,x,y,angleStep):
         sin = math.sin(math.radians(angleStep * i))
 
         r = 0
+        counter=0
         while True:
             r+=1
             originalX = x + r * cos
@@ -250,13 +284,42 @@ def getAngleData(field,x,y,angleStep):
 
             for direction in [-1,1]:
                 for thick in range(0,direction*cable_size,direction):
-                    X = int(originalX - thick * sin)#cos(theta+90)
-                    if(X >= width or X < 0):break
-                    Y = int(originalY + thick * cos)#sin(theta+90)
-                    if(Y >= height or Y < 0):break
-                    if(field[X,Y] == 0):continue
-                    angleData[i,1]+=1 - abs(float(thick) / cable_size) ** 2
+                    X1 = int(x + r * cos - thick * sin)#cos(theta+90)
+                    Y1 = int(y + r * sin + thick * cos)#sin(theta+90)
+                    if(X1 >= width or X1 < 0):break
+                    if(Y1 >= height or Y1 < 0):break
+                    if(field[X1,Y1] == 0):continue
 
+                    X2 = int(x + (r-1) * cos - thick * sin)#cos(theta+90)
+                    Y2 = int(y + (r-1) * sin + thick * cos)#sin(theta+90)
+                    if(X2 >= width or X2 < 0):break
+                    if(Y2 >= height or Y2 < 0):break
+
+                    a=field[X1,Y1]
+                    b=field[X2,Y2]
+                        
+                    if(a>b):
+                        c=a-b
+                    else:
+                        c=b-a
+                    
+                    counter+=(1 - abs(float(thick) / cable_size) ** 2)
+                    #c=255-a
+                    #print(x,y,X1,Y1,c)
+                    #angleData[i,1]+=(1 - abs(float(thick) / cable_size) ** 2)
+                    angleData[i,1]+=(1 - abs(float(thick) / cable_size) ** 2)*(255-c)
+                    #if(x==24 and y==168 and (angleStep*i==30 or angleStep*i==330)):
+                        #print("AAAAAAA:",(1 - abs(float(thick) / cable_size) ** 2)*(255-c))
+                        #print("NOW!",angleStep,int(field[X1,Y1]),int(field[X2,Y2]),int(field[X1,Y1])-int(field[X2,Y2]),X1,Y1)
+
+                    #print(angleData[i,0],(1 - abs(float(thick) / cable_size) ** 2)*(255-abs(field[X1,Y1]-field[X2,Y2])))
+                    #print((1 - abs(float(thick) / cable_size) ** 2)*(255-abs(field[X1,Y1]-field[X2,Y2])))
+        
+        if(counter!=0):
+            angleData[i,1]/=counter
+
+        print(x,y,angleStep * i,i,angleData[i,1])
+        
     return angleData
 
 
@@ -321,12 +384,12 @@ def getTopAngle(img,x,y,angle1,angle2,angle3):
     topAngle3 = 0
     
     
-    angle1x = np.zeros(1)
-    angle1y = np.zeros(1)
-    angle2x = np.zeros(1)
-    angle2y = np.zeros(1)
-    angle3x = np.zeros(1)
-    angle3y = np.zeros(1)
+    angle1x = np.empty(1)
+    angle1y = np.empty(1)
+    angle2x = np.empty(1)
+    angle2y = np.empty(1)
+    angle3x = np.empty(1)
+    angle3y = np.empty(1)
 
     
     for i in range(3):
@@ -426,7 +489,8 @@ def getRobotAngle(img,x,y,angle1,angle2,angle3,rotation):
     a2,b2 = reg1dim(Data2x,Data2y)
 
     g = 9.8
-    div = min(g,rotation.z) / g
+    #div = min(g,rotation.z) / g
+    div = min(g,0) / g
     tieAngle = math.degrees(math.acos(div))
     #print("仰角:",math.degrees(math.atan(a1)) ,
     #tieAngle,"/旋回角:",-math.degrees(math.atan(a2)),"/R角:",newAngles[1] - 90 -
