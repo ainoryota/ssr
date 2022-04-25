@@ -26,8 +26,8 @@ from OutputController import OutputController
 from multiprocessing import Process, Manager
 
 def startSystem(stepQueue):
-    #OutputController().setStepQueue(stepQueue)
-    #system = System()
+    OutputController().setStepQueue(stepQueue)
+    system = System()
     robot = RealRobot()
     form = Form(robot)
 
@@ -35,12 +35,12 @@ if __name__ == '__main__':
     print("Start") 
     with Manager() as manager:
         stepQueue = manager.Queue()
-        #p1 = Process(target=OutputDone, args=(stepQueue,))
+        p1 = Process(target=OutputDone, args=(stepQueue,))
         p2 = Process(target=startSystem,args=(stepQueue,))
-        #p1.start()
+        p1.start()
         p2.start()
 
-        #p1.join()
+        p1.join()
         p2.join()
     quit()
             
