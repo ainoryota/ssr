@@ -373,9 +373,9 @@ def ImageReconition(original_img,rotation):
     Rangle = 0
     Langle = 0
 
-    debugMode = False
+    debugMode = True
     if debugMode:
-        return [img,0,0,0,GammalAngle,TurnAngle,Rangle,Langle]
+        return [img,0,0,0,GammalAngle,TurnAngle,Rangle,Langle,XLog]
 
     img = original_img[0:360, 280:640]
     original_img = original_img[0:360, (640 + 280):1280]

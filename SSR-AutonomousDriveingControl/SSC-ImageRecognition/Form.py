@@ -79,7 +79,7 @@ class Form(object):
         self.data["v4"].set(False)
         self.data["v5"].set(True) 
         self.data["v6"].set(True)
-        self.data["v7"].set(True)
+        self.data["v7"].set(False)
         self.data["v8"].set(False)
         self.data["v_auto"].set(False)
 

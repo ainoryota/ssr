@@ -66,7 +66,7 @@ class RealSense(object):
 
         
 
-        result=IR(color_image,depth_image,ir_image1,accel)
+        result=IR(color_image,depth_image,ir_image1,accel,False)
 
         testImg = result[0]
         #testImg=color_image
@@ -85,7 +85,7 @@ class RealSense(object):
         self.timerlabel.configure(text="{0} ms".format(timer))
         self.branchdata.append([result[1],result[2],timer])
 
-        #print("★",'{:.2f}'.format(result[3]),result[1],result[8])
+        print("★",'{:.2f}'.format(result[3]),result[1],result[8])
         if(result[3] > 0.13 and result[1] < 150):
             print("■■■■■分岐",result[4],result[5],result[6],result[7],result[8])
             if(self.data["v_auto"].get()):

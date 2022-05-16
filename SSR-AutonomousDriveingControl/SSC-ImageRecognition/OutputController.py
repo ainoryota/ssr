@@ -35,10 +35,10 @@ class OutputController(object):
 
     def insertOrder(self,order):
         self.orderList.insert(0,order)
-        print("Order Set:",order)
+        #print("Order Set:",order)
 
     def write(self,command,timer):
-        print("Warn: Debug Command is used")
+        #print("Warn: Debug Command is used")
         self.serial.write(command)
 
     def pushStep(self):
@@ -55,7 +55,7 @@ def OutputDone(stepQueue):
             time.sleep(0.1)
             continue
         orderList = stepQueue.get()
-        print("Start Output:",len(orderList),"datas")
+        #print("Start Output:",len(orderList),"datas")
 
 
         timer = 0
@@ -65,44 +65,44 @@ def OutputDone(stepQueue):
             timer = data.delay + data.sleepTime
 
             if(isinstance(data,InitOrder)):#初期化に関する司令を1つのみ処理
-                print("　Init",data)
+                #print("　Init",data)
                 output.outputInit(data)
 
             elif(isinstance(data,PosOrder)):#位置に関する司令を複数個同時に処理
                 dataList = [data]
                 while(len(orderList) > 0 and isinstance(orderList[-1],PosOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
-                print("　Move Pos:",len(dataList),"motors")
+                #print("　Move Pos:",len(dataList),"motors")
                 output.outputPos(dataList)
 
             elif(isinstance(data,VelocityOrder)):#速度に関する司令を複数個同時に処理
                 dataList = [data]
                 while(len(orderList) > 0 and isinstance(orderList[-1],VelocityOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
-                print("　Move Velocity:",len(dataList),"motors")
+                #print("　Move Velocity:",len(dataList),"motors")
                 output.outputVelocity(dataList)
 
             elif(isinstance(data,MotorModeOrder)):#ノーマルモードへの変更に関する司令を複数個同時に処理
                 dataList = [data]
                 while(len(orderList) > 0 and isinstance(orderList[-1],MotorModeOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
-                print("　Set MotorMode:",len(dataList),"motors")
+                #print("　Set MotorMode:",len(dataList),"motors")
                 output.setMotorMode(dataList)
 
             elif(isinstance(data,ResetMotorOrder)):#モータのリセット
                 dataList = [data]
                 while(len(orderList) > 0 and isinstance(orderList[-1],ResetMotorOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
-                print("　Reset Motor:",len(dataList),"motors")
+                #print("　Reset Motor:",len(dataList),"motors")
                 output.resetMotor(dataList)
 
             elif(isinstance(data,ResetEncoderOrder)):#エンコーダのリセット
                 dataList = [data]
                 while(len(orderList) > 0 and isinstance(orderList[-1],ResetEncoderOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
-                print("　Reset Encoder:",len(dataList),"motors")
+                #print("　Reset Encoder:",len(dataList),"motors")
                 output.resetEncoder(dataList)
-        print("End Output")
+        #print("End Output")
                                                 
 class MotorMode(IntEnum):
     PosNormal=0x00
@@ -118,7 +118,7 @@ class MotorMode(IntEnum):
         
 class Serial(object):
     def __init__(self):
-        print("Open Serial Port")
+        #print("Open Serial Port")
         if(platform.system() != "Windows"):
             self.serial = serial.Serial('/dev/ttyUSB0',115200)    
         else:
@@ -137,7 +137,7 @@ class Serial(object):
         else:
             print("statusの値が不正")
 
-        print("　　id:",order.id,"mode",order.mode)
+        #print("　　id:",order.id,"mode",order.mode)
 
                 #        Size CMD OP Data ADR CNT
         list1 = [0X08,0X04,0X00,order.id,data1,0X28,0X01]#制御モードの変更
@@ -161,7 +161,7 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
-            print("　　id:",data.id,"pos:",data.pos)
+            #print("　　id:",data.id,"pos:",data.pos)
             dataList+=[data.id,(0X10000 + int(data.pos * 100)) & 0XFF,((0X10000 + int(data.pos * 100)) // 256) & 0XFF]
             sleepTime = max(sleepTime,data.sleepTime)
    
@@ -177,7 +177,7 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
-            print("　　id:",data.id,"pos:",data.velocity)
+            #print("　　id:",data.id,"pos:",data.velocity)
             dataList+=[data.id,(0X10000 + int(data.velocity * 100)) & 0XFF, ((0X10000 + int(data.velocity * 100)) // 256) & 0XFF]
             sleepTime = max(sleepTime,data.sleepTime)
 
@@ -194,7 +194,7 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
-            print("　　id:",data.id,"motorMode:",data.motorMode)
+            #print("　　id:",data.id,"motorMode:",data.motorMode)
             dataList+=[data.id,int(data.motorMode)]
             sleepTime = max(sleepTime,data.sleepTime)
 
@@ -211,7 +211,7 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
-            print("　　id:",data.id)
+            #print("　　id:",data.id)
             dataList+=[data.id,0x00,0x00,0x00,0x00]
             sleepTime = max(sleepTime,data.sleepTime)
 
@@ -230,7 +230,7 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
-            print("　　id:",data.id)
+            #print("　　id:",data.id)
             dataList+=[data.id]
             sleepTime = max(sleepTime,data.sleepTime)
 
