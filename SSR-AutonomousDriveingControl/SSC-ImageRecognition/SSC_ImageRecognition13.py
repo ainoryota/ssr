@@ -479,24 +479,20 @@ def IR(color_image,depth_image,ir_image1,ir_image2,robot_rotation,extMode=True):
 
     
 
-
-    color_image = cv2.resize(color_image, (320, 180))
-    depth_image = cv2.resize(depth_image, (320, 180))
-    ir_image1 = cv2.resize(ir_image1, (320, 180))
-    ir_image2 = cv2.resize(ir_image2, (320, 180))
+    w=320
+    h=180
+    color_image = cv2.resize(color_image, (w,h))
+    depth_image = cv2.resize(depth_image, (w,h))
+    ir_image1 = cv2.resize(ir_image1, (w,h))
+    ir_image2 = cv2.resize(ir_image2, (w,h))
     ir_image1=cv2.cvtColor(ir_image1,cv2.COLOR_GRAY2RGB)
     ir_image2=cv2.cvtColor(ir_image2,cv2.COLOR_GRAY2RGB)
     depth_view = (cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.08,beta =0), cv2.COLORMAP_JET))
+    depth_image=np.where(depth_image>=OverDistance,OverDistance,depth_image)
     scale_depth=cv2.convertScaleAbs(depth_image, alpha=255/OverDistance,beta =0)
-
-    w=ir_image1.shape[1]
-    h=ir_image1.shape[0]
     depth_view=cv2.cvtColor(scale_depth,cv2.COLOR_GRAY2RGB)
-    ir_image1=ShiftTrim(ir_image1,-10,15)
 
-    ir_image=np.zeros(ir_image1.shape, dtype=np.uint8)
-    
-    ir_image+=depth_view
+    ir_image1=ShiftTrim(ir_image1,-10,15)
     
     result=[depth_view,0,00,0,0,0,0,0,0,0,0,0,0]
     return [np.vstack((np.hstack((color_image,depth_view)),np.hstack((ir_image1,depth_view)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
