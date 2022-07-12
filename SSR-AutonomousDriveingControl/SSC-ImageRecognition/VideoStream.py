@@ -48,6 +48,8 @@ class VideoStream(object):
             self.config.enable_stream(rs.stream.color, resolution[0], resolution[1], rs.format.bgr8, framerate)
             self.config.enable_stream(rs.stream.infrared, 1, resolution[0], resolution[1], rs.format.y8, framerate)
             self.config.enable_stream(rs.stream.infrared, 2, resolution[0], resolution[1], rs.format.y8, framerate)
+            self.align=rs.align(rs.stream.color)
+
         
         def start(self):
             if(self.USE_IMU):
@@ -67,10 +69,11 @@ class VideoStream(object):
                 while True:
                     # Wait for a coherent pair of frames: depth and color
                     vid_frames = self.vid_pipe.wait_for_frames()
-                    depth_frame = vid_frames.get_depth_frame()
-                    color_frame = vid_frames.get_color_frame()
-                    ir_frame1 = vid_frames.get_infrared_frame(1)
-                    ir_frame2 = vid_frames.get_infrared_frame(2)
+                    aligned_frames=self.align.process(vid_frames)
+                    depth_frame = aligned_frames.get_depth_frame()
+                    color_frame = aligned_frames.get_color_frame()
+                    ir_frame1 = aligned_frames.get_infrared_frame(1)
+                    ir_frame2 = aligned_frames.get_infrared_frame(2)
                     if not depth_frame or not color_frame:
                         continue
 

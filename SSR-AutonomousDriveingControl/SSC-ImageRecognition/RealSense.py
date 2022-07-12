@@ -1,4 +1,5 @@
 import time
+from turtle import width
 from VideoStream import VideoStream
 from PIL import Image,ImageTk #udo pip install pillow
 import tkinter as tk
@@ -12,16 +13,16 @@ from functools import partial
 import sys
 import tkinter as tk
 from PIL import Image,ImageTk #udo pip install pillow
-from SSC_ImageRecognition12 import ImageReconition
-from SSC_ImageRecognition12 import IR
-from SSC_ImageRecognition12 import ResetLog
+from SSC_ImageRecognition13 import ImageReconition
+from SSC_ImageRecognition13 import IR
+from SSC_ImageRecognition13 import ResetLog
 import math
 import pyrealsense2 as rs
 import numpy as np
 
 import sys
 from numba import jit
-from ctypes import windll
+from ctypes import alignment, windll
 
 
 
@@ -31,7 +32,7 @@ class RealSense(object):
         self.root = root
         self.br = branch
         self.data = data
-        self.vs = VideoStream()
+        self.vs = VideoStream((1280,720))
         time.sleep(1)
         self.vs.start();
 
@@ -43,8 +44,25 @@ class RealSense(object):
         self.il = tk.Label(self.root,image=testImgA)
         self.il.grid(row=3, column=4,columnspan=30,rowspan=10)
 
-        self.timerlabel = tk.Label(self.root,text="")
-        self.timerlabel.grid(row=33, column=7)
+        self.timerlabel = tk.Label(self.root,text="",anchor="w",width = 50)
+        self.timerlabel.grid(row=33, column=6,columnspan=5)
+
+        self.AccelLabelX = tk.Label(self.root,text="",anchor="w",width = 50)
+        self.AccelLabelX.grid(row=34, column=6,columnspan=5)
+        self.AccelLabelY = tk.Label(self.root,text="",anchor="w",width = 50)
+        self.AccelLabelY.grid(row=35, column=6,columnspan=5)
+        self.AccelLabelZ = tk.Label(self.root,text="",anchor="w",width = 50)
+        self.AccelLabelZ.grid(row=36, column=6,columnspan=5)
+
+
+        self.GyroLableX = tk.Label(self.root,text="",anchor="w",width = 50)
+        self.GyroLableX.grid(row=37, column=6,columnspan=5)
+        self.GyroLableY = tk.Label(self.root,text="",anchor="w",width = 50)
+        self.GyroLableY.grid(row=38, column=6,columnspan=5)
+        self.GyroLableZ = tk.Label(self.root,text="",anchor="w",width = 50)
+        self.GyroLableZ.grid(row=39, column=6,columnspan=5)
+
+
 
         self.branchdata = []
 
@@ -65,14 +83,13 @@ class RealSense(object):
 
 
         
-
-        result=IR(color_image,depth_image,ir_image1,accel,False)
+        print("color:",color_image.shape)
+        print("depth;",depth_image.shape)
+        print("IR1:",ir_image1.shape)
+        print("IR2:",ir_image2.shape)
+        result=IR(color_image,depth_image,ir_image1,ir_image2,accel,False)
 
         testImg = result[0]
-        #testImg=color_image
-        testImg = cv2.resize(testImg,dsize=(640,320))
-
-
         testImg = Image.fromarray(testImg)
         testImg = ImageTk.PhotoImage(testImg)
 
@@ -82,7 +99,13 @@ class RealSense(object):
         self.il.image = testImg
     
         timer = math.floor((time.time() - start) * 1000)
-        self.timerlabel.configure(text="{0} ms".format(timer))
+        self.AccelLabelX.configure(text="加速度X:{0:.2f}".format(accel.x))
+        self.AccelLabelY.configure(text="加速度Y:{0:.2f}".format(accel.y))
+        self.AccelLabelZ.configure(text="加速度Z:{0:.2f}".format(accel.z))
+        self.GyroLableX.configure(text="ジャイロX:{0:.2f}".format(gyro.x))
+        self.GyroLableY.configure(text="ジャイロY:{0:.2f}".format(gyro.y))
+        self.GyroLableZ.configure(text="ジャイロY:{0:.2f}".format(gyro.z))
+        self.timerlabel.configure(text="処理時間:{0} ms".format(timer))
         self.branchdata.append([result[1],result[2],timer])
 
         print("★",'{:.2f}'.format(result[3]),result[1],result[8])
