@@ -103,6 +103,10 @@ class Form(object):
         self.data["cb7"].grid(row = 2, column =6, padx = 5, pady = 5)
         self.data["cb8"].grid(row = 2, column =7, padx = 5, pady = 5)
 
+
+        self.data["scale"]=tk.Scale(self.root,orient=tk.HORIZONTAL,from_=0,to=100)
+        self.data["scale"].grid(row=32, column=5,columnspan=10,rowspan=1)
+
         ##１セット目
         #入力ウィンドウの作成
         self.data["entry1"]= tk.Entry(self.root,width = 25)
@@ -155,7 +159,7 @@ class Form(object):
         self.data["entry1"].delete(0,'end')
         self.data["entry1"].insert(0,'0_-15_75_45')
         self.data["entry2"].delete(0,'end')
-        self.data["entry2"].insert(0,'15_0_75_45')
+        self.data["entry2"].insert(0,'15_10_70_70')
         self.data["entry3"].delete(0,'end')
         self.data["entry3"].insert(0,'-15_0_40_10')
         self.data["entry4"].delete(0,'end')

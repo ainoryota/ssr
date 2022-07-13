@@ -32,7 +32,7 @@ class RealSense(object):
         self.root = root
         self.br = branch
         self.data = data
-        self.vs = VideoStream((1280,720))
+        self.vs = VideoStream((640,360))
         time.sleep(1)
         self.vs.start();
 
@@ -43,6 +43,8 @@ class RealSense(object):
         testImgA = ImageTk.PhotoImage(img)
         self.il = tk.Label(self.root,image=testImgA)
         self.il.grid(row=3, column=4,columnspan=30,rowspan=10)
+
+
 
         self.timerlabel = tk.Label(self.root,text="",anchor="w",width = 50)
         self.timerlabel.grid(row=33, column=6,columnspan=5)
@@ -87,7 +89,7 @@ class RealSense(object):
         print("depth;",depth_image.shape)
         print("IR1:",ir_image1.shape)
         print("IR2:",ir_image2.shape)
-        result=IR(color_image,depth_image,ir_image1,ir_image2,accel,False)
+        result=IR(color_image,depth_image,ir_image1,ir_image2,accel,False,self.data["scale"].get())
 
         testImg = result[0]
         testImg = Image.fromarray(testImg)
@@ -99,6 +101,7 @@ class RealSense(object):
         self.il.image = testImg
     
         timer = math.floor((time.time() - start) * 1000)
+
         self.AccelLabelX.configure(text="加速度X:{0:.2f}".format(accel.x))
         self.AccelLabelY.configure(text="加速度Y:{0:.2f}".format(accel.y))
         self.AccelLabelZ.configure(text="加速度Z:{0:.2f}".format(accel.z))

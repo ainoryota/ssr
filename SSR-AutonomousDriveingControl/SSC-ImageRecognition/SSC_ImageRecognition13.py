@@ -467,11 +467,52 @@ def ShiftTrim(image,Yshift,Xshift):
     #print(w,h,Xshift,Yshift)
     return image
 
-def IR(color_image,depth_image,ir_image1,ir_image2,robot_rotation,extMode=True):
+def cvpaste(img, imgback, x, y, angle, scale):  
+    # x and y are the distance from the center of the background image 
+
+    r = img.shape[0]
+    c = img.shape[1]
+    rb = imgback.shape[0]
+    cb = imgback.shape[1]
+    hrb=round(rb/2)
+    hcb=round(cb/2)
+    hr=round(r/2)
+    hc=round(c/2)
+
+    # Copy the forward image and move to the center of the background image
+    imgrot = np.zeros((rb,cb,3),np.uint8)
+    imgrot[hrb-hr:hrb+hr,hcb-hc:hcb+hc,:] = img[:hr*2,:hc*2,:]
+
+    # Rotation and scaling
+    M = cv2.getRotationMatrix2D((hcb,hrb),angle,scale)
+    imgrot = cv2.warpAffine(imgrot,M,(cb,rb))
+    # Translation
+    M = np.float32([[1,0,x],[0,1,y]])
+    imgrot = cv2.warpAffine(imgrot,M,(cb,rb))
+
+    # Makeing mask
+    imggray = cv2.cvtColor(imgrot,cv2.COLOR_BGR2GRAY)
+    ret, mask = cv2.threshold(imggray, 10, 255, cv2.THRESH_BINARY)
+    mask_inv = cv2.bitwise_not(mask)
+
+    # Now black-out the area of the forward image in the background image
+    img1_bg = cv2.bitwise_and(imgback,imgback,mask = mask_inv)
+
+    # Take only region of the forward image.
+    img2_fg = cv2.bitwise_and(imgrot,imgrot,mask = mask)
+
+    # Paste the forward image on the background image
+    print(img1_bg.shape)
+    print(img2_fg.shape)
+    imgpaste = cv2.add(img1_bg,img2_fg, dtype = cv2.CV_8U)
+
+    return imgpaste
+
+def IR(color_image,depth_image,ir_image1,ir_image2,robot_rotation,extMode=True,viewScale=50):
 
     minDistance = 0
     maxDistance = 600
-    OverDistance=1500
+    OverDistance=1000
     GammalAngle = 0
     TurnAngle = 0
     Rangle = 0
@@ -481,21 +522,39 @@ def IR(color_image,depth_image,ir_image1,ir_image2,robot_rotation,extMode=True):
 
     w=320
     h=180
+
+    x=17
+    y=0
+    angle=0
+    scale=1.4
+
     color_image = cv2.resize(color_image, (w,h))
+    #color_image = cvpaste(color_image, np.zeros((h,w,3)), x, y, angle, scale)
+
+    print(color_image)
+    print(color_image.shape)
+    print(type(color_image))
+
     depth_image = cv2.resize(depth_image, (w,h))
     ir_image1 = cv2.resize(ir_image1, (w,h))
     ir_image2 = cv2.resize(ir_image2, (w,h))
     ir_image1=cv2.cvtColor(ir_image1,cv2.COLOR_GRAY2RGB)
     ir_image2=cv2.cvtColor(ir_image2,cv2.COLOR_GRAY2RGB)
+
+    ir_image1 = cv2.resize(ir_image1, (w,h))
+    ir_image1 = cvpaste(ir_image1, np.zeros((h,w,3)), x, y, angle, scale)
+    ir_image2 = cv2.resize(ir_image2, (w,h))
+    ir_image2 = cvpaste(ir_image2, np.zeros((h,w,3)), x, y, angle, scale)
+
+
     depth_view = (cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.08,beta =0), cv2.COLORMAP_JET))
     depth_image=np.where(depth_image>=OverDistance,OverDistance,depth_image)
     scale_depth=cv2.convertScaleAbs(depth_image, alpha=255/OverDistance,beta =0)
-    depth_view=cv2.cvtColor(scale_depth,cv2.COLOR_GRAY2RGB)
+    #depth_view=cv2.cvtColor(scale_depth,cv2.COLOR_GRAY2RGB)
 
-    ir_image1=ShiftTrim(ir_image1,-10,15)
-    
     result=[depth_view,0,00,0,0,0,0,0,0,0,0,0,0]
-    return [np.vstack((np.hstack((color_image,depth_view)),np.hstack((ir_image1,depth_view)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
+    setImage=cv2.addWeighted(ir_image1, viewScale/100, depth_view, 1 - viewScale/100, 0)
+    return [np.vstack((np.hstack((color_image,depth_view)),np.hstack((ir_image1,setImage)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
 
     ir_image = cv2.cvtColor(ir_image,cv2.COLOR_GRAY2RGB)
 
