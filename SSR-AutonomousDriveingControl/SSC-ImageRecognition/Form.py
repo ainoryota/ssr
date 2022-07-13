@@ -157,7 +157,7 @@ class Form(object):
         self.data["branchEntry"].grid(row = 12, column =0, padx = 5, pady = 5)
         
         self.data["entry1"].delete(0,'end')
-        self.data["entry1"].insert(0,'0_-15_75_45')
+        self.data["entry1"].insert(0,'0_-15_60_45')
         self.data["entry2"].delete(0,'end')
         self.data["entry2"].insert(0,'15_10_70_70')
         self.data["entry3"].delete(0,'end')
