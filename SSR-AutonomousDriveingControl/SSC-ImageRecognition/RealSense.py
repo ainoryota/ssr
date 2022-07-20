@@ -1,5 +1,4 @@
 import time
-from turtle import width
 from VideoStream import VideoStream
 from PIL import Image,ImageTk #udo pip install pillow
 import tkinter as tk
@@ -85,10 +84,10 @@ class RealSense(object):
 
 
         
-        print("color:",color_image.shape)
-        print("depth;",depth_image.shape)
-        print("IR1:",ir_image1.shape)
-        print("IR2:",ir_image2.shape)
+        #print("color:",color_image.shape)
+        #print("depth;",depth_image.shape)
+        #print("IR1:",ir_image1.shape)
+        #print("IR2:",ir_image2.shape)
         result=IR(color_image,depth_image,ir_image1,ir_image2,accel,False,self.data["scale"].get())
 
         testImg = result[0]

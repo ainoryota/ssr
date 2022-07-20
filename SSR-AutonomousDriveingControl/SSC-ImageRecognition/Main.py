@@ -49,4 +49,3 @@ if __name__ == '__main__':
     timerlabel = 0
     branchdata = []
 
-    realsense_init()

@@ -37,9 +37,6 @@ class OutputController(object):
         self.orderList.insert(0,order)
         #print("Order Set:",order)
 
-    def write(self,command,timer):
-        #print("Warn: Debug Command is used")
-        self.serial.write(command)
 
     def pushStep(self):
         self.stepQueue.put(sorted(self.orderList,key=lambda x: -x.delay - (0.001 if isinstance(x,PosOrder) else 0.002 if  isinstance(x,VelocityOrder) else 0)))

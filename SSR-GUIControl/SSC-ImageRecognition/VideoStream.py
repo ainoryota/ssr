@@ -29,7 +29,7 @@ class VideoStream(object):
             #for  device in devices:
             #    print(device);
 
-            #print(rs.device_list)
+            #print(rs.device_list) 
             #print(rs.context.query_devices().size());
             #print(rs.context.query_devices()[0]);
             #print(rs.context.query_devices()[1]);

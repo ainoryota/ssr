@@ -502,17 +502,29 @@ def cvpaste(img, imgback, x, y, angle, scale):
     img2_fg = cv2.bitwise_and(imgrot,imgrot,mask = mask)
 
     # Paste the forward image on the background image
-    print(img1_bg.shape)
-    print(img2_fg.shape)
+    #print(img1_bg.shape)
+    #print(img2_fg.shape)
     imgpaste = cv2.add(img1_bg,img2_fg, dtype = cv2.CV_8U)
 
     return imgpaste
+
+def ScalarImage2RGB(img,ClipMinDistance,ClipMaxDistance):
+
+    img=np.where((img<=ClipMinDistance) | (img>=ClipMaxDistance),255,(np.floor(((img-ClipMinDistance).astype(np.float)*255/(ClipMaxDistance-ClipMinDistance)))).astype(np.uint8))
+    print(img)
+    result=np.dstack([img,img,img]).astype(np.uint8)
+    #for (y,x) in zip(idx[0], idx[1]):
+    #result[y][x]=np.array([255,255,255])
+    #hoge=img[y][x]
+    #result[y][x]=np.array([hoge,hoge,hoge])
+    return result
+
 
 def IR(color_image,depth_image,ir_image1,ir_image2,robot_rotation,extMode=True,viewScale=50):
 
     minDistance = 0
     maxDistance = 600
-    OverDistance=1000
+    OverDistance=3000
     GammalAngle = 0
     TurnAngle = 0
     Rangle = 0
@@ -531,9 +543,9 @@ def IR(color_image,depth_image,ir_image1,ir_image2,robot_rotation,extMode=True,v
     color_image = cv2.resize(color_image, (w,h))
     #color_image = cvpaste(color_image, np.zeros((h,w,3)), x, y, angle, scale)
 
-    print(color_image)
-    print(color_image.shape)
-    print(type(color_image))
+    #print(color_image)
+    #print(color_image.shape)
+    #print(type(color_image))
 
     depth_image = cv2.resize(depth_image, (w,h))
     ir_image1 = cv2.resize(ir_image1, (w,h))
@@ -547,8 +559,8 @@ def IR(color_image,depth_image,ir_image1,ir_image2,robot_rotation,extMode=True,v
     ir_image2 = cvpaste(ir_image2, np.zeros((h,w,3)), x, y, angle, scale)
 
 
-    depth_view = (cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.08,beta =0), cv2.COLORMAP_JET))
-    depth_image=np.where(depth_image>=OverDistance,OverDistance,depth_image)
+    depth_view=ScalarImage2RGB(depth_image,minDistance,OverDistance)
+
     scale_depth=cv2.convertScaleAbs(depth_image, alpha=255/OverDistance,beta =0)
     #depth_view=cv2.cvtColor(scale_depth,cv2.COLOR_GRAY2RGB)
 
