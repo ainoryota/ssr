@@ -10,6 +10,8 @@ import time
 from PIL import Image,ImageTk
 import numba
 import csv
+from KMeans import KMeans
+import matplotlib.pyplot as plt
 
 #一次式で最小事情近似する
 def reg1dim(x, y):
@@ -450,9 +452,9 @@ def ImageReconition(original_img,rotation):
     return [img,x,y,fortunity,GammalAngle,TurnAngle,Rangle,Langle,XLog]
 
 def ShiftTrim(image,Yshift,Xshift):
-    image=np.roll(image, (Yshift, Xshift), axis=(0, 1))
-    w=image.shape[1]
-    h=image.shape[0]
+    image = np.roll(image, (Yshift, Xshift), axis=(0, 1))
+    w = image.shape[1]
+    h = image.shape[0]
     if Xshift >= 0:
         image[:, :Xshift] = 0
     else:
@@ -468,20 +470,20 @@ def ShiftTrim(image,Yshift,Xshift):
     return image
 
 def cvpaste(img, imgback, x, y, angle, scale):  
-    # x and y are the distance from the center of the background image 
+    # x and y are the distance from the center of the background image
 
     r = img.shape[0]
     c = img.shape[1]
     rb = imgback.shape[0]
     cb = imgback.shape[1]
-    hrb=round(rb/2)
-    hcb=round(cb/2)
-    hr=round(r/2)
-    hc=round(c/2)
+    hrb = round(rb / 2)
+    hcb = round(cb / 2)
+    hr = round(r / 2)
+    hc = round(c / 2)
 
     # Copy the forward image and move to the center of the background image
     imgrot = np.zeros((rb,cb,3),np.uint8)
-    imgrot[hrb-hr:hrb+hr,hcb-hc:hcb+hc,:] = img[:hr*2,:hc*2,:]
+    imgrot[hrb - hr:hrb + hr,hcb - hc:hcb + hc,:] = img[:hr * 2,:hc * 2,:]
 
     # Rotation and scaling
     M = cv2.getRotationMatrix2D((hcb,hrb),angle,scale)
@@ -510,16 +512,22 @@ def cvpaste(img, imgback, x, y, angle, scale):
 
 #2ms
 def ScalarImage2RGB(img,ClipMinDistance,ClipMaxDistance):
-    rate=255.0/(ClipMaxDistance-ClipMinDistance)
-    img=np.where((img<=ClipMinDistance) | (img>=ClipMaxDistance),255,rate*(img-ClipMinDistance))
+    rate = 255.0 / (ClipMaxDistance - ClipMinDistance)
+    img = np.where((img <= ClipMinDistance) | (img >= ClipMaxDistance),255,rate * (img - ClipMinDistance))
     return np.dstack([img,img,img]).astype(np.uint8)
+
+def IsArea(value,min,max):
+    if(min<=value and value<=max):
+        return True;
+    else:
+        return False
 
 def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50):
 
     #索道などのパラメータ
-    minDistance = 0
+    minDistance = 50
     maxDistance = 600
-    OverDistance=3000
+    OverDistance = 3000
 
     #戻り値
     GammalAngle = 0
@@ -528,88 +536,87 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
     Langle = 0
 
     #画像の標準サイズ
-    w=320
-    h=180
+    w = 320
+    h = 180
 
     #赤外線カメラとdepthカメラの位地変換用定数
-    x=17
-    y=0
-    angle=0
-    scale=1.4
+    x = 13
+    angle = 0
+    scale = 1.4
 
     #リサイズとファイル形式の変換
     color_image = cv2.resize(color_image, (w,h))
     depth_scale = cv2.resize(depth_scale, (w,h))
     ir_image = cv2.resize(ir_image, (w,h))
-    ir_image=cv2.cvtColor(ir_image,cv2.COLOR_GRAY2RGB)
-    ir_image = cvpaste(ir_image, np.zeros((h,w,3)), x, y, angle, scale)
-
-    depth_view=ScalarImage2RGB(depth_scale,minDistance,OverDistance)
-
-    result=[depth_view,0,00,0,0,0,0,0,0,0,0,0,0]
-    setImage=cv2.addWeighted(ir_image, viewScale/100, depth_view, 1 - viewScale/100, 0)
-    return [np.vstack((np.hstack((color_image,depth_view)),np.hstack((ir_image,setImage)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
-
     ir_image = cv2.cvtColor(ir_image,cv2.COLOR_GRAY2RGB)
 
+    #画角合わせ
+    color_image = np.delete(color_image,slice(0,x),1)
+    depth_scale = np.delete(depth_scale,slice(0,x),1)
+    ir_image = cvpaste(ir_image, np.zeros((h,w,3)), 0, 0, angle, scale)
+    ir_image = np.delete(ir_image,slice(w - x,w),1)
 
-    image_pil = Image.fromarray(cv2.cvtColor(depth_view,cv2.COLOR_BGR2RGB))
-    ##BGRなのでRGBに変換
-   
-    double_image = np.hstack((result[0],ir_image))
-    return [double_image,result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
-
-
-    #for x in range(320):
-        #for y in range(320):
-            #if(depth_image[x][y]>0):
-                #ir_image[x][y]=255;
+    #画角の結果に合わせた画像サイズ修正
+    w = w - x
 
 
-    width = 320
-    height = 320
+    #表示用画像と処理用データをそれぞれ生成
+    depth_image = ScalarImage2RGB(depth_scale,minDistance,OverDistance)
+    depth_image[:,int(depth_image.shape[1] / 2),:] = np.array([255,0,0])
+    ir_scale = cv2.cvtColor(ir_image,cv2.COLOR_RGB2GRAY)
 
-    start_position = [int(width / 2),int(height / 2)]
+
+    #デバッグ用
+    if(False):
+        result = [depth_image,0,00,0,0,0,0,0,0,0,0,0,0]
+        brendImage = cv2.addWeighted(ir_image, viewScale / 100, depth_image, 1 - viewScale / 100, 0)
+        return [np.vstack((np.hstack((color_image,depth_image)),np.hstack((ir_image,brendImage)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
+
+
+    start_position = [int(h / 2),int(w / 2)]
     threshold = 127#分割領域の閾値
-    pix = ir_image[start_position[0]][start_position[1]][0]#グループ化させる領域の画素値
-
+    pix = ir_scale[start_position[1]][start_position[0]]#中心の画素値
     frag = np.zeros(ir_image.shape)#領域分割フラグ
     ir_image2 = ir_image.copy()
 
-    # 8 Neighborhood
+    #領域拡張法のための定義
     directs = [(-1,-1), (0,-1), (1,-1), (1,0), (1,1), (0,1),(-1,1),(-1,0)]
     visited = np.zeros(shape=(ir_image.shape), dtype=np.uint8)
     seeds = []
     ir_image = cv2.medianBlur(ir_image,9)
 
-    for y in range(0,int(height)):
-        for x in range(0,int(width)):
-            if(depth_image[y][x] > 0):
+    #depth要素のある部分にフラグを付ける
+    for y in range(0,int(h)):
+        for x in range(0,int(w)):
+            if(minDistance <= depth_scale[y][x] and depth_scale[y][x] < maxDistance):
                 frag[y][x] = 3
 
     #領域拡張法
-    if(extMode):
+    if(False):
         #モルフォロジー変換
         kernel = np.ones((3,3),np.uint8)
-        depth_image = cv2.erode(depth_image,kernel,iterations = 1)
-        #ret,ir_image = cv2.threshold(cv2.cvtColor(ir_image, cv2.COLOR_BGR2GRAY),0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-        #ir_image = cv2.adaptiveThreshold(cv2.cvtColor(ir_image, cv2.COLOR_BGR2GRAY),255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,11,2)
+        depth_scale = cv2.erode(depth_scale,kernel,iterations = 1)
+        #ret,ir_image = cv2.threshold(cv2.cvtColor(ir_image,
+        #cv2.COLOR_BGR2GRAY),0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        #ir_image = cv2.adaptiveThreshold(cv2.cvtColor(ir_image,
+        #cv2.COLOR_BGR2GRAY),255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+        #cv2.THRESH_BINARY,11,2)
         #ir_image=cv2.cvtColor(ir_image, cv2.COLOR_GRAY2BGR)
 
-        colorList=[]
-        for y in range(0,int(height)):
-            for x in range(0,int(width)):
-                if(depth_image[y][x] > 0):
+        colorList = []
+        for y in range(0,int(h)):
+            for x in range(0,int(w)):
+                if(IsArea(depth_scale[y][x],minDistance,maxDistance)):
                     seeds.append((x,y))
-                    colorList.append(ir_image[y][x][0])
+                    colorList.append(ir_scale[y][x])
                     #maxColor=max(maxColor,ir_image[y][x][0])
                     #minColor=min(minColor,ir_image[y][x][0])
 
             
 
         colorList.sort()
-        minColor=colorList[int(len(colorList)*0.1)]*0.9
-        maxColor=colorList[int(len(colorList)*0.9)]*1.1
+        minColor = colorList[int(len(colorList) * 0.1)] * 0.9
+        maxColor = colorList[int(len(colorList) * 0.9)] * 1.1
         #print("minMax",minColor,maxColor)
         #minColor*=0.9
         #maxColor*=1.1
@@ -622,43 +629,53 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
                 cur_x = x + direct[0]
                 cur_y = y + direct[1]
                 # illegal
-                if cur_x < 0 or cur_y < 0 or cur_x >= width or cur_y >= height:
+                if cur_x < 0 or cur_y < 0 or cur_x >= w or cur_y >= h:
                     continue
                 # Not visited and belong to the same target
-                #print(ir_image[cur_y][cur_x][0], ir_image[y][x][0],diff(ir_image[cur_y][cur_x][0] , ir_image[y][x][0]))
+                #print(ir_image[cur_y][cur_x][0],
+                #ir_image[y][x][0],diff(ir_image[cur_y][cur_x][0] ,
+                #ir_image[y][x][0]))
 
-                #if (not visited[cur_y][cur_x][0]) and (diff(ir_image[cur_y][cur_x][0] ,ir_image[y][x][0]) <= 3) :
-                if (not visited[cur_y][cur_x][0]) and minColor<ir_image[cur_y][cur_x][0] and ir_image[cur_y][cur_x][0]<maxColor and diff(ir_image[cur_y][cur_x][0] ,ir_image[y][x][0]) <= 5 :
+                #if (not visited[cur_y][cur_x][0]) and
+                #(diff(ir_image[cur_y][cur_x][0] ,ir_image[y][x][0]) <= 3) :
+                if (not visited[cur_y][cur_x][0]) and minColor < ir_scale[cur_y][cur_x] and ir_scale[cur_y][cur_x] < maxColor and diff(ir_scale[cur_y][cur_x]  ,ir_scale[y][x]) <= 5 :
                     if(frag[cur_y][cur_x][0] == 0):
                         frag[cur_y][cur_x] = 1
                     visited[cur_y][cur_x] = 1
                     seeds.append((cur_x,cur_y))
 
+    ir_image2 = ir_image.copy()
 
-    
-    for y in range(0,int(height)):
-        for x in range(0,int(width)):
-            depth_view[y][x][0]=100
-            depth_view[y][x][1]=100
-            depth_view[y][x][2]=100
-            if(frag[y][x][0]==1):
-                ir_image2[y][x]=[255,0,0]
-            elif(frag[y][x][0]==2):
-                ir_image2[y][x]=[0,255,0]
-            elif(frag[y][x][0]==3):
-                ir_image2[y][x]=[0,0,255]
+    for y in range(0,int(h)):
+        for x in range(0,int(w)):
+            depth_image[y][x][0] = 100
+            depth_image[y][x][1] = 100
+            depth_image[y][x][2] = 100
+            if(frag[y][x][0] == 1):
+                ir_image2[y][x] = [255,0,0]
+            elif(frag[y][x][0] == 2):
+                ir_image2[y][x] = [0,255,0]
+            elif(frag[y][x][0] == 3):
+                ir_image2[y][x] = [0,0,255]
             else:
-                ir_image2[y][x]=ir_image[y][x]
-                depth_view[y][x][0]=0
-                depth_view[y][x][1]=0
-                depth_view[y][x][2]=0
+                ir_image2[y][x] = ir_image[y][x]
+                depth_image[y][x][0] = 0
+                depth_image[y][x][1] = 0
+                depth_image[y][x][2] = 0
 
 
    # double_image = np.hstack((depth_view,ir_image))
     #double_image = np.hstack((ir_image2,ir_image))
-    image_pil = Image.fromarray(cv2.cvtColor(depth_view,cv2.COLOR_BGR2RGB))
-    ##BGRなのでRGBに変換
-    result=ImageReconition(depth_view,robot_rotation)
+    image_pil = Image.fromarray(cv2.cvtColor(depth_image,cv2.COLOR_BGR2RGB))
+
+    #デバッグ用
+    if(True):
+        result = [depth_image,0,00,0,0,0,0,0,0,0,0,0,0]
+        brendImage = cv2.addWeighted(ir_image, viewScale / 100, depth_image, 1 - viewScale / 100, 0)
+        return [np.vstack((np.hstack((color_image,depth_image)),np.hstack((ir_image2,brendImage)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
+
+
+    result = ImageReconition(depth_image,robot_rotation)
     double_image = np.hstack((result[0],ir_image2))
     return [double_image,result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
 
@@ -673,5 +690,5 @@ def ResetLog():
         XLog[i] = 0
 
 def diff(a,b):
-    if(a>b):return a-b
-    else: return b-a
+    if(a > b):return a - b
+    else: return b - a

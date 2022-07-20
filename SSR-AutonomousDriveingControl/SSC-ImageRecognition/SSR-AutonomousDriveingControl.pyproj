@@ -29,6 +29,9 @@
     <Compile Include="Form.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="KMeans.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Main.py">
       <SubType>Code</SubType>
     </Compile>
