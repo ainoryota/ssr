@@ -88,7 +88,7 @@ class RealSense(object):
         #print("depth;",depth_image.shape)
         #print("IR1:",ir_image1.shape)
         #print("IR2:",ir_image2.shape)
-        result=IR(color_image,depth_image,ir_image1,ir_image2,accel,False,self.data["scale"].get())
+        result=IR(color_image,depth_image,ir_image1,accel,False,self.data["scale"].get())
 
         testImg = result[0]
         testImg = Image.fromarray(testImg)

@@ -508,65 +508,47 @@ def cvpaste(img, imgback, x, y, angle, scale):
 
     return imgpaste
 
+#2ms
 def ScalarImage2RGB(img,ClipMinDistance,ClipMaxDistance):
+    rate=255.0/(ClipMaxDistance-ClipMinDistance)
+    img=np.where((img<=ClipMinDistance) | (img>=ClipMaxDistance),255,rate*(img-ClipMinDistance))
+    return np.dstack([img,img,img]).astype(np.uint8)
 
-    img=np.where((img<=ClipMinDistance) | (img>=ClipMaxDistance),255,(np.floor(((img-ClipMinDistance).astype(np.float)*255/(ClipMaxDistance-ClipMinDistance)))).astype(np.uint8))
-    print(img)
-    result=np.dstack([img,img,img]).astype(np.uint8)
-    #for (y,x) in zip(idx[0], idx[1]):
-    #result[y][x]=np.array([255,255,255])
-    #hoge=img[y][x]
-    #result[y][x]=np.array([hoge,hoge,hoge])
-    return result
+def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50):
 
-
-def IR(color_image,depth_image,ir_image1,ir_image2,robot_rotation,extMode=True,viewScale=50):
-
+    #索道などのパラメータ
     minDistance = 0
     maxDistance = 600
     OverDistance=3000
+
+    #戻り値
     GammalAngle = 0
     TurnAngle = 0
     Rangle = 0
     Langle = 0
 
-    
-
+    #画像の標準サイズ
     w=320
     h=180
 
+    #赤外線カメラとdepthカメラの位地変換用定数
     x=17
     y=0
     angle=0
     scale=1.4
 
+    #リサイズとファイル形式の変換
     color_image = cv2.resize(color_image, (w,h))
-    #color_image = cvpaste(color_image, np.zeros((h,w,3)), x, y, angle, scale)
+    depth_scale = cv2.resize(depth_scale, (w,h))
+    ir_image = cv2.resize(ir_image, (w,h))
+    ir_image=cv2.cvtColor(ir_image,cv2.COLOR_GRAY2RGB)
+    ir_image = cvpaste(ir_image, np.zeros((h,w,3)), x, y, angle, scale)
 
-    #print(color_image)
-    #print(color_image.shape)
-    #print(type(color_image))
-
-    depth_image = cv2.resize(depth_image, (w,h))
-    ir_image1 = cv2.resize(ir_image1, (w,h))
-    ir_image2 = cv2.resize(ir_image2, (w,h))
-    ir_image1=cv2.cvtColor(ir_image1,cv2.COLOR_GRAY2RGB)
-    ir_image2=cv2.cvtColor(ir_image2,cv2.COLOR_GRAY2RGB)
-
-    ir_image1 = cv2.resize(ir_image1, (w,h))
-    ir_image1 = cvpaste(ir_image1, np.zeros((h,w,3)), x, y, angle, scale)
-    ir_image2 = cv2.resize(ir_image2, (w,h))
-    ir_image2 = cvpaste(ir_image2, np.zeros((h,w,3)), x, y, angle, scale)
-
-
-    depth_view=ScalarImage2RGB(depth_image,minDistance,OverDistance)
-
-    scale_depth=cv2.convertScaleAbs(depth_image, alpha=255/OverDistance,beta =0)
-    #depth_view=cv2.cvtColor(scale_depth,cv2.COLOR_GRAY2RGB)
+    depth_view=ScalarImage2RGB(depth_scale,minDistance,OverDistance)
 
     result=[depth_view,0,00,0,0,0,0,0,0,0,0,0,0]
-    setImage=cv2.addWeighted(ir_image1, viewScale/100, depth_view, 1 - viewScale/100, 0)
-    return [np.vstack((np.hstack((color_image,depth_view)),np.hstack((ir_image1,setImage)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
+    setImage=cv2.addWeighted(ir_image, viewScale/100, depth_view, 1 - viewScale/100, 0)
+    return [np.vstack((np.hstack((color_image,depth_view)),np.hstack((ir_image,setImage)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
 
     ir_image = cv2.cvtColor(ir_image,cv2.COLOR_GRAY2RGB)
 
