@@ -591,9 +591,9 @@ def WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scal
     #IR要素が小さい部分にフラグ2をつける
     flag = np.where((ir_scale <= 100) ,2,flag)
 
-    resultScale=np.where(flag==3,255,0).astype(np.uint8)
+    binaryScale=np.where(flag==3,255,0).astype(np.uint8)
 
-    return (flag,resultScale)
+    return (flag,binaryScale)
 
 
 def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50):
@@ -655,24 +655,25 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
 
     #赤外線画像とdepth画像から2値画像を生成する
     if(True):
-        flag,ir_scale=WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale)
+        flag,binaryScale=WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale)
         ir_image2 = ir_image.copy()
         ir_image2[np.where(flag == 3)] = [0,0,255]#depth要素のある部分
         ir_image2[np.where(flag == 4)] = [0,255,255]#depth要素が遠い部分
         ir_image2[np.where(flag == 1)] = [255,0,0]#データが不正の位地
         ir_image2[np.where(flag == 2)] = [0,255,0]#IR要素が小さい部分
-        #ir_image2 = cv2.cvtColor(ir_scale,cv2.COLOR_GRAY2RGB)
-            
+        binaryScale = cv2.medianBlur(binaryScale,3)
+        ir_image2 = cv2.cvtColor(binaryScale,cv2.COLOR_GRAY2RGB)
+        
 
 
 
     #デバッグ用
-    if(True):
+    if(False):
         result = [depth_image,0,00,0,0,0,0,0,0,0,0,0,0]
         brendImage = cv2.addWeighted(depth_image, viewScale / 100, ir_image2, 1 - viewScale / 100, 0)
         return [np.vstack((np.hstack((color_image,depth_image)),np.hstack((ir_image,brendImage)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
 
-    result = ImageReconition(depth_image,robot_rotation)
+    result = ImageReconition(binaryScale,robot_rotation)
     double_image = np.hstack((result[0],ir_image2))
     return [double_image,result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
 
