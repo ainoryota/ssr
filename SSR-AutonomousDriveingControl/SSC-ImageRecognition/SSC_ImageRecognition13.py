@@ -613,6 +613,7 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
             flagData=np.where(flag[y-1:y+2,x-1:x+2]==0,1,0)#まだ通ってない場所だけ1
             if(np.sum(flagData)==0):continue
             ir_scale_data=ir_scale[y-1:y+2,x-1:x+2]
+            if(ir_scale[y][x]+5<minColor or maxColor<ir_scale[y][x]-5):continue
             growArea=np.where((minColor < ir_scale_data)&(ir_scale_data< maxColor)&(abs(ir_scale[y][x]-ir_scale_data)<=5),1,0)*flagData
             if(np.sum(growArea)==0):continue
             xAll=(Xdirects+x)*growArea
