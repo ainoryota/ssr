@@ -522,12 +522,86 @@ def IsArea(value,min,max):
     else:
         return False
 
+def RegionGrowing(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale):
+    #depth要素のある部分にフラグを付ける
+    flag = np.where((minDistance <= depth_scale) & (depth_scale < maxDistance),3,0)
+    start_position = [int(h / 2),int(w / 2)]
+    threshold = 127#分割領域の閾値
+    pix = ir_scale[start_position[1]][start_position[0]]#中心の画素値
+
+    #領域拡張法のための定義
+    directs = [(-1,-1), (0,-1), (1,-1), (1,0), (1,1), (0,1),(-1,1),(-1,0)]
+    Xdirects=[[-1,0,1],[-1,0,1],[-1,0,1]]
+    Ydirects=[[-1,-1,-1],[0,0,0],[1,1,1]]
+    #ir_image = cv2.medianBlur(ir_image,9)
+
+    #モルフォロジー変換
+    kernel = np.ones((3,3),np.uint8)
+    depth_scale = cv2.erode(depth_scale,kernel,iterations = 1)
+    #ret,ir_image = cv2.threshold(cv2.cvtColor(ir_image,
+    #cv2.COLOR_BGR2GRAY),0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    #ir_image = cv2.adaptiveThreshold(cv2.cvtColor(ir_image,
+    #cv2.COLOR_BGR2GRAY),255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+    #cv2.THRESH_BINARY,11,2)
+    #ir_image=cv2.cvtColor(ir_image, cv2.COLOR_GRAY2BGR)
+
+    idx = np.where((minDistance <= depth_scale) & (depth_scale <= maxDistance))
+    seeds = list(zip(idx[0],idx[1]))
+    colorList=ir_scale[idx]
+    colorList.sort()
+    minColor = colorList[int(len(colorList) * 0.1)] * 0.9
+    maxColor = colorList[int(len(colorList) * 0.9)] * 1.1
+
+    counter=0
+    while len(seeds)>0:
+        (y,x)= seeds.pop(0)
+        if x == 0 or y == 0 or x == w-1 or y == h-1: continue
+
+        #depthが指定の範囲内にある隣接箇所で行ったことないところを拡張していく
+        flagData=np.where(flag[y-1:y+2,x-1:x+2]==0,1,0)#まだ通ってない場所だけ1
+        if(np.sum(flagData)==0):continue
+        ir_scale_data=ir_scale[y-1:y+2,x-1:x+2]
+        if(ir_scale[y][x]+5<minColor or maxColor<ir_scale[y][x]-5):continue
+        growArea=np.where((minColor < ir_scale_data)&(ir_scale_data< maxColor)&(abs(ir_scale[y][x]-ir_scale_data)<=5),1,0)*flagData
+        if(np.sum(growArea)==0):continue
+        xAll=(Xdirects+x)*growArea
+        yAll=(Ydirects+y)*growArea
+
+        #通ったflagを立て隣接箇所をseedsに追加   
+        seedPlus=[a for a in list(zip(yAll.ravel(),xAll.ravel())) if a != (0,0)]
+        if len(seedPlus)>0:
+            a,b=zip(*seedPlus)
+            flag[a,b] = 1
+            seeds.extend(seedPlus)
+    return flag
+
+#赤外線画像とdepth画像を合成した二値画像を生成する
+def WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale):
+    resultScale=np.zeros((h,w),dtype=np.uint8)
+        
+    #depth要素のある部分にフラグ3を付ける
+    flag = np.where((minDistance <= depth_scale) & (depth_scale < maxDistance),3,0)
+        
+    #遠くのdepth要素がある部分にフラグ4を付ける
+    flag = np.where((depth_scale > overDistance),4,flag)
+
+    #データが不正の位地にフラグ1をつける
+    flag = np.where((depth_scale==0) ,1,flag)
+            
+    #IR要素が小さい部分にフラグ2をつける
+    flag = np.where((ir_scale <= 100) ,2,flag)
+
+    resultScale=np.where(flag==3,255,0).astype(np.uint8)
+
+    return (flag,resultScale)
+
+
 def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50):
 
     #索道などのパラメータ
     minDistance = 50
     maxDistance = 600
-    OverDistance = 3000
+    overDistance = 3000
 
     #戻り値
     GammalAngle = 0
@@ -560,7 +634,7 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
     w = w - x
 
     #表示用画像と処理用データをそれぞれ生成
-    depth_image = ScalarImage2RGB(depth_scale,minDistance,OverDistance)
+    depth_image = ScalarImage2RGB(depth_scale,minDistance,overDistance)
     depth_image[:,int(depth_image.shape[1] / 2),:] = np.array([255,0,0])
     ir_scale = cv2.cvtColor(ir_image,cv2.COLOR_RGB2GRAY)
 
@@ -571,73 +645,32 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
         brendImage = cv2.addWeighted(ir_image, viewScale / 100, depth_image, 1 - viewScale / 100, 0)
         return [np.vstack((np.hstack((color_image,depth_image)),np.hstack((ir_image,brendImage)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
 
-
-    #depth要素のある部分にフラグを付ける
-    flag = np.where((minDistance <= depth_scale) & (depth_scale < maxDistance),3,0)
-
     #領域拡張法
+    if(False):
+        flag=RegionGrowing(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale)
+        ir_image2 = ir_image.copy()
+        ir_image2[np.where(flag == 1)] = [255,0,0]
+        ir_image2[np.where(flag == 2)] = [0,255,0]
+        ir_image2[np.where(flag == 3)] = [0,0,255]
+
+    #赤外線画像とdepth画像から2値画像を生成する
     if(True):
-        start_position = [int(h / 2),int(w / 2)]
-        threshold = 127#分割領域の閾値
-        pix = ir_scale[start_position[1]][start_position[0]]#中心の画素値
-
-        #領域拡張法のための定義
-        directs = [(-1,-1), (0,-1), (1,-1), (1,0), (1,1), (0,1),(-1,1),(-1,0)]
-        Xdirects=[[-1,0,1],[-1,0,1],[-1,0,1]]
-        Ydirects=[[-1,-1,-1],[0,0,0],[1,1,1]]
-        #ir_image = cv2.medianBlur(ir_image,9)
-
-        #モルフォロジー変換
-        kernel = np.ones((3,3),np.uint8)
-        depth_scale = cv2.erode(depth_scale,kernel,iterations = 1)
-        #ret,ir_image = cv2.threshold(cv2.cvtColor(ir_image,
-        #cv2.COLOR_BGR2GRAY),0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-        #ir_image = cv2.adaptiveThreshold(cv2.cvtColor(ir_image,
-        #cv2.COLOR_BGR2GRAY),255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-        #cv2.THRESH_BINARY,11,2)
-        #ir_image=cv2.cvtColor(ir_image, cv2.COLOR_GRAY2BGR)
-
-        idx = np.where((minDistance <= depth_scale) & (depth_scale <= maxDistance))
-        seeds = list(zip(idx[0],idx[1]))
-        colorList=ir_scale[idx]
-        colorList.sort()
-        minColor = colorList[int(len(colorList) * 0.1)] * 0.9
-        maxColor = colorList[int(len(colorList) * 0.9)] * 1.1
-
-        counter=0
-        while len(seeds)>0:
-            (y,x)= seeds.pop(0)
-            if x == 0 or y == 0 or x == w-1 or y == h-1: continue
-
-            #depthが指定の範囲内にある隣接箇所で行ったことないところを拡張していく
-            flagData=np.where(flag[y-1:y+2,x-1:x+2]==0,1,0)#まだ通ってない場所だけ1
-            if(np.sum(flagData)==0):continue
-            ir_scale_data=ir_scale[y-1:y+2,x-1:x+2]
-            if(ir_scale[y][x]+5<minColor or maxColor<ir_scale[y][x]-5):continue
-            growArea=np.where((minColor < ir_scale_data)&(ir_scale_data< maxColor)&(abs(ir_scale[y][x]-ir_scale_data)<=5),1,0)*flagData
-            if(np.sum(growArea)==0):continue
-            xAll=(Xdirects+x)*growArea
-            yAll=(Ydirects+y)*growArea
-
-            #通ったflagを立て隣接箇所をseedsに追加   
-            seedPlus=[a for a in list(zip(yAll.ravel(),xAll.ravel())) if a != (0,0)]
-            if len(seedPlus)>0:
-                a,b=zip(*seedPlus)
-                flag[a,b] = 1
-                seeds.extend(seedPlus)
+        flag,ir_scale=WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale)
+        ir_image2 = ir_image.copy()
+        ir_image2[np.where(flag == 3)] = [0,0,255]#depth要素のある部分
+        ir_image2[np.where(flag == 4)] = [0,255,255]#depth要素が遠い部分
+        ir_image2[np.where(flag == 1)] = [255,0,0]#データが不正の位地
+        ir_image2[np.where(flag == 2)] = [0,255,0]#IR要素が小さい部分
+        #ir_image2 = cv2.cvtColor(ir_scale,cv2.COLOR_GRAY2RGB)
             
 
-    ir_image2 = ir_image.copy()
-    ir_image2[np.where(flag == 1)] = [255,0,0]
-    ir_image2[np.where(flag == 2)] = [0,255,0]
-    ir_image2[np.where(flag == 3)] = [0,0,255]
+
 
     #デバッグ用
     if(True):
         result = [depth_image,0,00,0,0,0,0,0,0,0,0,0,0]
-        brendImage = cv2.addWeighted(ir_image, viewScale / 100, depth_image, 1 - viewScale / 100, 0)
-        return [np.vstack((np.hstack((color_image,depth_image)),np.hstack((ir_image2,brendImage)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
-
+        brendImage = cv2.addWeighted(depth_image, viewScale / 100, ir_image2, 1 - viewScale / 100, 0)
+        return [np.vstack((np.hstack((color_image,depth_image)),np.hstack((ir_image,brendImage)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
 
     result = ImageReconition(depth_image,robot_rotation)
     double_image = np.hstack((result[0],ir_image2))
