@@ -517,8 +517,8 @@ def ScalarImage2RGB(img,ClipMinDistance,ClipMaxDistance):
     return np.dstack([img,img,img]).astype(np.uint8)
 
 def IsArea(value,min,max):
-    if(min<=value and value<=max):
-        return True;
+    if(min <= value and value <= max):
+        return True
     else:
         return False
 
@@ -559,7 +559,6 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
     #画角の結果に合わせた画像サイズ修正
     w = w - x
 
-
     #表示用画像と処理用データをそれぞれ生成
     depth_image = ScalarImage2RGB(depth_scale,minDistance,OverDistance)
     depth_image[:,int(depth_image.shape[1] / 2),:] = np.array([255,0,0])
@@ -573,26 +572,21 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
         return [np.vstack((np.hstack((color_image,depth_image)),np.hstack((ir_image,brendImage)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
 
 
-    start_position = [int(h / 2),int(w / 2)]
-    threshold = 127#分割領域の閾値
-    pix = ir_scale[start_position[1]][start_position[0]]#中心の画素値
-    frag = np.zeros(ir_image.shape)#領域分割フラグ
-    ir_image2 = ir_image.copy()
-
-    #領域拡張法のための定義
-    directs = [(-1,-1), (0,-1), (1,-1), (1,0), (1,1), (0,1),(-1,1),(-1,0)]
-    visited = np.zeros(shape=(ir_image.shape), dtype=np.uint8)
-    seeds = []
-    ir_image = cv2.medianBlur(ir_image,9)
-
     #depth要素のある部分にフラグを付ける
-    for y in range(0,int(h)):
-        for x in range(0,int(w)):
-            if(minDistance <= depth_scale[y][x] and depth_scale[y][x] < maxDistance):
-                frag[y][x] = 3
+    frag = np.where((minDistance <= depth_scale) & (depth_scale < maxDistance),3,0)
 
     #領域拡張法
-    if(False):
+    if(True):
+        start_position = [int(h / 2),int(w / 2)]
+        threshold = 127#分割領域の閾値
+        pix = ir_scale[start_position[1]][start_position[0]]#中心の画素値
+
+        #領域拡張法のための定義
+        directs = [(-1,-1), (0,-1), (1,-1), (1,0), (1,1), (0,1),(-1,1),(-1,0)]
+        visited = np.zeros(shape=(ir_image.shape), dtype=np.uint8)
+        seeds = []
+        ir_image = cv2.medianBlur(ir_image,9)
+
         #モルフォロジー変換
         kernel = np.ones((3,3),np.uint8)
         depth_scale = cv2.erode(depth_scale,kernel,iterations = 1)
@@ -603,70 +597,37 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
         #cv2.THRESH_BINARY,11,2)
         #ir_image=cv2.cvtColor(ir_image, cv2.COLOR_GRAY2BGR)
 
-        colorList = []
-        for y in range(0,int(h)):
-            for x in range(0,int(w)):
-                if(IsArea(depth_scale[y][x],minDistance,maxDistance)):
-                    seeds.append((x,y))
-                    colorList.append(ir_scale[y][x])
-                    #maxColor=max(maxColor,ir_image[y][x][0])
-                    #minColor=min(minColor,ir_image[y][x][0])
-
-            
-
+        idx = np.where((minDistance <= depth_scale) & (depth_scale <= maxDistance))
+        seeds = list(zip(idx[0],idx[1]))
+        colorList=ir_scale[idx]
         colorList.sort()
         minColor = colorList[int(len(colorList) * 0.1)] * 0.9
         maxColor = colorList[int(len(colorList) * 0.9)] * 1.1
-        #print("minMax",minColor,maxColor)
-        #minColor*=0.9
-        #maxColor*=1.1
-        for seed in seeds:
-            x = seed[0]
-            y = seed[1]
-            frag[y][x] = 2 
 
+        for seed in seeds:
+            y = seed[0]
+            x = seed[1]
+            frag[y][x] = 2 
             for direct in directs:
                 cur_x = x + direct[0]
                 cur_y = y + direct[1]
                 # illegal
-                if cur_x < 0 or cur_y < 0 or cur_x >= w or cur_y >= h:
+                if cur_x < 0 or cur_y < 0 or cur_x >= w or cur_y >= h or visited[cur_y][cur_x][0]==1:
                     continue
-                # Not visited and belong to the same target
-                #print(ir_image[cur_y][cur_x][0],
-                #ir_image[y][x][0],diff(ir_image[cur_y][cur_x][0] ,
-                #ir_image[y][x][0]))
+    
 
-                #if (not visited[cur_y][cur_x][0]) and
-                #(diff(ir_image[cur_y][cur_x][0] ,ir_image[y][x][0]) <= 3) :
-                if (not visited[cur_y][cur_x][0]) and minColor < ir_scale[cur_y][cur_x] and ir_scale[cur_y][cur_x] < maxColor and diff(ir_scale[cur_y][cur_x]  ,ir_scale[y][x]) <= 5 :
-                    if(frag[cur_y][cur_x][0] == 0):
+                hoge=ir_scale[cur_y][cur_x]
+                hoge2=ir_scale[y][x]
+                if (minColor < hoge and hoge< maxColor and diff(hoge,hoge2) <= 5) :
+                    if(frag[cur_y][cur_x] == 0):
                         frag[cur_y][cur_x] = 1
                     visited[cur_y][cur_x] = 1
-                    seeds.append((cur_x,cur_y))
+                    seeds.append((cur_y,cur_x))
 
     ir_image2 = ir_image.copy()
-
-    for y in range(0,int(h)):
-        for x in range(0,int(w)):
-            depth_image[y][x][0] = 100
-            depth_image[y][x][1] = 100
-            depth_image[y][x][2] = 100
-            if(frag[y][x][0] == 1):
-                ir_image2[y][x] = [255,0,0]
-            elif(frag[y][x][0] == 2):
-                ir_image2[y][x] = [0,255,0]
-            elif(frag[y][x][0] == 3):
-                ir_image2[y][x] = [0,0,255]
-            else:
-                ir_image2[y][x] = ir_image[y][x]
-                depth_image[y][x][0] = 0
-                depth_image[y][x][1] = 0
-                depth_image[y][x][2] = 0
-
-
-   # double_image = np.hstack((depth_view,ir_image))
-    #double_image = np.hstack((ir_image2,ir_image))
-    image_pil = Image.fromarray(cv2.cvtColor(depth_image,cv2.COLOR_BGR2RGB))
+    ir_image2[np.where(frag == 1)] = [255,0,0]
+    ir_image2[np.where(frag == 2)] = [0,255,0]
+    ir_image2[np.where(frag == 3)] = [0,0,255]
 
     #デバッグ用
     if(True):
