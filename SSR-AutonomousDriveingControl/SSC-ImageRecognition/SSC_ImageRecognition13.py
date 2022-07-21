@@ -573,7 +573,7 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
 
 
     #depth要素のある部分にフラグを付ける
-    frag = np.where((minDistance <= depth_scale) & (depth_scale < maxDistance),3,0)
+    flag = np.where((minDistance <= depth_scale) & (depth_scale < maxDistance),3,0)
 
     #領域拡張法
     if(True):
@@ -583,9 +583,9 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
 
         #領域拡張法のための定義
         directs = [(-1,-1), (0,-1), (1,-1), (1,0), (1,1), (0,1),(-1,1),(-1,0)]
-        visited = np.zeros(shape=(ir_image.shape), dtype=np.uint8)
-        seeds = []
-        ir_image = cv2.medianBlur(ir_image,9)
+        Xdirects=[[-1,0,1],[-1,0,1],[-1,0,1]]
+        Ydirects=[[-1,-1,-1],[0,0,0],[1,1,1]]
+        #ir_image = cv2.medianBlur(ir_image,9)
 
         #モルフォロジー変換
         kernel = np.ones((3,3),np.uint8)
@@ -604,30 +604,32 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
         minColor = colorList[int(len(colorList) * 0.1)] * 0.9
         maxColor = colorList[int(len(colorList) * 0.9)] * 1.1
 
-        for seed in seeds:
-            y = seed[0]
-            x = seed[1]
-            frag[y][x] = 2 
-            for direct in directs:
-                cur_x = x + direct[0]
-                cur_y = y + direct[1]
-                # illegal
-                if cur_x < 0 or cur_y < 0 or cur_x >= w or cur_y >= h or visited[cur_y][cur_x][0]==1:
-                    continue
-    
+        counter=0
+        while len(seeds)>0:
+            (y,x)= seeds.pop(0)
+            if x == 0 or y == 0 or x == w-1 or y == h-1: continue
 
-                hoge=ir_scale[cur_y][cur_x]
-                hoge2=ir_scale[y][x]
-                if (minColor < hoge and hoge< maxColor and diff(hoge,hoge2) <= 5) :
-                    if(frag[cur_y][cur_x] == 0):
-                        frag[cur_y][cur_x] = 1
-                    visited[cur_y][cur_x] = 1
-                    seeds.append((cur_y,cur_x))
+            #depthが指定の範囲内にある隣接箇所で行ったことないところを拡張していく
+            flagData=np.where(flag[y-1:y+2,x-1:x+2]==0,1,0)#まだ通ってない場所だけ1
+            if(np.sum(flagData)==0):continue
+            ir_scale_data=ir_scale[y-1:y+2,x-1:x+2]
+            growArea=np.where((minColor < ir_scale_data)&(ir_scale_data< maxColor)&(abs(ir_scale[y][x]-ir_scale_data)<=5),1,0)*flagData
+            if(np.sum(growArea)==0):continue
+            xAll=(Xdirects+x)*growArea
+            yAll=(Ydirects+y)*growArea
+
+            #通ったflagを立て隣接箇所をseedsに追加   
+            seedPlus=[a for a in list(zip(yAll.ravel(),xAll.ravel())) if a != (0,0)]
+            if len(seedPlus)>0:
+                a,b=zip(*seedPlus)
+                flag[a,b] = 1
+                seeds.extend(seedPlus)
+            
 
     ir_image2 = ir_image.copy()
-    ir_image2[np.where(frag == 1)] = [255,0,0]
-    ir_image2[np.where(frag == 2)] = [0,255,0]
-    ir_image2[np.where(frag == 3)] = [0,0,255]
+    ir_image2[np.where(flag == 1)] = [255,0,0]
+    ir_image2[np.where(flag == 2)] = [0,255,0]
+    ir_image2[np.where(flag == 3)] = [0,0,255]
 
     #デバッグ用
     if(True):
