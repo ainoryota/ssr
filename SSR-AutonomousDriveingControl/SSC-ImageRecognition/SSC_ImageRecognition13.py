@@ -50,7 +50,7 @@ def CalcDiffAngle(angle1,angle2):
 #分岐点位置を与えたときにその位置を評価する
 @numba.jit(nopython=True)
 def CalcScore(field,x,y,anglestep):
-    height, width = field.shape
+    h, w = field.shape
     maxValue = 0
     maxValue1 = 0
     maxValue2 = 0
@@ -75,9 +75,9 @@ def CalcScore(field,x,y,anglestep):
     angleData = np.zeros((num,2))
 
     i = -1
-    while i < num:
+    while i < num-1:
         i = i + 1
-        angleData[i,0] = anglestep * i
+        angleData[i][0] = anglestep * i
                 
         cos = math.cos(math.radians(anglestep * i))
         sin = math.sin(math.radians(anglestep * i))
@@ -87,25 +87,25 @@ def CalcScore(field,x,y,anglestep):
             r+=1
             originalX = x + r * cos
             originalY = y + r * sin
-            if(originalX >= width or originalX < 0 or originalY >= height or originalY < 0):
+            if(originalX >= w or originalX < 0 or originalY >= h or originalY < 0):
                 break
 
 
             for thick in range(0,-cable_size,-1):
                 X = int(originalX - thick * sin)#cos(theta+90)
-                if(X >= width or X < 0):break
+                if(X >= w or X < 0):break
                 Y = int(originalY + thick * cos)#sin(theta+90)
-                if(Y >= height or Y < 0):break
-                if(field[X,Y] == 0):continue
-                angleData[i,1]+=1 - abs(float(thick) / cable_size) ** 2
+                if(Y >= h or Y < 0):break
+                if(field[Y][X] == 0):continue
+                angleData[i][1]+=1 - abs(float(thick) / cable_size) ** 2
 
             for thick in range(0,cable_size):
                 X = int(originalX - thick * sin)#cos(theta+90)
-                if(X >= width or X < 0):break
+                if(X >= w or X < 0):break
                 Y = int(originalY + thick * cos)#sin(theta+90)
-                if(Y >= height or Y < 0):break
-                if(field[X,Y] == 0):continue
-                angleData[i,1]+=1 - abs(float(thick) / cable_size) ** 2
+                if(Y >= h or Y < 0):break
+                if(field[Y][X] == 0):continue
+                angleData[i][1]+=1 - abs(float(thick) / cable_size) ** 2
 
     count = np.count_nonzero(angleData > 0,0)[1]
     angleData = angleData[np.argsort(angleData[:,1])][::-1]
@@ -113,35 +113,92 @@ def CalcScore(field,x,y,anglestep):
 
     angle270Score = 0
     for i in range(count):
-        if(angleData[i,0] == 270):
-            angle270Score = angleData[i,1]
+        if(angleData[i][0]== 270):
+            angle270Score = angleData[i][1]
             break
 
     for i in range(count):
-        angle1 = int(angleData[i,0])            
+        angle1 = int(angleData[i][0])            
         for j in range(i,count):
-            angle2 = int(angleData[j,0])
+            angle2 = int(angleData[j][1])
             if(CalcDiffAngle(angle1,angle2) < 60):continue
-            if(angleData[i,1] + angleData[j,1] > doubel_max):
-                doubel_max = angleData[i,1] + angleData[j,1]
-            if(angleData[i,1] + angleData[j,1] + angleData[0,1] < maxValue):break
+            if(angleData[i][1] + angleData[j][1] > doubel_max):
+                doubel_max = angleData[i][1] + angleData[j][1]
+            if(angleData[i][1] + angleData[j][1] + angleData[0][1] < maxValue):break
                     
             angle3 = 270
             if(CalcDiffAngle(angle2,angle3) < 60 or CalcDiffAngle(angle1,angle3) < 60):continue
 
-            value = angleData[i,1] + angleData[j,1] + angle270Score
+            value = angleData[i][1] + angleData[j][1] + angle270Score
 
             if(value > maxValue):
                 maxValue = value
                 maxAngle1 = angle1
                 maxAngle2 = angle2
                 maxAngle3 = angle3
-                maxValue1 = angleData[i,1]
-                maxValue2 = angleData[j,1]
+                maxValue1 = angleData[i][1]
+                maxValue2 = angleData[j][1]
                 maxValue3 = angle270Score
                             
                 break#ソートされているのでbreakしてOK
     return [maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3,doubel_max]
+
+def calcTurningAngle(binryScale):
+    h, w = binryScale.shape
+
+    maxValue = 0
+    step = 12 * 2
+    field = np.where(binryScale > 0,1,0)
+    maxX = 0
+    maxY = 0
+    maxAngle1 = -1
+    maxAngle2 = -1
+    maxAngle3 = -1
+    maxValue1 = -1
+    maxValue2 = -1
+    maxValue3 = -1
+    maxDoubel = -1
+    anglestep = 10
+
+
+    print("A")
+    #ざっくり解を調べる
+    for x in range(0,w,step):
+        for y in range(0,h,step):
+            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,anglestep)
+            if(maxValue < value):
+                maxValue = value
+                maxAngle1 = angle1
+                maxAngle2 = angle2
+                maxAngle3 = angle3
+                maxValue1 = value1
+                maxValue2 = value2
+                maxValue3 = value3
+                maxX = x
+                maxY = y
+                maxDoubel = doubel
+
+    print("B")
+    #解の周辺をさらに調べる
+    detailStep = 5
+    detailanglestep = 5
+    for x in range(maxX - step,maxX + step,detailStep):
+        for y in range(maxY - step,maxY + step,detailStep):
+            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,detailanglestep)
+            if(maxValue < value):
+                maxValue = value
+                maxAngle1 = angle1
+                maxAngle2 = angle2
+                maxAngle3 = angle3
+                maxValue1 = value1
+                maxValue2 = value2
+                maxValue3 = value3
+                maxX = x
+                maxY = y
+                maxDoubel = doubel
+
+
+    return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel]
 
 
 def Calc(img):
@@ -369,7 +426,7 @@ def getRobotAngle(img,x,y,angle1,angle2,angle3,rotation):
 
     return (GammalAngle,TurnAngle,Rangle,Langle)
 
-def ImageReconition(original_img,rotation):
+def ImageReconition(binaryScale):
     img = original_img
     GammalAngle = 0
     TurnAngle = 0
@@ -595,6 +652,9 @@ def WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scal
 
     return (flag,binaryScale)
 
+def DrawAngleLine(img,x,y,theta,color,thickness):
+    return cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=color,thickness=thickness)
+
 
 def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50):
 
@@ -667,13 +727,46 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
 
 
 
+    
+
+    #得られた二値画像から旋回角を求める
+    (maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel)=calcTurningAngle(binaryScale)
+    
+    print(maxX,maxY)
     #デバッグ用
-    if(False):
+    if(True):
+        if(5<maxX and maxX<w-5 and 5<maxY and maxY<h-5):
+            x=w-maxX
+            y=maxY
+            
+
+
+            maxAngle1=maxAngle1+90
+            maxAngle2=maxAngle1+maxAngle2+90
+            maxAngle3=maxAngle1+maxAngle2+maxAngle3+90
+            theta = maxAngle1-90
+            thickness=5
+            topAngle1=maxAngle1
+            topAngle2=maxAngle1+maxAngle2
+            topAngle3=maxAngle1+maxAngle2+maxAngle3
+            ir_image2=DrawAngleLine(ir_image2,x,y,topAngle1,(255,100,100,50),thickness)
+            ir_image2 = cv2.putText(ir_image2,str(int(topAngle1)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(255,100,100))
+            theta = maxAngle2-90
+            ir_image2=DrawAngleLine(ir_image2,x,y,topAngle2,(100,255,100,50),thickness)
+            ir_image2 = cv2.putText(ir_image2,str(int(topAngle2)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,255,100))
+            theta = maxAngle3-90
+            ir_image2=DrawAngleLine(ir_image2,x,y,topAngle3,(100,100,255,50),thickness)
+            image2 = cv2.putText(ir_image2,str(int(topAngle3)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,100,255))
+            ir_image2 = cv2.putText(ir_image2,str(int(topAngle1)) + "/" + str(int(topAngle2)) + "/" + str(int(topAngle3)),(0,100),cv2.FONT_HERSHEY_PLAIN,3,(255,255,255))
+            ir_image2[y-5:y+5,x-5:x+5,:] = [255,255,0]
+
+
         result = [depth_image,0,00,0,0,0,0,0,0,0,0,0,0]
         brendImage = cv2.addWeighted(depth_image, viewScale / 100, ir_image2, 1 - viewScale / 100, 0)
         return [np.vstack((np.hstack((color_image,depth_image)),np.hstack((ir_image,brendImage)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
 
-    result = ImageReconition(binaryScale,robot_rotation)
+
+    result = ImageReconition(binaryScale)
     double_image = np.hstack((result[0],ir_image2))
     return [double_image,result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
 
