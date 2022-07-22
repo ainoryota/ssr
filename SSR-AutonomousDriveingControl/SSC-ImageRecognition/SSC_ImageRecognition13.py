@@ -12,6 +12,9 @@ import numba
 import csv
 from KMeans import KMeans
 import matplotlib.pyplot as plt
+from skimage.draw import line #pip install scikit-image
+from skimage import morphology #pip install scikit-image
+from functools import lru_cache
 
 #一次式で最小事情近似する
 def reg1dim(x, y):
@@ -47,13 +50,61 @@ def CalcDiffAngle(angle1,angle2):
     ret = min(ret,abs(angle1 - angle2 + 360))
     return ret
 
+
+
+def trapez(y,y0,w):
+    return np.clip(np.minimum(y + 1 + w / 2 - y0, -y + 1 + w / 2 + y0),0,1)
+
+def weighted_line(r0, c0, r1, c1, w, rmin=0, rmax=np.inf):
+    # The algorithm below works fine if c1 >= c0 and c1-c0 >= abs(r1-r0).
+    # If either of these cases are violated, do some switches.
+    if abs(c1 - c0) < abs(r1 - r0):
+        # Switch x and y, and switch again when returning.
+        xx, yy, val = weighted_line(c0, r0, c1, r1, w, rmin=rmin, rmax=rmax)
+        return (yy, xx, val)
+
+    # At this point we know that the distance in columns (x) is greater
+    # than that in rows (y).  Possibly one more switch if c0 > c1.
+    if c0 > c1:
+        return weighted_line(r1, c1, r0, c0, w, rmin=rmin, rmax=rmax)
+
+    # The following is now always < 1 in abs
+    slope = (r1 - r0) / (c1 - c0)
+
+    # Adjust weight by the slope
+    w *= np.sqrt(1 + np.abs(slope)) / 2
+
+    # We write y as a function of x, because the slope is always <= 1
+    # (in absolute value)
+    x = np.arange(c0, c1 + 1, dtype=float)
+    y = x * slope + (c1 * r0 - c0 * r1) / (c1 - c0)
+
+    # Now instead of 2 values for y, we have 2*np.ceil(w/2).
+    # All values are 1 except the upmost and bottommost.
+    thickness = np.ceil(w / 2)
+    yy = (np.floor(y).reshape(-1,1) + np.arange(-thickness - 1,thickness + 2).reshape(1,-1))
+    xx = np.repeat(x, yy.shape[1])
+    vals = trapez(yy, y.reshape(-1,1), w).flatten()
+    
+    yy = yy.flatten()
+
+    # Exclude useless parts and those outside of the interval
+    # to avoid parts outside of the picture
+    mask = np.logical_and.reduce((yy >= rmin, yy < rmax, vals > 0))
+
+    return (yy[mask].astype(int), xx[mask].astype(int), vals[mask])
+
+@lru_cache(maxsize=1000)
+def getThetaArray(theta,len,thickness):
+    cos = math.cos(math.radians(theta))
+    sin = math.sin(math.radians(theta))
+    rr, cc,_ = weighted_line(0, 0,  int(len * sin),int(len * cos),thickness)
+    return (rr,cc)
+
+
+
 #分岐点位置を与えたときにその位置を評価する
 def CalcScore(field,x,y,anglestep):
-    h,w=field.shape
-    p=np.sum(field[max(y-12,0):min(h-1,y+12),max(x-12,0):min(w-1,x+12)])
-    return [0,30,60,p,0,0,0,0]
-
-
     h, w = field.shape
     maxValue = 0
     maxValue1 = 0
@@ -74,50 +125,41 @@ def CalcScore(field,x,y,anglestep):
     topAngle2 = 0
     topAngle3 = 0
 
+    #anglestepずつ角度を変化させていく
     num = int(360 / anglestep)
+    scores = np.zeros((num + 1))
+    angles = range(0,360,anglestep)
+    
+    if(False):
+        for i in range(num):
+            rr, cc = getThetaArray(angles[i],300,5)
+            if(angles[i] < 90):
+                hoge = np.where((rr + y < h) &  (cc + x < w))
+            elif(angles[i] < 180):
+                hoge = np.where((rr + y < h) & (cc + x >= 0) )
+            elif(angles[i] < 270):
+                hoge = np.where((rr + y >= 0) & (cc + x >= 0) )
+            elif(angles[i] < 360):
+                hoge = np.where((rr + y >= 0) & (cc + x < w))
+            scores[i] = np.sum(field[((rr[hoge] + y), (cc[hoge] + x))])
 
-    angleData = np.zeros((num,2))
+        angleScore = list(zip(scores,angles))
+        angleScore.sort(reverse=True)
+        maxValue = angleScore[0][0]
+        maxAngle1 = angleScore[0][1]
+    else:
+        maxValue = 0
+        maxAngle1 =0
+    
+    return [maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3,doubel_max]
 
-    i = -1
-    while i < num-1:
-        i = i + 1
-        angleData[i][0] = anglestep * i
-                
-        cos = math.cos(math.radians(anglestep * i))
-        sin = math.sin(math.radians(anglestep * i))
-
-        r = 0
-        while True:
-            r+=1
-            originalX = x + r * cos
-            originalY = y + r * sin
-            if(originalX >= w or originalX < 0 or originalY >= h or originalY < 0):
-                break
-
-
-            for thick in range(0,-cable_size,-1):
-                X = int(originalX - thick * sin)#cos(theta+90)
-                if(X >= w or X < 0):break
-                Y = int(originalY + thick * cos)#sin(theta+90)
-                if(Y >= h or Y < 0):break
-                if(field[Y][X] == 0):continue
-                angleData[i][1]+=1 - abs(float(thick) / cable_size) ** 2
-
-            for thick in range(0,cable_size):
-                X = int(originalX - thick * sin)#cos(theta+90)
-                if(X >= w or X < 0):break
-                Y = int(originalY + thick * cos)#sin(theta+90)
-                if(Y >= h or Y < 0):break
-                if(field[Y][X] == 0):continue
-                angleData[i][1]+=1 - abs(float(thick) / cable_size) ** 2
-
-    count = np.count_nonzero(angleData > 0,0)[1]
+    count = np.count_nonzero(scores > 0,0)[1]
     angleData = angleData[np.argsort(angleData[:,1])][::-1]
 
 
     angle270Score = 0
     for i in range(count):
-        if(angleData[i][0]== 270):
+        if(angleData[i][0] == 270):
             angle270Score = angleData[i][1]
             break
 
@@ -164,12 +206,12 @@ def calcTurningAngle(binryScale):
     maxDoubel = -1
     anglestep = 10
 
-    PointList=np.zeros((int(h/step+1),int(w/step+1)))
+    PointList = np.zeros((int(h / step + 1),int(w / step + 1)))
     #ざっくり解を調べる
-    for x in range(0,w,step):
+    for x in range(int(w*0.4),int(w*0.6),step):
         for y in range(0,h,step):
             (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,anglestep)
-            if(PointList[int(y/step)][int(x/step)]==0):PointList[int(y/step)][int(x/step)]=value
+            PointList[int(y / step)][int(x / step)] = value
             if(maxValue < value):
                 maxValue = value
                 maxAngle1 = angle1
@@ -181,13 +223,17 @@ def calcTurningAngle(binryScale):
                 maxX = x
                 maxY = y
                 maxDoubel = doubel
+                if(True):
+                    PointList = (PointList * 255 / maxValue).astype(np.uint8)
+                    return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList]
 
     ##解の周辺をさらに調べる
     #detailStep = 5
     #detailanglestep = 5
     #for x in range(maxX - step,maxX + step,detailStep):
     #    for y in range(maxY - step,maxY + step,detailStep):
-    #        (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,detailanglestep)
+    #        (angle1,angle2,angle3,value,value1,value2,value3,doubel) =
+    #        CalcScore(field,x,y,detailanglestep)
     #        if(maxValue < value):
     #            maxValue = value
     #            maxAngle1 = angle1
@@ -200,7 +246,7 @@ def calcTurningAngle(binryScale):
     #            maxY = y
     #            maxDoubel = doubel
 
-    PointList=(PointList*255/maxValue).astype(np.uint8)
+    PointList = (PointList * 255 / maxValue).astype(np.uint8)
     return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList]
 
 
@@ -591,8 +637,8 @@ def RegionGrowing(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale)
 
     #領域拡張法のための定義
     directs = [(-1,-1), (0,-1), (1,-1), (1,0), (1,1), (0,1),(-1,1),(-1,0)]
-    Xdirects=[[-1,0,1],[-1,0,1],[-1,0,1]]
-    Ydirects=[[-1,-1,-1],[0,0,0],[1,1,1]]
+    Xdirects = [[-1,0,1],[-1,0,1],[-1,0,1]]
+    Ydirects = [[-1,-1,-1],[0,0,0],[1,1,1]]
     #ir_image = cv2.medianBlur(ir_image,9)
 
     #モルフォロジー変換
@@ -607,37 +653,37 @@ def RegionGrowing(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale)
 
     idx = np.where((minDistance <= depth_scale) & (depth_scale <= maxDistance))
     seeds = list(zip(idx[0],idx[1]))
-    colorList=ir_scale[idx]
+    colorList = ir_scale[idx]
     colorList.sort()
     minColor = colorList[int(len(colorList) * 0.1)] * 0.9
     maxColor = colorList[int(len(colorList) * 0.9)] * 1.1
 
-    counter=0
-    while len(seeds)>0:
-        (y,x)= seeds.pop(0)
-        if x == 0 or y == 0 or x == w-1 or y == h-1: continue
+    counter = 0
+    while len(seeds) > 0:
+        (y,x) = seeds.pop(0)
+        if x == 0 or y == 0 or x == w - 1 or y == h - 1: continue
 
         #depthが指定の範囲内にある隣接箇所で行ったことないところを拡張していく
-        flagData=np.where(flag[y-1:y+2,x-1:x+2]==0,1,0)#まだ通ってない場所だけ1
-        if(np.sum(flagData)==0):continue
-        ir_scale_data=ir_scale[y-1:y+2,x-1:x+2]
-        if(ir_scale[y][x]+5<minColor or maxColor<ir_scale[y][x]-5):continue
-        growArea=np.where((minColor < ir_scale_data)&(ir_scale_data< maxColor)&(abs(ir_scale[y][x]-ir_scale_data)<=5),1,0)*flagData
-        if(np.sum(growArea)==0):continue
-        xAll=(Xdirects+x)*growArea
-        yAll=(Ydirects+y)*growArea
+        flagData = np.where(flag[y - 1:y + 2,x - 1:x + 2] == 0,1,0)#まだ通ってない場所だけ1
+        if(np.sum(flagData) == 0):continue
+        ir_scale_data = ir_scale[y - 1:y + 2,x - 1:x + 2]
+        if(ir_scale[y][x] + 5 < minColor or maxColor < ir_scale[y][x] - 5):continue
+        growArea = np.where((minColor < ir_scale_data) & (ir_scale_data < maxColor) & (abs(ir_scale[y][x] - ir_scale_data) <= 5),1,0) * flagData
+        if(np.sum(growArea) == 0):continue
+        xAll = (Xdirects + x) * growArea
+        yAll = (Ydirects + y) * growArea
 
-        #通ったflagを立て隣接箇所をseedsに追加   
-        seedPlus=[a for a in list(zip(yAll.ravel(),xAll.ravel())) if a != (0,0)]
-        if len(seedPlus)>0:
-            a,b=zip(*seedPlus)
+        #通ったflagを立て隣接箇所をseedsに追加
+        seedPlus = [a for a in list(zip(yAll.ravel(),xAll.ravel())) if a != (0,0)]
+        if len(seedPlus) > 0:
+            a,b = zip(*seedPlus)
             flag[a,b] = 1
             seeds.extend(seedPlus)
     return flag
 
 #赤外線画像とdepth画像を合成した二値画像を生成する
 def WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale):
-    resultScale=np.zeros((h,w),dtype=np.uint8)
+    resultScale = np.zeros((h,w),dtype=np.uint8)
         
     #depth要素のある部分にフラグ3を付ける
     flag = np.where((minDistance <= depth_scale) & (depth_scale < maxDistance),3,0)
@@ -646,12 +692,12 @@ def WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scal
     flag = np.where((depth_scale > overDistance),4,flag)
 
     #データが不正の位地にフラグ1をつける
-    flag = np.where((depth_scale==0) ,1,flag)
+    flag = np.where((depth_scale == 0) ,1,flag)
             
     #IR要素が小さい部分にフラグ2をつける
     flag = np.where((ir_scale <= 100) ,2,flag)
 
-    binaryScale=np.where(flag==3,255,0).astype(np.uint8)
+    binaryScale = np.where(flag == 3,255,0).astype(np.uint8)
 
     return (flag,binaryScale)
 
@@ -710,7 +756,7 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
 
     #領域拡張法
     if(False):
-        flag=RegionGrowing(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale)
+        flag = RegionGrowing(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale)
         ir_image2 = ir_image.copy()
         ir_image2[np.where(flag == 1)] = [255,0,0]
         ir_image2[np.where(flag == 2)] = [0,255,0]
@@ -718,55 +764,51 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
 
     #赤外線画像とdepth画像から2値画像を生成する
     if(True):
-        flag,binaryScale=WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale)
+        flag,binaryScale = WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale)
         ir_image2 = ir_image.copy()
         ir_image2[np.where(flag == 3)] = [0,0,255]#depth要素のある部分
         ir_image2[np.where(flag == 4)] = [0,255,255]#depth要素が遠い部分
-        ir_image2[np.where(flag == 1)] = [255,0,0]#データが不正の位地 
+        ir_image2[np.where(flag == 1)] = [255,0,0]#データが不正の位地
         ir_image2[np.where(flag == 2)] = [0,255,0]#IR要素が小さい部分
         binaryScale = cv2.medianBlur(binaryScale,3)
         ir_image2 = cv2.cvtColor(binaryScale,cv2.COLOR_GRAY2RGB)   
 
     #得られた二値画像から旋回角を求める
-    (maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList)=calcTurningAngle(binaryScale)
+    (maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList) = calcTurningAngle(binaryScale)
     
     print(maxX,maxY)
     #デバッグ用
     if(True):
 
         imageMap = ir_image.copy()
-        step=12*2
+        step = 12 * 2
         for x in range(w):
             for y in range(h):
-                imageMap[y,x,:] = [PointList[min(int(h/step),int((y+12)/step))][min(int(w/step),int((x+12)/step))],0,0]
-        if(5<maxX and maxX<w-5 and 5<maxY and maxY<h-5):
-            x=maxX
-            y=maxY
+                imageMap[y,x,:] = [PointList[min(int(h / step),int((y + 12) / step))][min(int(w / step),int((x + 12) / step))],0,0]
+        x = maxX
+        y = maxY
 
-            maxAngle1=maxAngle1
-            maxAngle2=maxAngle2
-            maxAngle3=maxAngle3
+        maxAngle1 = maxAngle1
+        maxAngle2 = maxAngle2
+        maxAngle3 = maxAngle3
             
-            thickness=5
-            topAngle1=maxAngle1
-            topAngle2=maxAngle2
-            topAngle3=maxAngle3
+        thickness = 5
+        topAngle1 = maxAngle1
+        topAngle2 = maxAngle2
+        topAngle3 = maxAngle3
 
 
-            theta = maxAngle1
-            ir_image2=DrawAngleLine(ir_image2,x,y,topAngle1,(255,100,100,50),thickness)
-            ir_image2 = cv2.putText(ir_image2,str(int(topAngle1)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(255,100,100))
-            theta = maxAngle2
-            ir_image2=DrawAngleLine(ir_image2,x,y,topAngle2,(100,255,100,50),thickness)
-            ir_image2 = cv2.putText(ir_image2,str(int(topAngle2)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,255,100))
-            theta = maxAngle3
-            ir_image2=DrawAngleLine(ir_image2,x,y,topAngle3,(100,100,255,50),thickness)
-            image2 = cv2.putText(ir_image2,str(int(topAngle3)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,100,255))
-            ir_image2 = cv2.putText(ir_image2,str(int(topAngle1)) + "/" + str(int(topAngle2)) + "/" + str(int(topAngle3)),(0,100),cv2.FONT_HERSHEY_PLAIN,3,(255,255,255))
-            ir_image2[y-5:y+5,x-5:x+5,:] = [255,255,0]
-
-
-
+        theta = maxAngle1
+        ir_image2 = DrawAngleLine(ir_image2,x,y,topAngle1,(255,100,100,50),thickness)
+        ir_image2 = cv2.putText(ir_image2,str(int(topAngle1)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(255,100,100))
+        theta = maxAngle2
+        ir_image2 = DrawAngleLine(ir_image2,x,y,topAngle2,(100,255,100,50),thickness)
+        ir_image2 = cv2.putText(ir_image2,str(int(topAngle2)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,255,100))
+        theta = maxAngle3
+        ir_image2 = DrawAngleLine(ir_image2,x,y,topAngle3,(100,100,255,50),thickness)
+        image2 = cv2.putText(ir_image2,str(int(topAngle3)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,100,255))
+        ir_image2 = cv2.putText(ir_image2,str(int(topAngle1)) + "/" + str(int(topAngle2)) + "/" + str(int(topAngle3)),(0,100),cv2.FONT_HERSHEY_PLAIN,3,(255,255,255))
+        ir_image2[max(0,y - 5):min(h-1,y + 5),max(0,x - 5):min(x + 5,w-1),:] = [255,255,0]
 
         result = [depth_image,0,00,0,0,0,0,0,0,0,0,0,0]
         brendImage = cv2.addWeighted(imageMap, viewScale / 100, ir_image2, 1 - viewScale / 100, 0)
