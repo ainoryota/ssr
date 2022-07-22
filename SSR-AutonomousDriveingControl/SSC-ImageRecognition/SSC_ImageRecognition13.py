@@ -130,7 +130,7 @@ def CalcScore(field,x,y,anglestep):
     scores = np.zeros((num + 1))
     angles = range(0,360,anglestep)
     
-    if(False):
+    if(True):
         for i in range(num):
             rr, cc = getThetaArray(angles[i],300,5)
             if(angles[i] < 90):
@@ -206,7 +206,7 @@ def calcTurningAngle(binryScale):
     maxDoubel = -1
     anglestep = 10
 
-    PointList = np.zeros((int(h / step + 1),int(w / step + 1)))
+    PointList = np.zeros((int(h / step + 2),int(w / step + 2)))
     #ざっくり解を調べる
     for x in range(int(w*0.4),int(w*0.6),step):
         for y in range(0,h,step):
@@ -223,7 +223,7 @@ def calcTurningAngle(binryScale):
                 maxX = x
                 maxY = y
                 maxDoubel = doubel
-                if(True):
+                if(False):
                     PointList = (PointList * 255 / maxValue).astype(np.uint8)
                     return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList]
 
@@ -705,7 +705,7 @@ def DrawAngleLine(img,x,y,theta,color,thickness):
     return cv2.line(img,(x,y),(x + int(360 * math.cos(math.radians(theta))),y + int(360 * math.sin(math.radians(theta)))),color=color,thickness=thickness)
 
 
-def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50):
+def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewRate=50):
 
     #索道などのパラメータ
     minDistance = 50
@@ -751,7 +751,7 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
     #デバッグ用
     if(False):
         result = [depth_image,0,00,0,0,0,0,0,0,0,0,0,0]
-        brendImage = cv2.addWeighted(ir_image, viewScale / 100, depth_image, 1 - viewScale / 100, 0)
+        brendImage = cv2.addWeighted(ir_image, viewRate / 100, depth_image, 1 - viewRate / 100, 0)
         return [np.vstack((np.hstack((color_image,depth_image)),np.hstack((ir_image,brendImage)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
 
     #領域拡張法
@@ -779,12 +779,9 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
     print(maxX,maxY)
     #デバッグ用
     if(True):
-
-        imageMap = ir_image.copy()
         step = 12 * 2
-        for x in range(w):
-            for y in range(h):
-                imageMap[y,x,:] = [PointList[min(int(h / step),int((y + 12) / step))][min(int(w / step),int((x + 12) / step))],0,0]
+        imageMap=np.dstack((PointList.repeat(step, axis=0).repeat(step, axis=1)[int(step/2):int(step/2)+h,int(step/2):int(step/2)+w].reshape((h,w,1)),np.zeros((h,w,2)))).astype(np.uint8)
+
         x = maxX
         y = maxY
 
@@ -811,7 +808,8 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
         ir_image2[max(0,y - 5):min(h-1,y + 5),max(0,x - 5):min(x + 5,w-1),:] = [255,255,0]
 
         result = [depth_image,0,00,0,0,0,0,0,0,0,0,0,0]
-        brendImage = cv2.addWeighted(imageMap, viewScale / 100, ir_image2, 1 - viewScale / 100, 0)
+
+        brendImage = cv2.addWeighted(imageMap, viewRate / 100, ir_image2, 1 - viewRate / 100, 0)
         return [np.vstack((np.hstack((color_image,depth_image)),np.hstack((ir_image,brendImage)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
 
 
