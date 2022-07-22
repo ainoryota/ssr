@@ -55,29 +55,27 @@ def CalcDiffAngle(angle1,angle2):
 def trapez(y,y0,w):
     return np.clip(np.minimum(y + 1 + w / 2 - y0, -y + 1 + w / 2 + y0),0,1)
 
-def weighted_line(r0, c0, r1, c1, w, rmin=0, rmax=np.inf):
-    # The algorithm below works fine if c1 >= c0 and c1-c0 >= abs(r1-r0).
-    # If either of these cases are violated, do some switches.
-    if abs(c1 - c0) < abs(r1 - r0):
-        # Switch x and y, and switch again when returning.
-        xx, yy, val = weighted_line(c0, r0, c1, r1, w, rmin=rmin, rmax=rmax)
+def weighted_line(y1, x1, y2, x2, w, rmin=0, rmax=np.inf):
+    # 傾き無限になるときはxとyを入れ替えて計算
+    if abs(x2 - x1) < abs(y2 - y1) :
+        # xとyを入れ替え
+        xx, yy, val = weighted_line(x1, y1, x2, y2, w, rmin=rmin, rmax=rmax)
         return (yy, xx, val)
 
-    # At this point we know that the distance in columns (x) is greater
-    # than that in rows (y).  Possibly one more switch if c0 > c1.
-    if c0 > c1:
-        return weighted_line(r1, c1, r0, c0, w, rmin=rmin, rmax=rmax)
+    # 点1x<点2xにする
+    if x1 > x2 :
+        return weighted_line(y2, x2, y1, x1, w, rmin=rmin, rmax=rmax)
 
     # The following is now always < 1 in abs
-    slope = (r1 - r0) / (c1 - c0)
+    slope = (y2 - y1) / (x2 - x1)
 
     # Adjust weight by the slope
-    w *= np.sqrt(1 + np.abs(slope)) / 2
+    w *= 1
 
     # We write y as a function of x, because the slope is always <= 1
     # (in absolute value)
-    x = np.arange(c0, c1 + 1, dtype=float)
-    y = x * slope + (c1 * r0 - c0 * r1) / (c1 - c0)
+    x = np.arange(x1, x2 + 1, dtype=float)
+    y = x * slope + (x2 * y1 - x1 * y2) / (x2 - x1)
 
     # Now instead of 2 values for y, we have 2*np.ceil(w/2).
     # All values are 1 except the upmost and bottommost.
@@ -90,11 +88,12 @@ def weighted_line(r0, c0, r1, c1, w, rmin=0, rmax=np.inf):
 
     # Exclude useless parts and those outside of the interval
     # to avoid parts outside of the picture
-    mask = np.logical_and.reduce((yy >= rmin, yy < rmax, vals > 0))
+    #mask = np.logical_and.reduce((yy >= rmin, yy < rmax, vals > 0))
 
-    return (yy[mask].astype(int), xx[mask].astype(int), vals[mask])
+    #return (yy[mask].astype(int), xx[mask].astype(int), vals[mask])
+    return (yy.astype(int), xx.astype(int), vals)
 
-@lru_cache(maxsize=1000)
+#@lru_cache(maxsize=1000)
 def getThetaArray(theta,len,thickness):
     cos = math.cos(math.radians(theta))
     sin = math.sin(math.radians(theta))
@@ -121,70 +120,65 @@ def CalcScore(field,x,y,anglestep):
     W = math.floor(checkSize / 2)
 
     doubel_max = 0
-    topAngle1 = 0
-    topAngle2 = 0
-    topAngle3 = 0
 
     #anglestepずつ角度を変化させていく
     num = int(360 / anglestep)
     scores = np.zeros((num + 1))
     angles = range(0,360,anglestep)
     
-    if(True):
-        for i in range(num):
-            rr, cc = getThetaArray(angles[i],300,5)
-            if(angles[i] < 90):
-                hoge = np.where((rr + y < h) &  (cc + x < w))
-            elif(angles[i] < 180):
-                hoge = np.where((rr + y < h) & (cc + x >= 0) )
-            elif(angles[i] < 270):
-                hoge = np.where((rr + y >= 0) & (cc + x >= 0) )
-            elif(angles[i] < 360):
-                hoge = np.where((rr + y >= 0) & (cc + x < w))
-            scores[i] = np.sum(field[((rr[hoge] + y), (cc[hoge] + x))])
 
-        angleScore = list(zip(scores,angles))
-        angleScore.sort(reverse=True)
-        maxValue = angleScore[0][0]
-        maxAngle1 = angleScore[0][1]
-    else:
-        maxValue = 0
-        maxAngle1 =0
-    
-    return [maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3,doubel_max]
-
-    count = np.count_nonzero(scores > 0,0)[1]
-    angleData = angleData[np.argsort(angleData[:,1])][::-1]
+    for i in range(num):
+        rr, cc = getThetaArray(angles[i],300,3)
+        if(angles[i] < 90):
+            hoge = np.where((rr + y < h) &  (cc + x < w))
+        elif(angles[i] < 180):
+            hoge = np.where((rr + y < h) & (cc + x >= 0) )
+        elif(angles[i] < 270):
+            hoge = np.where((rr + y >= 0) & (cc + x >= 0) )
+        elif(angles[i] < 360):
+            hoge = np.where((rr + y >= 0) & (cc + x < w))
+        scores[i] = np.sum(field[((rr[hoge] + y), (cc[hoge] + x))])
 
 
-    angle270Score = 0
+    angleScore = list(zip(scores,angles))
+    angleScore.sort(reverse=True)
+    maxValue = angleScore[0][0]
+    maxAngle1 = angleScore[0][1]
+    count=np.count_nonzero(scores>0)
+
+
+    #return [maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3,doubel_max]
+
+    angle90Score = 0
     for i in range(count):
-        if(angleData[i][0] == 270):
-            angle270Score = angleData[i][1]
+        if(angleScore[i][1] == 90):
+            angle90Score = angleScore[i][0]
             break
 
-    for i in range(count):
-        angle1 = int(angleData[i][0])            
-        for j in range(i,count):
-            angle2 = int(angleData[j][1])
-            if(CalcDiffAngle(angle1,angle2) < 60):continue
-            if(angleData[i][1] + angleData[j][1] > doubel_max):
-                doubel_max = angleData[i][1] + angleData[j][1]
-            if(angleData[i][1] + angleData[j][1] + angleData[0][1] < maxValue):break
-                    
-            angle3 = 270
-            if(CalcDiffAngle(angle2,angle3) < 60 or CalcDiffAngle(angle1,angle3) < 60):continue
 
-            value = angleData[i][1] + angleData[j][1] + angle270Score
+    ruleAngle=30
+    for i in range(count):
+        angle1 = int(angleScore[i][1])            
+        for j in range(i,count):
+            angle2 = int(angleScore[j][1])
+            if(CalcDiffAngle(angle1,angle2) < ruleAngle):continue
+            if(angleScore[i][0] + angleScore[j][0] > doubel_max):
+                doubel_max = angleScore[i][0] + angleScore[j][0]
+            if(angleScore[i][0] + angleScore[j][0] +angle90Score < maxValue):break # + angleScore[0][0]
+                    
+            angle3 = 90
+            if(CalcDiffAngle(angle2,angle3) < ruleAngle or CalcDiffAngle(angle1,angle3) < ruleAngle):continue
+
+            value = angleScore[i][0] + angleScore[j][0] + angle90Score
 
             if(value > maxValue):
                 maxValue = value
                 maxAngle1 = angle1
                 maxAngle2 = angle2
                 maxAngle3 = angle3
-                maxValue1 = angleData[i][1]
-                maxValue2 = angleData[j][1]
-                maxValue3 = angle270Score
+                maxValue1 = angleScore[i][0]
+                maxValue2 = angleScore[j][0]
+                maxValue3 = angle90Score
                             
                 break#ソートされているのでbreakしてOK
     return [maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3,doubel_max]
@@ -193,7 +187,7 @@ def calcTurningAngle(binryScale):
     h, w = binryScale.shape
 
     maxValue = 0
-    step = 12 * 2
+    step = 12*2
     field = np.where(binryScale > 0,1,0)
     maxX = 0
     maxY = 0
@@ -204,28 +198,50 @@ def calcTurningAngle(binryScale):
     maxValue2 = -1
     maxValue3 = -1
     maxDoubel = -1
-    anglestep = 10
+    anglestep = 1
 
     PointList = np.zeros((int(h / step + 2),int(w / step + 2)))
-    #ざっくり解を調べる
-    for x in range(int(w*0.4),int(w*0.6),step):
-        for y in range(0,h,step):
-            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,anglestep)
-            PointList[int(y / step)][int(x / step)] = value
-            if(maxValue < value):
-                maxValue = value
-                maxAngle1 = angle1
-                maxAngle2 = angle2
-                maxAngle3 = angle3
-                maxValue1 = value1
-                maxValue2 = value2
-                maxValue3 = value3
-                maxX = x
-                maxY = y
-                maxDoubel = doubel
-                if(False):
-                    PointList = (PointList * 255 / maxValue).astype(np.uint8)
-                    return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList]
+    
+    if(False):
+        #解を調べる
+        for x in range(int(w*0.4),int(w*0.6),step):
+            for y in range(0,h,step):
+                score=np.sum(field[y-12:y+12,x-12:x+12])
+                field[y-12:y+12,x-12:x+12]=0
+                (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,anglestep)
+                value+=score
+                PointList[int(y / step)][int(x / step)] = value
+                if(maxValue < value):
+                    maxValue = value
+                    maxAngle1 = angle1
+                    maxAngle2 = angle2
+                    maxAngle3 = angle3
+                    maxValue1 = value1
+                    maxValue2 = value2
+                    maxValue3 = value3
+                    maxX = x
+                    maxY = y
+                    maxDoubel = doubel
+    else:
+        x=146
+        y=72
+        score=np.sum(field[y-12:y+12,x-12:x+12])
+        field[y-12:y+12,x-12:x+12]=0
+        (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,anglestep)
+        value+=score
+        PointList[int(y / step)][int(x / step)] = value
+        if(maxValue < value):
+            maxValue = value
+            maxAngle1 = angle1
+            maxAngle2 = angle2
+            maxAngle3 = angle3
+            maxValue1 = value1
+            maxValue2 = value2
+            maxValue3 = value3
+            maxX = x
+            maxY = y
+            maxDoubel = doubel
+    print(maxX,maxY,maxValue1,maxValue2,maxValue3)
 
     ##解の周辺をさらに調べる
     #detailStep = 5
