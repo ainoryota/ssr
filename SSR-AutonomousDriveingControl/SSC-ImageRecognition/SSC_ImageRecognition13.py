@@ -48,8 +48,12 @@ def CalcDiffAngle(angle1,angle2):
     return ret
 
 #分岐点位置を与えたときにその位置を評価する
-@numba.jit(nopython=True)
 def CalcScore(field,x,y,anglestep):
+    h,w=field.shape
+    p=np.sum(field[max(y,0):min(h-1,y+24),max(x,0):min(w-1,x+24)])
+    return [0,0,0,p,0,0,0,0]
+
+
     h, w = field.shape
     maxValue = 0
     maxValue1 = 0
@@ -160,12 +164,12 @@ def calcTurningAngle(binryScale):
     maxDoubel = -1
     anglestep = 10
 
-
-    print("A")
+    PointList=np.zeros((int(h/step+1),int(w/step+1)))
     #ざっくり解を調べる
     for x in range(0,w,step):
         for y in range(0,h,step):
             (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,anglestep)
+            PointList[int(y/step)][int(x/step)]=value
             if(maxValue < value):
                 maxValue = value
                 maxAngle1 = angle1
@@ -178,27 +182,26 @@ def calcTurningAngle(binryScale):
                 maxY = y
                 maxDoubel = doubel
 
-    print("B")
-    #解の周辺をさらに調べる
-    detailStep = 5
-    detailanglestep = 5
-    for x in range(maxX - step,maxX + step,detailStep):
-        for y in range(maxY - step,maxY + step,detailStep):
-            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,detailanglestep)
-            if(maxValue < value):
-                maxValue = value
-                maxAngle1 = angle1
-                maxAngle2 = angle2
-                maxAngle3 = angle3
-                maxValue1 = value1
-                maxValue2 = value2
-                maxValue3 = value3
-                maxX = x
-                maxY = y
-                maxDoubel = doubel
+    ##解の周辺をさらに調べる
+    #detailStep = 5
+    #detailanglestep = 5
+    #for x in range(maxX - step,maxX + step,detailStep):
+    #    for y in range(maxY - step,maxY + step,detailStep):
+    #        (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,detailanglestep)
+    #        if(maxValue < value):
+    #            maxValue = value
+    #            maxAngle1 = angle1
+    #            maxAngle2 = angle2
+    #            maxAngle3 = angle3
+    #            maxValue1 = value1
+    #            maxValue2 = value2
+    #            maxValue3 = value3
+    #            maxX = x
+    #            maxY = y
+    #            maxDoubel = doubel
 
-
-    return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel]
+    PointList=(PointList*255/maxValue).astype(np.uint8)
+    return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList]
 
 
 def Calc(img):
@@ -719,27 +722,26 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
         ir_image2 = ir_image.copy()
         ir_image2[np.where(flag == 3)] = [0,0,255]#depth要素のある部分
         ir_image2[np.where(flag == 4)] = [0,255,255]#depth要素が遠い部分
-        ir_image2[np.where(flag == 1)] = [255,0,0]#データが不正の位地
+        ir_image2[np.where(flag == 1)] = [255,0,0]#データが不正の位地 
         ir_image2[np.where(flag == 2)] = [0,255,0]#IR要素が小さい部分
         binaryScale = cv2.medianBlur(binaryScale,3)
-        ir_image2 = cv2.cvtColor(binaryScale,cv2.COLOR_GRAY2RGB)
-        
-
-
-
-    
+        ir_image2 = cv2.cvtColor(binaryScale,cv2.COLOR_GRAY2RGB)   
 
     #得られた二値画像から旋回角を求める
-    (maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel)=calcTurningAngle(binaryScale)
+    (maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList)=calcTurningAngle(binaryScale)
     
     print(maxX,maxY)
     #デバッグ用
     if(True):
+
+        imageMap = ir_image.copy()
+        step=12*2
+        for x in range(w):
+            for y in range(h):
+                imageMap[y,x,:] = [PointList[int(y/step)][int(x/step)],0,0]
         if(5<maxX and maxX<w-5 and 5<maxY and maxY<h-5):
             x=w-maxX
             y=maxY
-            
-
 
             maxAngle1=maxAngle1+90
             maxAngle2=maxAngle1+maxAngle2+90
@@ -749,6 +751,9 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
             topAngle1=maxAngle1
             topAngle2=maxAngle1+maxAngle2
             topAngle3=maxAngle1+maxAngle2+maxAngle3
+
+
+
             ir_image2=DrawAngleLine(ir_image2,x,y,topAngle1,(255,100,100,50),thickness)
             ir_image2 = cv2.putText(ir_image2,str(int(topAngle1)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(255,100,100))
             theta = maxAngle2-90
@@ -761,8 +766,10 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
             ir_image2[y-5:y+5,x-5:x+5,:] = [255,255,0]
 
 
+
+
         result = [depth_image,0,00,0,0,0,0,0,0,0,0,0,0]
-        brendImage = cv2.addWeighted(depth_image, viewScale / 100, ir_image2, 1 - viewScale / 100, 0)
+        brendImage = cv2.addWeighted(imageMap, viewScale / 100, ir_image2, 1 - viewScale / 100, 0)
         return [np.vstack((np.hstack((color_image,depth_image)),np.hstack((ir_image,brendImage)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
 
 
