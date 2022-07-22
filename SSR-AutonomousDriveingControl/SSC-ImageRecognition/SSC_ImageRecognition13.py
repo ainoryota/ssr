@@ -50,8 +50,8 @@ def CalcDiffAngle(angle1,angle2):
 #分岐点位置を与えたときにその位置を評価する
 def CalcScore(field,x,y,anglestep):
     h,w=field.shape
-    p=np.sum(field[max(y,0):min(h-1,y+24),max(x,0):min(w-1,x+24)])
-    return [0,0,0,p,0,0,0,0]
+    p=np.sum(field[max(y-12,0):min(h-1,y+12),max(x-12,0):min(w-1,x+12)])
+    return [0,30,60,p,0,0,0,0]
 
 
     h, w = field.shape
@@ -169,7 +169,7 @@ def calcTurningAngle(binryScale):
     for x in range(0,w,step):
         for y in range(0,h,step):
             (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,anglestep)
-            PointList[int(y/step)][int(x/step)]=value
+            if(PointList[int(y/step)][int(x/step)]==0):PointList[int(y/step)][int(x/step)]=value
             if(maxValue < value):
                 maxValue = value
                 maxAngle1 = angle1
@@ -656,7 +656,7 @@ def WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scal
     return (flag,binaryScale)
 
 def DrawAngleLine(img,x,y,theta,color,thickness):
-    return cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=color,thickness=thickness)
+    return cv2.line(img,(x,y),(x + int(360 * math.cos(math.radians(theta))),y + int(360 * math.sin(math.radians(theta)))),color=color,thickness=thickness)
 
 
 def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50):
@@ -738,30 +738,30 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewScale=50
         step=12*2
         for x in range(w):
             for y in range(h):
-                imageMap[y,x,:] = [PointList[int(y/step)][int(x/step)],0,0]
+                imageMap[y,x,:] = [PointList[min(int(h/step),int((y+12)/step))][min(int(w/step),int((x+12)/step))],0,0]
         if(5<maxX and maxX<w-5 and 5<maxY and maxY<h-5):
-            x=w-maxX
+            x=maxX
             y=maxY
 
-            maxAngle1=maxAngle1+90
-            maxAngle2=maxAngle1+maxAngle2+90
-            maxAngle3=maxAngle1+maxAngle2+maxAngle3+90
-            theta = maxAngle1-90
+            maxAngle1=maxAngle1
+            maxAngle2=maxAngle2
+            maxAngle3=maxAngle3
+            
             thickness=5
             topAngle1=maxAngle1
-            topAngle2=maxAngle1+maxAngle2
-            topAngle3=maxAngle1+maxAngle2+maxAngle3
+            topAngle2=maxAngle2
+            topAngle3=maxAngle3
 
 
-
+            theta = maxAngle1
             ir_image2=DrawAngleLine(ir_image2,x,y,topAngle1,(255,100,100,50),thickness)
-            ir_image2 = cv2.putText(ir_image2,str(int(topAngle1)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(255,100,100))
-            theta = maxAngle2-90
+            ir_image2 = cv2.putText(ir_image2,str(int(topAngle1)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(255,100,100))
+            theta = maxAngle2
             ir_image2=DrawAngleLine(ir_image2,x,y,topAngle2,(100,255,100,50),thickness)
-            ir_image2 = cv2.putText(ir_image2,str(int(topAngle2)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,255,100))
-            theta = maxAngle3-90
+            ir_image2 = cv2.putText(ir_image2,str(int(topAngle2)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,255,100))
+            theta = maxAngle3
             ir_image2=DrawAngleLine(ir_image2,x,y,topAngle3,(100,100,255,50),thickness)
-            image2 = cv2.putText(ir_image2,str(int(topAngle3)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,100,255))
+            image2 = cv2.putText(ir_image2,str(int(topAngle3)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,100,255))
             ir_image2 = cv2.putText(ir_image2,str(int(topAngle1)) + "/" + str(int(topAngle2)) + "/" + str(int(topAngle3)),(0,100),cv2.FONT_HERSHEY_PLAIN,3,(255,255,255))
             ir_image2[y-5:y+5,x-5:x+5,:] = [255,255,0]
 
