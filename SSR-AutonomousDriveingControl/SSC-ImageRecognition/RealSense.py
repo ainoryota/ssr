@@ -33,7 +33,7 @@ class RealSense(object):
         self.data = data
         self.vs = VideoStream((640,360))
         time.sleep(1)
-        self.vs.start();
+        self.vs.start()
 
         
         time.sleep(1)
@@ -46,23 +46,24 @@ class RealSense(object):
 
 
         self.timerlabel = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.timerlabel.grid(row=33, column=1,columnspan=5)
+        self.timerlabel.grid(row=0, column=34,columnspan=5)
 
         self.AccelLabelX = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.AccelLabelX.grid(row=34, column=1,columnspan=5)
+        self.AccelLabelX.grid(row=1, column=34,columnspan=5)
         self.AccelLabelY = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.AccelLabelY.grid(row=35, column=1,columnspan=5)
+        self.AccelLabelY.grid(row=2, column=34,columnspan=5)
         self.AccelLabelZ = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.AccelLabelZ.grid(row=36, column=1,columnspan=5)
+        self.AccelLabelZ.grid(row=3, column=34,columnspan=5)
 
 
         self.GyroLableX = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.GyroLableX.grid(row=37, column=1,columnspan=5)
+        self.GyroLableX.grid(row=4, column=34,columnspan=5)
         self.GyroLableY = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.GyroLableY.grid(row=38, column=1,columnspan=5)
+        self.GyroLableY.grid(row=5, column=34,columnspan=5)
         self.GyroLableZ = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.GyroLableZ.grid(row=39, column=1,columnspan=5)
-
+        self.GyroLableZ.grid(row=6, column=34,columnspan=5)
+        self.RobotTheta = tk.Label(self.root,text="",anchor="w",width = 50)
+        self.RobotTheta.grid(row=7, column=34,columnspan=5)
 
 
         self.branchdata = []
@@ -88,7 +89,7 @@ class RealSense(object):
         #print("depth;",depth_image.shape)
         #print("IR1:",ir_image1.shape)
         #print("IR2:",ir_image2.shape)
-        result=IR(color_image,depth_image,ir_image1,accel,True,self.data["scale"].get())
+        result = IR(color_image,depth_image,ir_image1,accel,True)
 
         testImg = result[0]
         testImg = Image.fromarray(testImg)
@@ -108,6 +109,7 @@ class RealSense(object):
         self.GyroLableY.configure(text="ジャイロY:{0:.2f}".format(gyro.y))
         self.GyroLableZ.configure(text="ジャイロY:{0:.2f}".format(gyro.z))
         self.timerlabel.configure(text="処理時間:{0} ms".format(timer))
+        self.RobotTheta.configure(text="ロボットの角度(deg):{0:.2f} ".format(math.degrees(-math.atan2(accel.y,accel.z))))
         self.branchdata.append([result[1],result[2],timer])
 
         print("★",'{:.2f}'.format(result[3]),result[1],result[8])
@@ -139,7 +141,8 @@ class RealSense(object):
                 result[7] = max(-80,result[7])
                 result[7] = min(80,result[7])
                 print("Branch Angle:",result[4],result[5],result[6],result[7],self.data["v1"].get(),self.data["v3"].get(),self.data["v7"].get(),self.data["v8"].get())
-                #Branch Angle:Exception in Tkinter callback 4:-5 5:-10 6:75 7:70 v1:True v3:True v7:True v8:False
+                #Branch Angle:Exception in Tkinter callback 4:-5 5:-10 6:75
+                #7:70 v1:True v3:True v7:True v8:False
                 self.br.branchAngle(result[4],result[5],result[6],result[7],self.data["v1"].get(),self.data["v3"].get(),self.data["v7"].get(),self.data["v8"].get())
             
 

@@ -101,8 +101,8 @@ class Form(object):
         self.data["cb8"].grid(row = 7, column =33, padx = 5, pady = 5)
         self.data["cb_auto"].grid(row = 13, column =0, padx = 5, pady = 5)
 
-        self.data["scale"] = tk.Scale(self.root,orient=tk.HORIZONTAL,from_=0,to=100)
-        self.data["scale"].grid(row=32, column=5,columnspan=10,rowspan=1)
+        #self.data["scale"] = tk.Scale(self.root,orient=tk.HORIZONTAL,from_=0,to=100)
+        #self.data["scale"].grid(row=32, column=5,columnspan=10,rowspan=1)
 
         ##１セット目
         #入力ウィンドウの作成

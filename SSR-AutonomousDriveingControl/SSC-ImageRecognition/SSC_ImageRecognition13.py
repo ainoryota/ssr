@@ -667,9 +667,7 @@ def CreteViewImage(img11,img12,img21,img22,img31,img32):
     return result
     
 
-def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewRate=50):
-
-
+def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
 
     #索道などのパラメータ
     minDistance = 200
@@ -687,7 +685,7 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewRate=50)
     h = 180
 
     #赤外線カメラとdepthカメラの位置変換用定数
-    x = 13
+    maxX = 13
     angle = 0
     scale = 1.4
 
@@ -698,13 +696,13 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewRate=50)
     ir_image = cv2.cvtColor(ir_image,cv2.COLOR_GRAY2RGB)
 
     #画角合わせ
-    color_image = np.delete(color_image,slice(0,x),1)
-    depth_scale = np.delete(depth_scale,slice(0,x),1)
+    color_image = np.delete(color_image,slice(0,maxX),1)
+    depth_scale = np.delete(depth_scale,slice(0,maxX),1)
     ir_image = cvpaste(ir_image, np.zeros((h,w,3)), 0, 0, angle, scale)
-    ir_image = np.delete(ir_image,slice(w - x,w),1)
+    ir_image = np.delete(ir_image,slice(w - maxX,w),1)
 
     #画角の結果に合わせた画像サイズ修正
-    w = w - x
+    w = w - maxX
 
     #表示用画像と処理用データをそれぞれ生成
     depth_image = ScalarImage2RGB(depth_scale,minDistance,overDistance)
@@ -729,11 +727,11 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewRate=50)
     #赤外線画像とdepth画像から2値画像を生成する
     if(True):
         flag,binaryScale = WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale)
-        ir_image2 = ir_image.copy()
-        ir_image2[np.where(flag == 3)] = [0,0,255]#depth要素のある部分
-        ir_image2[np.where(flag == 4)] = [0,255,255]#depth要素が遠い部分
-        ir_image2[np.where(flag == 1)] = [255,0,0]#データが不正の位置
-        ir_image2[np.where(flag == 2)] = [0,255,0]#IR要素が小さい部分
+        imageMap = ir_image.copy()
+        imageMap[np.where(flag == 3)] = [0,0,255]#depth要素のある部分
+        imageMap[np.where(flag == 4)] = [0,255,255]#depth要素が遠い部分
+        imageMap[np.where(flag == 1)] = [255,0,0]#データが不正の位置
+        imageMap[np.where(flag == 2)] = [0,255,0]#IR要素が小さい部分
         binaryScale = cv2.medianBlur(binaryScale,3)
         ir_image2 = cv2.cvtColor(binaryScale,cv2.COLOR_GRAY2RGB)   
 
@@ -747,52 +745,23 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewRate=50)
     ElevationAngle,ElevationImage = CalcElevationAngle(depth_scale,maxY,maxX,maxAngle1,maxAngle2,maxAngle3,minDistance,maxDistance,branchsize,thickness,h,w)
     print(maxX,maxY,ElevationAngle)
 
+    #表示
+    thickness = 5
+    angleA = abs(maxAngle1 - 270)
+    angleB = abs(maxAngle2 - 270)
+    if(angleA > angleB):(angleB,angleA) = (angleA,angleB)
+    cableway_image = DrawAngleLine(np.zeros((h,w,3),dtype=np.uint8),maxX,maxY,maxAngle1,(255,100,100,50),thickness)
+    cableway_image = DrawAngleLine(cableway_image,maxX,maxY,maxAngle2,(100,255,100,50),thickness)
+    cableway_image = DrawAngleLine(cableway_image,maxX,maxY,maxAngle3,(100,100,255,50),thickness)
+    cableway_image = cv2.putText(cableway_image,str(int(angleA)) + "/" + str(int(angleB)),(0,160),cv2.FONT_HERSHEY_PLAIN,2,(255,255,255))
+    brendImage = cv2.addWeighted(ir_image2, 0.5, cableway_image, 0.5, 0)
+    rr,cc = disk((maxY,maxX), 24, shape=(h,w))
+    mask = np.logical_and.reduce((rr >= 0, rr < h ,cc >= 0, cc < w))
+    cableway_image[rr[mask],cc[mask]] = [255,255,0]
 
-    #デバッグ用
-    if(True):
-        
-        imageMap = np.dstack((PointList.repeat(step, axis=0).repeat(step, axis=1)[int(step / 2):int(step / 2) + h,int(step / 2):int(step / 2) + w].reshape((h,w,1)),np.zeros((h,w,2)))).astype(np.uint8)
+    #img,x,y,fortunity,GammalAngle,TurnAngle,Rangle,Langle,XLog
+    return [CreteViewImage(color_image,depth_image,ir_image,brendImage,cvpaste(imageMap, np.zeros(ElevationImage.shape), 0, 0, 0,1),ElevationImage),0,0,0,0,0,0,0,XLog]
 
-        x = maxX
-        y = maxY
-
-        maxAngle1 = maxAngle1
-        maxAngle2 = maxAngle2
-        maxAngle3 = maxAngle3
-            
-        thickness = 5
-        topAngle1 = maxAngle1
-        topAngle2 = maxAngle2
-        topAngle3 = maxAngle3
-
-        cableway_image = np.zeros((h,w,3),dtype=np.uint8)
-
-        theta = maxAngle1
-        cableway_image = DrawAngleLine(cableway_image,x,y,topAngle1,(255,100,100,50),thickness)
-        cableway_image = cv2.putText(cableway_image,str(int(topAngle1)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(255,100,100))
-        theta = maxAngle2
-        cableway_image = DrawAngleLine(cableway_image,x,y,topAngle2,(100,255,100,50),thickness)
-        cableway_image = cv2.putText(cableway_image,str(int(topAngle2)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,255,100))
-        theta = maxAngle3
-        cableway_image = DrawAngleLine(cableway_image,x,y,topAngle3,(100,100,255,50),thickness)
-        cableway_image = cv2.putText(cableway_image,str(int(topAngle3)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,100,255))
-        cableway_image = cv2.putText(cableway_image,str(int(topAngle1)) + "/" + str(int(topAngle2)) + "/" + str(int(topAngle3)),(0,100),cv2.FONT_HERSHEY_PLAIN,3,(255,255,255))
-        cv2.addWeighted(cableway_image, viewRate / 100, cableway_image, 1 - viewRate / 100, 0)
-
-        rr,cc = disk((y,x), 24, shape=(h,w))
-        mask = np.logical_and.reduce((rr >= 0, rr < h ,cc >= 0, cc < w))
-        cableway_image[rr[mask],cc[mask]] = [255,255,0]
-
-        result = [depth_image,0,00,0,0,0,0,0,0,0,0,0,0]
-
-        ir_image2 = cv2.addWeighted(ir_image2, 0.5, cableway_image, 0.5, 0)
-        brendImage = cv2.addWeighted(imageMap, viewRate / 100, ir_image2, 1 - viewRate / 100, 0)
-        return [CreteViewImage(color_image,depth_image,ir_image,brendImage,ElevationImage,ElevationImage),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
-
-
-    result = ImageReconition(binaryScale)
-    double_image = np.hstack((result[0],ir_image2))
-    return [double_image,result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
 
 
 def ResetLog():
