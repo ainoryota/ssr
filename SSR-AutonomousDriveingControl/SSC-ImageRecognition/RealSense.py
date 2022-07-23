@@ -41,27 +41,27 @@ class RealSense(object):
         img = Image.open('testResult/test.png')
         testImgA = ImageTk.PhotoImage(img)
         self.il = tk.Label(self.root,image=testImgA)
-        self.il.grid(row=3, column=4,columnspan=30,rowspan=10)
+        self.il.grid(row=1, column=1,columnspan=30,rowspan=20,ipadx=5)
 
 
 
         self.timerlabel = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.timerlabel.grid(row=33, column=6,columnspan=5)
+        self.timerlabel.grid(row=33, column=1,columnspan=5)
 
         self.AccelLabelX = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.AccelLabelX.grid(row=34, column=6,columnspan=5)
+        self.AccelLabelX.grid(row=34, column=1,columnspan=5)
         self.AccelLabelY = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.AccelLabelY.grid(row=35, column=6,columnspan=5)
+        self.AccelLabelY.grid(row=35, column=1,columnspan=5)
         self.AccelLabelZ = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.AccelLabelZ.grid(row=36, column=6,columnspan=5)
+        self.AccelLabelZ.grid(row=36, column=1,columnspan=5)
 
 
         self.GyroLableX = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.GyroLableX.grid(row=37, column=6,columnspan=5)
+        self.GyroLableX.grid(row=37, column=1,columnspan=5)
         self.GyroLableY = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.GyroLableY.grid(row=38, column=6,columnspan=5)
+        self.GyroLableY.grid(row=38, column=1,columnspan=5)
         self.GyroLableZ = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.GyroLableZ.grid(row=39, column=6,columnspan=5)
+        self.GyroLableZ.grid(row=39, column=1,columnspan=5)
 
 
 

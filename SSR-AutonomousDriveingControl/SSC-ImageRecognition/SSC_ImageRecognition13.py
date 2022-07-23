@@ -113,8 +113,9 @@ def getDiskArray(y,x,r,h,w):
     mask = np.logical_and.reduce((rr >= 0, rr < h ,cc >= 0, cc < w))
     return (rr[mask],cc[mask])
 
+
 #分岐点位置を与えたときにその位置を評価する
-def CalcScore(field,x,y,anglestep):
+def CalcScore(field,x,y,anglestep,thickness):
     h, w = field.shape
     maxValue = 0
     maxValue1 = 0
@@ -129,17 +130,14 @@ def CalcScore(field,x,y,anglestep):
     cable_size = 12
     checkSize = 100
     W = math.floor(checkSize / 2)
-
     doubel_max = 0
-
-    #anglestepずつ角度を変化させていく
 
     ruleAngle = 30
     angle3 = 90
     angles = np.array(range(0,360,anglestep))
     angles = angles[np.where((CalcDiffAngleNP(angles,angle3) >= ruleAngle))]
-    scores = np.array([np.sum(field[(getWeightedLineArray(angle,300,3,y,x,h,w))]) for angle in angles])
-    angle90Score = np.sum(field[(getWeightedLineArray(90,300,3,y,x,h,w))])
+    scores = np.array([np.sum(field[(getWeightedLineArray(angle,300,thickness,y,x,h,w))]) for angle in angles])
+    maxValue3 = np.sum(field[(getWeightedLineArray(90,300,thickness,y,x,h,w))])
 
     idx = np.where((scores > 0))
     angles = angles[idx]
@@ -149,32 +147,28 @@ def CalcScore(field,x,y,anglestep):
     angles = angles[idx]
     scores = scores[idx]
 
-    count = len(angles)
-
-    for i in range(count):
+    for i in range(len(angles)):
         angle1 = angles[i]
         score1 = scores[i]
-        idx=np.where(CalcDiffAngleNP(angles[i:],angle1)>=ruleAngle)
-        if(len(idx[0])==0):continue
+        idx = np.where(CalcDiffAngleNP(angles[i:],angle1) >= ruleAngle)
+        if(len(idx[0]) == 0):continue
 
         angle2 = angles[i:][idx][0]
         score2 = scores[i:][idx][0]
-        maxValue =  score1 + score2 + angle90Score
+        maxValue = score1 + score2 + maxValue3
         maxAngle1 = angle1
         maxAngle2 = angle2
         maxAngle3 = angle3
         maxValue1 = score1
         maxValue2 = score2
-        maxValue3 = angle90Score
         break
 
     return [maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3,doubel_max]
 
-def calcTurningAngle(binryScale):
+def CalcTurningAngle(binryScale,step,branchsize,thickness):
     h, w = binryScale.shape
 
     maxValue = 0
-    step = 12 * 2
     field = np.where(binryScale > 0,1,0)
     maxX = 0
     maxY = 0
@@ -185,8 +179,7 @@ def calcTurningAngle(binryScale):
     maxValue2 = -1
     maxValue3 = -1
     maxDoubel = -1
-    anglestep = 5
-    branchsize = 24
+    anglestep = 3
 
     PointList = np.zeros((int(h / step + 2),int(w / step + 2)))
 
@@ -197,7 +190,7 @@ def calcTurningAngle(binryScale):
             rr,cc = getDiskArray(y,x,branchsize,h,w)
             score = np.sum(field[rr,cc])
             field[rr,cc] = 0
-            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,anglestep)
+            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,anglestep,thickness)
             value+=score
             PointList[int(y / step)][int(x / step)] = value
             if(maxValue < value):
@@ -216,58 +209,50 @@ def calcTurningAngle(binryScale):
     PointList = (PointList * 255 / maxValue).astype(np.uint8)
     return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList]
 
+def CalcElevationAngle(depthScale,y,x,angle1,angle2,angle3,minDistance,maxDistance,branchsize,thickness,h,w):
+    elevationAngle = 0
+    
+    #索道の触れうる部分のidxをすべて持ってくる
+    #分岐点周りのデータ+索道3本のデータ
+    rr1,cc1 = getDiskArray(y,x,branchsize,h,w)
+    rr2,cc2 = getWeightedLineArray(angle1,300,thickness,y,x,h,w)
+    rr3,cc3 = getWeightedLineArray(angle2,300,thickness,y,x,h,w)
+    rr4,cc4 = getWeightedLineArray(angle3,300,thickness,y,x,h,w)
 
-def Calc(img):
-    height, width, channels = img.shape[:3]
-    maxValue = 0
-    step = 12 * 2
-    field = np.where(np.any(img > 0,2) == 0,0,1)
-    maxX = 0
-    maxY = 0
-    maxAngle1 = -1
-    maxAngle2 = -1
-    maxAngle3 = -1
-    maxValue1 = -1
-    maxValue2 = -1
-    maxValue3 = -1
-    maxDoubel = -1
-    anglestep = 10
-    #ざっくり解を調べる
-    for x in range(0,width,step):
-        for y in range(0,height,step):
-            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,anglestep)
-            if(maxValue < value):
-                maxValue = value
-                maxAngle1 = angle1
-                maxAngle2 = angle2
-                maxAngle3 = angle3
-                maxValue1 = value1
-                maxValue2 = value2
-                maxValue3 = value3
-                maxX = x
-                maxY = y
-                maxDoubel = doubel
+    #ケーブルが通る部分のdepth情報
+    IsCableway = np.zeros((h,w),dtype=np.uint8)
+    IsCableway[rr1,cc1] = 1
+    IsCableway[rr2,cc2] = 1
+    IsCableway[rr3,cc3] = 1
+    IsCableway[rr4,cc4] = 1
+    EffectiveDepthScale = np.where((depthScale >= minDistance) & (depthScale < maxDistance),depthScale,0) * IsCableway
 
-    #解の周辺をさらに調べる
-    detailStep = 5
-    detailanglestep = 5
-    for x in range(maxX - step,maxX + step,detailStep):
-        for y in range(maxY - step,maxY + step,detailStep):
-            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,detailanglestep)
-            if(maxValue < value):
-                maxValue = value
-                maxAngle1 = angle1
-                maxAngle2 = angle2
-                maxAngle3 = angle3
-                maxValue1 = value1
-                maxValue2 = value2
-                maxValue3 = value3
-                maxX = x
-                maxY = y
-                maxDoubel = doubel
+    #描画用
+    elevationImage = np.zeros((int(maxDistance - minDistance),w),dtype=np.uint8) + 100
+
+    #最小二乗法で平面の傾きを考える
+    data1_x = np.zeros(0)
+    data1_depth = np.zeros(0)
+    data2_y = np.zeros(0)
+    data2_depth = np.zeros(0)
+
+    for x in range(w):
+        for y in range(h):
+            p = EffectiveDepthScale[y][x]
+            if(p > 0):
+                data1_x = np.append(data1_x,x)
+                data1_depth = np.append(data1_depth,p)
+                data2_y = np.append(data2_y,y)
+                data2_depth = np.append(data2_depth,p)
+                elevationImage[int(maxDistance - p - 1)][x] = 255
 
 
-    return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel]
+    a1,b1 = reg1dim(data1_x,data1_depth)
+    a2,b2 = reg1dim(data2_y,data2_depth)
+    elevationAngle = -math.degrees(math.atan(a1))
+    elevationImage = cv2.cvtColor(elevationImage, cv2.COLOR_GRAY2RGB)
+    return elevationAngle,elevationImage
+
 
 fortuneLog = [0,0,0,0,0]
 GammalAngleLog = [0,0,0,0,0]
@@ -618,7 +603,7 @@ def RegionGrowing(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale)
     #cv2.THRESH_BINARY,11,2)
     #ir_image=cv2.cvtColor(ir_image, cv2.COLOR_GRAY2BGR)
 
-    idx = np.where((minDistance <= depth_scale) & (depth_scale <= maxDistance))
+    idx = np.where((minDistance <= depth_scale) & (depth_scale < maxDistance))
     seeds = list(zip(idx[0],idx[1]))
     colorList = ir_scale[idx]
     colorList.sort()
@@ -658,27 +643,37 @@ def WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scal
     #遠くのdepth要素がある部分にフラグ4を付ける
     flag = np.where((depth_scale > overDistance),4,flag)
 
-    #データが不正の位地にフラグ1をつける
+    #データが不正の位置にフラグ1をつける
     flag = np.where((depth_scale == 0) ,1,flag)
             
     #IR要素が小さい部分にフラグ2をつける
     flag = np.where((ir_scale <= 100) ,2,flag)
 
     binaryScale = np.where(flag == 3,255,0).astype(np.uint8)
+    #binaryScale = np.where(flag == 0,ir_scale,binaryScale).astype(np.uint8)
 
     return (flag,binaryScale)
 
 def DrawAngleLine(img,x,y,theta,color,thickness):
     return cv2.line(img,(x,y),(x + int(360 * math.cos(math.radians(theta))),y + int(360 * math.sin(math.radians(theta)))),color=color,thickness=thickness)
 
+def CreteViewImage(img11,img12,img21,img22,img31,img32):
+    a = np.hstack((img11,img12))
+    b = np.hstack((img21,img22))
+    c = np.hstack((img31,img32))
+    result = np.vstack((a,b))
+    result = np.vstack((result,c))
+
+    return result
+    
 
 def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewRate=50):
 
 
 
     #索道などのパラメータ
-    minDistance = 50
-    maxDistance = 600
+    minDistance = 200
+    maxDistance = 500
     overDistance = 3000
 
     #戻り値
@@ -691,7 +686,7 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewRate=50)
     w = 320
     h = 180
 
-    #赤外線カメラとdepthカメラの位地変換用定数
+    #赤外線カメラとdepthカメラの位置変換用定数
     x = 13
     angle = 0
     scale = 1.4
@@ -737,18 +732,25 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewRate=50)
         ir_image2 = ir_image.copy()
         ir_image2[np.where(flag == 3)] = [0,0,255]#depth要素のある部分
         ir_image2[np.where(flag == 4)] = [0,255,255]#depth要素が遠い部分
-        ir_image2[np.where(flag == 1)] = [255,0,0]#データが不正の位地
+        ir_image2[np.where(flag == 1)] = [255,0,0]#データが不正の位置
         ir_image2[np.where(flag == 2)] = [0,255,0]#IR要素が小さい部分
         binaryScale = cv2.medianBlur(binaryScale,3)
         ir_image2 = cv2.cvtColor(binaryScale,cv2.COLOR_GRAY2RGB)   
 
     #得られた二値画像から旋回角を求める
-    (maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList) = calcTurningAngle(binaryScale)
-    
-    print(maxX,maxY)
+    step = 12
+    branchsize = 24
+    thickness = 5
+    (maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList) = CalcTurningAngle(binaryScale,step,branchsize,thickness)
+
+    #旋回角から仰角を求める
+    ElevationAngle,ElevationImage = CalcElevationAngle(depth_scale,maxY,maxX,maxAngle1,maxAngle2,maxAngle3,minDistance,maxDistance,branchsize,thickness,h,w)
+    print(maxX,maxY,ElevationAngle)
+
+
     #デバッグ用
     if(True):
-        step = 12 * 2
+        
         imageMap = np.dstack((PointList.repeat(step, axis=0).repeat(step, axis=1)[int(step / 2):int(step / 2) + h,int(step / 2):int(step / 2) + w].reshape((h,w,1)),np.zeros((h,w,2)))).astype(np.uint8)
 
         x = maxX
@@ -763,28 +765,29 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewRate=50)
         topAngle2 = maxAngle2
         topAngle3 = maxAngle3
 
+        cableway_image = np.zeros((h,w,3),dtype=np.uint8)
 
         theta = maxAngle1
-        ir_image2 = DrawAngleLine(ir_image2,x,y,topAngle1,(255,100,100,50),thickness)
-        ir_image2 = cv2.putText(ir_image2,str(int(topAngle1)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(255,100,100))
+        cableway_image = DrawAngleLine(cableway_image,x,y,topAngle1,(255,100,100,50),thickness)
+        cableway_image = cv2.putText(cableway_image,str(int(topAngle1)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(255,100,100))
         theta = maxAngle2
-        ir_image2 = DrawAngleLine(ir_image2,x,y,topAngle2,(100,255,100,50),thickness)
-        ir_image2 = cv2.putText(ir_image2,str(int(topAngle2)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,255,100))
+        cableway_image = DrawAngleLine(cableway_image,x,y,topAngle2,(100,255,100,50),thickness)
+        cableway_image = cv2.putText(cableway_image,str(int(topAngle2)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,255,100))
         theta = maxAngle3
-        ir_image2 = DrawAngleLine(ir_image2,x,y,topAngle3,(100,100,255,50),thickness)
-        image2 = cv2.putText(ir_image2,str(int(topAngle3)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,100,255))
-        ir_image2 = cv2.putText(ir_image2,str(int(topAngle1)) + "/" + str(int(topAngle2)) + "/" + str(int(topAngle3)),(0,100),cv2.FONT_HERSHEY_PLAIN,3,(255,255,255))
+        cableway_image = DrawAngleLine(cableway_image,x,y,topAngle3,(100,100,255,50),thickness)
+        cableway_image = cv2.putText(cableway_image,str(int(topAngle3)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,100,255))
+        cableway_image = cv2.putText(cableway_image,str(int(topAngle1)) + "/" + str(int(topAngle2)) + "/" + str(int(topAngle3)),(0,100),cv2.FONT_HERSHEY_PLAIN,3,(255,255,255))
+        cv2.addWeighted(cableway_image, viewRate / 100, cableway_image, 1 - viewRate / 100, 0)
+
         rr,cc = disk((y,x), 24, shape=(h,w))
         mask = np.logical_and.reduce((rr >= 0, rr < h ,cc >= 0, cc < w))
-        
-        ir_image2[rr[mask],cc[mask]] = [255,255,0]
-
-
+        cableway_image[rr[mask],cc[mask]] = [255,255,0]
 
         result = [depth_image,0,00,0,0,0,0,0,0,0,0,0,0]
 
+        ir_image2 = cv2.addWeighted(ir_image2, 0.5, cableway_image, 0.5, 0)
         brendImage = cv2.addWeighted(imageMap, viewRate / 100, ir_image2, 1 - viewRate / 100, 0)
-        return [np.vstack((np.hstack((color_image,depth_image)),np.hstack((ir_image,brendImage)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
+        return [CreteViewImage(color_image,depth_image,ir_image,brendImage,ElevationImage,ElevationImage),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
 
 
     result = ImageReconition(binaryScale)
