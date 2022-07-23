@@ -209,7 +209,7 @@ def CalcTurningAngle(binryScale,step,branchsize,thickness):
     PointList = (PointList * 255 / maxValue).astype(np.uint8)
     return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList]
 
-def CalcElevationAngle(depthScale,y,x,angle1,angle2,angle3,minDistance,maxDistance,branchsize,thickness,h,w):
+def CalcElevationAngle(depthScale,y,x,angle1,angle2,angle3,minDistance,maxDistance,branchsize,thickness,h,w,branchX,branchY):
     elevationAngle = 0
     
     #索道の触れうる部分のidxをすべて持ってくる
@@ -228,29 +228,29 @@ def CalcElevationAngle(depthScale,y,x,angle1,angle2,angle3,minDistance,maxDistan
     EffectiveDepthScale = np.where((depthScale >= minDistance) & (depthScale < maxDistance),depthScale,0) * IsCableway
 
     #描画用
-    elevationImage = np.zeros((int(maxDistance - minDistance),w),dtype=np.uint8) + 100
+    elevationImage = np.zeros((int(maxDistance - minDistance),w,3),dtype=np.uint8) + 100
 
     #最小二乗法で平面の傾きを考える
-    data1_x = np.zeros(0)
-    data1_depth = np.zeros(0)
-    data2_y = np.zeros(0)
-    data2_depth = np.zeros(0)
+    idx = np.nonzero(EffectiveDepthScale > 0)
+    ydata = idx[0]
+    Ymask = np.nonzero(ydata < branchY)
+    elevationImage[maxDistance - EffectiveDepthScale[idx] - 1,idx[1]] = [255,255,255]
+    
+    data1_x = idx[1][Ymask]
+    data1_depth = EffectiveDepthScale[idx][Ymask]
+    maskL = np.nonzero((w>branchX))#リアル空間で左分岐=画像上で右分岐
+    maskR = np.nonzero((w<branchX))
+
+    
+    a1,bL1 = reg1dim(data1_x[maskL],data1_depth[maskL])
 
     for x in range(w):
-        for y in range(h):
-            p = EffectiveDepthScale[y][x]
-            if(p > 0):
-                data1_x = np.append(data1_x,x)
-                data1_depth = np.append(data1_depth,p)
-                data2_y = np.append(data2_y,y)
-                data2_depth = np.append(data2_depth,p)
-                elevationImage[int(maxDistance - p - 1)][x] = 255
+        Y = int(maxDistance - 1 - int(x * a1 + bL1))
+        if(Y >= int(maxDistance - minDistance) or Y < 0):continue
+        elevationImage[Y][x] = [255,0,255]
 
 
-    a1,b1 = reg1dim(data1_x,data1_depth)
-    a2,b2 = reg1dim(data2_y,data2_depth)
-    elevationAngle = -math.degrees(math.atan(a1))
-    elevationImage = cv2.cvtColor(elevationImage, cv2.COLOR_GRAY2RGB)
+    elevationAngle = math.degrees(math.atan(a1))
     return elevationAngle,elevationImage
 
 
@@ -742,7 +742,9 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
     (maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList) = CalcTurningAngle(binaryScale,step,branchsize,thickness)
 
     #旋回角から仰角を求める
-    ElevationAngle,ElevationImage = CalcElevationAngle(depth_scale,maxY,maxX,maxAngle1,maxAngle2,maxAngle3,minDistance,maxDistance,branchsize,thickness,h,w)
+    LElevationAngle,RElevationAngle,ElevationImage = CalcElevationAngle(depth_scale,maxY,maxX,maxAngle1,maxAngle2,maxAngle3,minDistance,maxDistance,branchsize,thickness,h,w,maxX,maxY)
+    #ElevationImage=ir_image2.copy()
+    #ElevationAngle=0
     print(maxX,maxY,ElevationAngle)
 
     #表示
