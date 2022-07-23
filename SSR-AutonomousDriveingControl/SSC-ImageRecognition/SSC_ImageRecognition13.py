@@ -154,20 +154,19 @@ def CalcScore(field,x,y,anglestep):
     for i in range(count):
         angle1 = angles[i]
         score1 = scores[i]
-        for j in range(i,count):
-            angle2 = angles[j]
-            score2 = scores[j]
-            value = score1 + score2 + angle90Score
-            if(CalcDiffAngle(angle1,angle2) >= ruleAngle and value > maxValue):
-                maxValue = value
-                maxAngle1 = angle1
-                maxAngle2 = angle2
-                maxAngle3 = angle3
-                maxValue1 = score1
-                maxValue2 = score2
-                maxValue3 = angle90Score
-                break
+        idx=np.where(CalcDiffAngleNP(angles[i:],angle1)>=ruleAngle)
+        if(len(idx[0])==0):continue
 
+        angle2 = angles[i:][idx][0]
+        score2 = scores[i:][idx][0]
+        maxValue =  score1 + score2 + angle90Score
+        maxAngle1 = angle1
+        maxAngle2 = angle2
+        maxAngle3 = angle3
+        maxValue1 = score1
+        maxValue2 = score2
+        maxValue3 = angle90Score
+        break;
 
 
     #for i in range(count):
