@@ -99,7 +99,7 @@ def weighted_line(y1, x1, y2, x2, w, rmin=0, rmax=np.inf):
     #return (yy[mask].astype(int), xx[mask].astype(int), vals[mask])
     return (yy.astype(int), xx.astype(int), vals)
 
-@lru_cache(maxsize=5000)
+@lru_cache(maxsize=10000)
 def getWeightedLineArray(theta,len,thickness,y,x,h,w):
     cos = math.cos(math.radians(theta))
     sin = math.sin(math.radians(theta))
@@ -107,7 +107,7 @@ def getWeightedLineArray(theta,len,thickness,y,x,h,w):
     mask = np.logical_and.reduce((rr + y >= 0, rr + y < h ,cc + x >= 0, cc + x < w))
     return (rr[mask] + y,cc[mask] + x)
 
-@lru_cache(maxsize=1000)
+@lru_cache(maxsize=5000)
 def getDiskArray(y,x,r,h,w):
     rr,cc = disk((y,x), r, shape=(h,w))
     mask = np.logical_and.reduce((rr >= 0, rr < h ,cc >= 0, cc < w))
@@ -133,22 +133,22 @@ def CalcScore(field,x,y,anglestep):
     doubel_max = 0
 
     #anglestepずつ角度を変化させていく
-    num = int(360 / anglestep)
+
+    ruleAngle = 30
+    angle3 = 90
     angles = np.array(range(0,360,anglestep))
+    angles = angles[np.where((CalcDiffAngleNP(angles,angle3) >= ruleAngle))]
     scores = np.array([np.sum(field[(getWeightedLineArray(angle,300,3,y,x,h,w))]) for angle in angles])
-    angle90Score = scores[np.nonzero(angles == 90)]
+    angle90Score = np.sum(field[(getWeightedLineArray(90,300,3,y,x,h,w))])
 
+    idx = np.where((scores > 0))
+    angles = angles[idx]
+    scores = scores[idx]
 
-    #全部numpyにする
     idx = np.argsort(scores)[::-1]
     angles = angles[idx]
     scores = scores[idx]
 
-    ruleAngle = 30
-    angle3 = 90
-    idx = np.where((scores > 0) & (CalcDiffAngleNP(angles,angle3) >= ruleAngle))
-    angles = angles[idx]
-    scores = scores[idx]
     count = len(angles)
 
     for i in range(count):
@@ -166,101 +166,9 @@ def CalcScore(field,x,y,anglestep):
         maxValue1 = score1
         maxValue2 = score2
         maxValue3 = angle90Score
-        break;
+        break
 
-
-    #for i in range(count):
-    #    angle1 = angles[i]
-    #    score1 = scores[i]
-    #    idx=np.argmax((CalcDiffAngleNP(angles[i:],angle1)>=ruleAngle)*(scores[i:]))
-    #    angle2 = angles[i:][idx]
-    #    score2 = scores[i:][idx]
-    #    value = score1 + score2 + angle90Score
-    #    if(value > maxValue):
-    #        maxValue = value
-    #        maxAngle1 = angle1
-    #        maxAngle2 = angle2
-    #        maxAngle3 = angle3
-    #        maxValue1 = score1
-    #        maxValue2 = score2
-    #        maxValue3 = angle90Score
-
-
-    #angleScore = list(zip(scores,angles))
-    #angleScore.sort(reverse=True)
-
-    #ruleAngle = 30
-    #angle3 = 90
-    #angleScore = np.array(list(filter(lambda x: x[0] > 0 and
-    #CalcDiffAngle(x[1],angle3) >= ruleAngle,angleScore)))
-    #count=len(angleScore)
-    #maxValue = angleScore[0][0]
-    #maxAngle1 = angleScore[0][1]
-
-    
-    #for i in range(count):
-    #    score1,angle1 = angleScore[i]
-    #    for score2,angle2 in angleScore[np.where(angleScore)]
-    #   list(filter(lambda x:CalcDiffAngle(angle1,x[1]) <
-    #   ruleAngle,angleScore[i:])):
-    #        value = score1 + score2 + angle90Score
-
-    #        if(value > maxValue):
-    #            maxValue = value
-    #            maxAngle1 = angle1
-    #            maxAngle2 = angle2
-    #            maxAngle3 = angle3
-    #            maxValue1 = score1
-    #            maxValue2 = score2
-    #            maxValue3 = angle90Score
-
-    #for score1,angle1 in angleScore:
-    #    for score2,angle2 in list(filter(lambda x:(x[0] > score1) & (score1 +
-    #    x[0] + angle90Score < maxValue) & (CalcDiffAngle(angle1,x[1]) <
-    #    ruleAngle),angleScore)):
-    #        value = score1 + score2 + angle90Score
-    #        if(value > maxValue):
-    #            maxValue = value
-    #            maxAngle1 = angle1
-    #            maxAngle2 = angle2
-    #            maxAngle3 = angle3
-    #            maxValue1 = angleScore[i][0]
-    #            maxValue2 = angleScore[j][0]
-    #            maxValue3 = angle90Score
-                            
-    #            break#ソートされているのでbreakしてOK
-
-
-    #for i in range(count):
-    #    angle1 = int(angleScore[i][1])
-    #    for j in range(i,count):
-    #        angle2 = int(angleScore[j][1])
-    #        if(CalcDiffAngle(angle1,angle2) < ruleAngle):continue
-    #        if(angleScore[i][0] + angleScore[j][0] > doubel_max):
-    #            doubel_max = angleScore[i][0] + angleScore[j][0]
-    #        if(angleScore[i][0] + angleScore[j][0] + angle90Score <
-    #        maxValue):break # + angleScore[0][0]
-                    
-    #        angle3 = 90
-    #        if(CalcDiffAngle(angle2,angle3) < ruleAngle or
-    #        CalcDiffAngle(angle1,angle3) < ruleAngle):continue
-
-    #        value = angleScore[i][0] + angleScore[j][0] + angle90Score
-
-    #        if(value > maxValue):
-    #            maxValue = value
-    #            maxAngle1 = angle1
-    #            maxAngle2 = angle2
-    #            maxAngle3 = angle3
-    #            maxValue1 = angleScore[i][0]
-    #            maxValue2 = angleScore[j][0]
-    #            maxValue3 = angle90Score
-                            
-    #            break#ソートされているのでbreakしてOK
     return [maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3,doubel_max]
-
-def ClipArrayRange(target,y,x,Y,W,minY,maxY,minX,maxX):
-    return 
 
 def calcTurningAngle(binryScale):
     h, w = binryScale.shape
@@ -281,7 +189,6 @@ def calcTurningAngle(binryScale):
     branchsize = 24
 
     PointList = np.zeros((int(h / step + 2),int(w / step + 2)))
-    
 
     #解を調べる
     for x in range(int(w * 0.4),int(w * 0.6),step):
@@ -290,7 +197,6 @@ def calcTurningAngle(binryScale):
             rr,cc = getDiskArray(y,x,branchsize,h,w)
             score = np.sum(field[rr,cc])
             field[rr,cc] = 0
-
             (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,anglestep)
             value+=score
             PointList[int(y / step)][int(x / step)] = value
@@ -767,6 +673,8 @@ def DrawAngleLine(img,x,y,theta,color,thickness):
 
 
 def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewRate=50):
+
+
 
     #索道などのパラメータ
     minDistance = 50
