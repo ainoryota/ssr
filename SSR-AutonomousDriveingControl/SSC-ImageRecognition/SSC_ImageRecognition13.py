@@ -44,14 +44,19 @@ def getUnitValue(value,unit):
 
 
 #2つの角度の差を求める
-@numba.jit(nopython=True)
+@lru_cache(maxsize=1000)
 def CalcDiffAngle(angle1,angle2):
     ret = min(360,abs(angle1 - angle2))
     ret = min(ret,abs(angle1 - angle2 - 360))
     ret = min(ret,abs(angle1 - angle2 + 360))
     return ret
 
-
+def CalcDiffAngleNP(angle1,angle2):
+    angle1 = np.where(angle1 > 360,angle1 - 360,angle1)
+    angle1 = np.where(angle1 > np.abs(angle1 - angle2),np.abs(angle1 - angle2),angle1)
+    angle1 = np.where(angle1 > np.abs(angle1 - angle2 - 360),np.abs(angle1 - angle2 - 360),angle1)
+    angle1 = np.where(angle1 > np.abs(angle1 - angle2 + 360),np.abs(angle1 - angle2 + 360),angle1)
+    return angle1
 
 def trapez(y,y0,w):
     return np.clip(np.minimum(y + 1 + w / 2 - y0, -y + 1 + w / 2 + y0),0,1)
@@ -129,51 +134,130 @@ def CalcScore(field,x,y,anglestep):
 
     #anglestepずつ角度を変化させていく
     num = int(360 / anglestep)
-    angles = range(0,360,anglestep)    
+    angles = np.array(range(0,360,anglestep))
     scores = np.array([np.sum(field[(getWeightedLineArray(angle,300,3,y,x,h,w))]) for angle in angles])
-
-    angleScore = list(zip(scores,angles))
-    angleScore.sort(reverse=True)
-    maxValue = angleScore[0][0]
-    maxAngle1 = angleScore[0][1]
-    count = np.count_nonzero(scores > 0)
+    angle90Score = scores[np.nonzero(angles == 90)]
 
 
-    #return
-    #[maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3,doubel_max]
-
-    angle90Score = 0
-    for i in range(count):
-        if(angleScore[i][1] == 90):
-            angle90Score = angleScore[i][0]
-            break
-
+    #全部numpyにする
+    idx = np.argsort(scores)[::-1]
+    angles = angles[idx]
+    scores = scores[idx]
 
     ruleAngle = 30
+    angle3 = 90
+    idx = np.where((scores > 0) & (CalcDiffAngleNP(angles,angle3) >= ruleAngle))
+    angles = angles[idx]
+    scores = scores[idx]
+    count = len(angles)
+
     for i in range(count):
-        angle1 = int(angleScore[i][1])            
+        angle1 = angles[i]
+        score1 = scores[i]
         for j in range(i,count):
-            angle2 = int(angleScore[j][1])
-            if(CalcDiffAngle(angle1,angle2) < ruleAngle):continue
-            if(angleScore[i][0] + angleScore[j][0] > doubel_max):
-                doubel_max = angleScore[i][0] + angleScore[j][0]
-            if(angleScore[i][0] + angleScore[j][0] + angle90Score < maxValue):break # + angleScore[0][0]
-                    
-            angle3 = 90
-            if(CalcDiffAngle(angle2,angle3) < ruleAngle or CalcDiffAngle(angle1,angle3) < ruleAngle):continue
-
-            value = angleScore[i][0] + angleScore[j][0] + angle90Score
-
-            if(value > maxValue):
+            angle2 = angles[j]
+            score2 = scores[j]
+            value = score1 + score2 + angle90Score
+            if(CalcDiffAngle(angle1,angle2) >= ruleAngle and value > maxValue):
                 maxValue = value
                 maxAngle1 = angle1
                 maxAngle2 = angle2
                 maxAngle3 = angle3
-                maxValue1 = angleScore[i][0]
-                maxValue2 = angleScore[j][0]
+                maxValue1 = score1
+                maxValue2 = score2
                 maxValue3 = angle90Score
+                break
+
+
+
+    #for i in range(count):
+    #    angle1 = angles[i]
+    #    score1 = scores[i]
+    #    idx=np.argmax((CalcDiffAngleNP(angles[i:],angle1)>=ruleAngle)*(scores[i:]))
+    #    angle2 = angles[i:][idx]
+    #    score2 = scores[i:][idx]
+    #    value = score1 + score2 + angle90Score
+    #    if(value > maxValue):
+    #        maxValue = value
+    #        maxAngle1 = angle1
+    #        maxAngle2 = angle2
+    #        maxAngle3 = angle3
+    #        maxValue1 = score1
+    #        maxValue2 = score2
+    #        maxValue3 = angle90Score
+
+
+    #angleScore = list(zip(scores,angles))
+    #angleScore.sort(reverse=True)
+
+    #ruleAngle = 30
+    #angle3 = 90
+    #angleScore = np.array(list(filter(lambda x: x[0] > 0 and
+    #CalcDiffAngle(x[1],angle3) >= ruleAngle,angleScore)))
+    #count=len(angleScore)
+    #maxValue = angleScore[0][0]
+    #maxAngle1 = angleScore[0][1]
+
+    
+    #for i in range(count):
+    #    score1,angle1 = angleScore[i]
+    #    for score2,angle2 in angleScore[np.where(angleScore)]
+    #   list(filter(lambda x:CalcDiffAngle(angle1,x[1]) <
+    #   ruleAngle,angleScore[i:])):
+    #        value = score1 + score2 + angle90Score
+
+    #        if(value > maxValue):
+    #            maxValue = value
+    #            maxAngle1 = angle1
+    #            maxAngle2 = angle2
+    #            maxAngle3 = angle3
+    #            maxValue1 = score1
+    #            maxValue2 = score2
+    #            maxValue3 = angle90Score
+
+    #for score1,angle1 in angleScore:
+    #    for score2,angle2 in list(filter(lambda x:(x[0] > score1) & (score1 +
+    #    x[0] + angle90Score < maxValue) & (CalcDiffAngle(angle1,x[1]) <
+    #    ruleAngle),angleScore)):
+    #        value = score1 + score2 + angle90Score
+    #        if(value > maxValue):
+    #            maxValue = value
+    #            maxAngle1 = angle1
+    #            maxAngle2 = angle2
+    #            maxAngle3 = angle3
+    #            maxValue1 = angleScore[i][0]
+    #            maxValue2 = angleScore[j][0]
+    #            maxValue3 = angle90Score
                             
-                break#ソートされているのでbreakしてOK
+    #            break#ソートされているのでbreakしてOK
+
+
+    #for i in range(count):
+    #    angle1 = int(angleScore[i][1])
+    #    for j in range(i,count):
+    #        angle2 = int(angleScore[j][1])
+    #        if(CalcDiffAngle(angle1,angle2) < ruleAngle):continue
+    #        if(angleScore[i][0] + angleScore[j][0] > doubel_max):
+    #            doubel_max = angleScore[i][0] + angleScore[j][0]
+    #        if(angleScore[i][0] + angleScore[j][0] + angle90Score <
+    #        maxValue):break # + angleScore[0][0]
+                    
+    #        angle3 = 90
+    #        if(CalcDiffAngle(angle2,angle3) < ruleAngle or
+    #        CalcDiffAngle(angle1,angle3) < ruleAngle):continue
+
+    #        value = angleScore[i][0] + angleScore[j][0] + angle90Score
+
+    #        if(value > maxValue):
+    #            maxValue = value
+    #            maxAngle1 = angle1
+    #            maxAngle2 = angle2
+    #            maxAngle3 = angle3
+    #            maxValue1 = angleScore[i][0]
+    #            maxValue2 = angleScore[j][0]
+    #            maxValue3 = angle90Score
+                            
+    #            break#ソートされているのでbreakしてOK
     return [maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3,doubel_max]
 
 def ClipArrayRange(target,y,x,Y,W,minY,maxY,minX,maxX):
