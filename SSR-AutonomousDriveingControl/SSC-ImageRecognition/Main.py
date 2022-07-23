@@ -47,5 +47,4 @@ if __name__ == '__main__':
     cc = 0
     il = 0
     timerlabel = 0
-    branchdata = []
 

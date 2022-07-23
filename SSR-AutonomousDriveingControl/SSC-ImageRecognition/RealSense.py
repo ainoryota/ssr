@@ -66,7 +66,6 @@ class RealSense(object):
         self.RobotTheta.grid(row=7, column=34,columnspan=5)
 
 
-        self.branchdata = []
 
         self.getRealsense()
        
@@ -90,12 +89,24 @@ class RealSense(object):
         #print("IR1:",ir_image1.shape)
         #print("IR2:",ir_image2.shape)
         result = IR(color_image,depth_image,ir_image1,accel,True)
+        # return
+        # [CreteViewImage(color_image,depth_image,ir_image,brendImage,cvpaste(imageMap,
+        # np.zeros(ElevationImage.shape), 0, 0,
+        # 0,1),ElevationImage),y,x,rule1,rule2,rule3,LElevationAngle,RElevationAngle,angleA,angleB]
+
 
         testImg = result[0]
         testImg = Image.fromarray(testImg)
         testImg = ImageTk.PhotoImage(testImg)
 
-    
+        y = result[1]
+        x = result[2]
+        rule1 = result[3]
+        rule3 = result[4]
+        LElevationAngle = result[5]
+        RElevationAngle = result[6]
+        Rangle = result[7]
+        Langle = result[8]
 
         self.il.configure(image=testImg)
         self.il.image = testImg
@@ -110,10 +121,11 @@ class RealSense(object):
         self.GyroLableZ.configure(text="ジャイロY:{0:.2f}".format(gyro.z))
         self.timerlabel.configure(text="処理時間:{0} ms".format(timer))
         self.RobotTheta.configure(text="ロボットの角度(deg):{0:.2f} ".format(math.degrees(-math.atan2(accel.y,accel.z))))
-        self.branchdata.append([result[1],result[2],timer])
 
-        print("★",'{:.2f}'.format(result[3]),result[1],result[8])
-        if(result[3] > 0.13 and result[1] < 150):
+        print()
+
+        print("★rule",rule1,rule3,":","Place",(y,x),"TurnAngle",Langle,Rangle,"ElevationAngle",LElevationAngle,RElevationAngle,"GammaAngle",math.degrees(-math.atan2(accel.y,accel.z)))
+        if(False):
             print("■■■■■分岐",result[4],result[5],result[6],result[7],result[8])
             if(self.data["v_auto"].get()):
                 SleepLength = 0

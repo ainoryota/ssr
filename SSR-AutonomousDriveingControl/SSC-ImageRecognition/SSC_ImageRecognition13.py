@@ -17,7 +17,7 @@ from skimage.draw import disk #pip install scikit-image
 from skimage import morphology #pip install scikit-image
 from functools import lru_cache
 
-#一次式で最小事情近似する
+#一次式で最小二乗近似する
 def reg1dim(x, y):
     try:
         n = len(x)
@@ -27,7 +27,7 @@ def reg1dim(x, y):
         if n == 0:b = 0
         else:       b = (y.sum() - a * x.sum()) / n
     except:
-        print("reg1dim Error")
+        print("reg1dim Error",len(x),":",len(y))
         a = 0
         b = 0
 
@@ -130,7 +130,7 @@ def CalcScore(field,x,y,anglestep,thickness):
     cable_size = 12
     checkSize = 100
     W = math.floor(checkSize / 2)
-    doubel_max = 0
+
 
     ruleAngle = 30
     angle3 = 90
@@ -146,6 +146,7 @@ def CalcScore(field,x,y,anglestep,thickness):
     idx = np.argsort(scores)[::-1]
     angles = angles[idx]
     scores = scores[idx]
+
 
     for i in range(len(angles)):
         angle1 = angles[i]
@@ -163,7 +164,7 @@ def CalcScore(field,x,y,anglestep,thickness):
         maxValue2 = score2
         break
 
-    return [maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3,doubel_max]
+    return [maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3]
 
 def CalcTurningAngle(binryScale,step,branchsize,thickness):
     h, w = binryScale.shape
@@ -185,12 +186,13 @@ def CalcTurningAngle(binryScale,step,branchsize,thickness):
 
     #解を調べる
     for x in range(int(w * 0.4),int(w * 0.6),step):
+        maxDoubel = max(maxDoubel,np.sum(field[(getWeightedLineArray(90,300,thickness,0,x,h,w))]))
         for y in range(0,h,step):
             field = np.where(binryScale > 0,1,0)
             rr,cc = getDiskArray(y,x,branchsize,h,w)
             score = np.sum(field[rr,cc])
             field[rr,cc] = 0
-            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,anglestep,thickness)
+            (angle1,angle2,angle3,value,value1,value2,value3) = CalcScore(field,x,y,anglestep,thickness)
             value+=score
             PointList[int(y / step)][int(x / step)] = value
             if(maxValue < value):
@@ -203,7 +205,6 @@ def CalcTurningAngle(binryScale,step,branchsize,thickness):
                 maxValue3 = value3
                 maxX = x
                 maxY = y
-                maxDoubel = doubel
 
 
     PointList = (PointList * 255 / maxValue).astype(np.uint8)
@@ -238,28 +239,32 @@ def CalcElevationAngle(depthScale,y,x,angle1,angle2,angle3,minDistance,maxDistan
     
     data1_x = idx[1][Ymask]
     data1_depth = EffectiveDepthScale[idx][Ymask]
-    maskL = np.nonzero((w>branchX))#リアル空間で左分岐=画像上で右分岐
-    maskR = np.nonzero((w<branchX))
+    maskL = np.nonzero((data1_x > branchX))#リアル空間で左分岐=画像上で右分岐
+    maskR = np.nonzero((data1_x < branchX))
 
-    
-    a1,bL1 = reg1dim(data1_x[maskL],data1_depth[maskL])
-
+    if(len(data1_x[maskL]) < 2):(aL1,bL1) = (0,0)
+    else:aL1,bL1 = reg1dim(data1_x[maskL],data1_depth[maskL])
+    if(len(data1_x[maskR]) < 2):(aR1,bR1) = (0,0)
+    else:aR1,bR1 = reg1dim(data1_x[maskR],data1_depth[maskR])
     for x in range(w):
-        Y = int(maxDistance - 1 - int(x * a1 + bL1))
-        if(Y >= int(maxDistance - minDistance) or Y < 0):continue
-        elevationImage[Y][x] = [255,0,255]
+        Y1 = int(maxDistance - 1 - int(x * aL1 + bL1))
+        Y2 = int(maxDistance - 1 - int(x * aR1 + bR1))
+        if(x > branchX and Y1 < int(maxDistance - minDistance) and Y1 >= 0): elevationImage[Y1][x] = [255,0,255]
+        if(x < branchX and Y2 < int(maxDistance - minDistance) and Y2 >= 0): elevationImage[Y2][x] = [0,255,255]
+
+    LelevationAngle = math.degrees(math.atan(aL1))
+    RelevationAngle = math.degrees(math.atan(aR1))
+    return LelevationAngle,RelevationAngle,elevationImage
 
 
-    elevationAngle = math.degrees(math.atan(a1))
-    return elevationAngle,elevationImage
-
-
-fortuneLog = [0,0,0,0,0]
-GammalAngleLog = [0,0,0,0,0]
-TurnAngleLog = [0,0,0,0,0]
-RangleLog = [0,0,0,0,0]
-LangleLog = [0,0,0,0,0]
-XLog = [0,0,0,0,0]
+c = 100
+doubelLog = [0 for a in range(c)]
+valueLog = [0 for a in range(c)]
+GammalAngleLog = [0 for a in range(c)]
+TurnAngleLog = [0 for a in range(c)]
+RangleLog = [0 for a in range(c)]
+LangleLog = [0 for a in range(c)]
+XLog = [0 for a in range(c)]
 
 def getTopAngle(img,x,y,angle1,angle2,angle3):
     #maxAngle1,2,3,x,yを採用した際に各方向を実現する最小二乗法近似の結果
@@ -454,9 +459,9 @@ def ImageReconition(binaryScale):
     #信頼度の導出
     fortunity = min((value1,value2,value3)) / max(1,value1 + value2 + value3)
     fortunity = 1 - doubel_max / max(1,value1 + value2 + value3)
-    fortuneLog.pop(0)
-    fortuneLog.append(fortunity)
-    fortunity = sum(fortuneLog) / 5
+    doubelLog.pop(0)
+    doubelLog.append(fortunity)
+    fortunity = sum(doubelLog) / 5
     print("angle1",angle1,angle2,angle3)
     (GammalAngle,TurnAngle,Rangle,Langle) = getRobotAngle(img,y,x,angle1,angle2,angle3,rotation)
     print("Newangle1",GammalAngle,TurnAngle,Rangle,Langle)
@@ -709,7 +714,6 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
     depth_image[:,int(depth_image.shape[1] / 2),:] = np.array([255,0,0])
     ir_scale = cv2.cvtColor(ir_image,cv2.COLOR_RGB2GRAY)
 
-
     #デバッグ用
     if(False):
         result = [depth_image,0,00,0,0,0,0,0,0,0,0,0,0]
@@ -733,19 +737,76 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
         imageMap[np.where(flag == 1)] = [255,0,0]#データが不正の位置
         imageMap[np.where(flag == 2)] = [0,255,0]#IR要素が小さい部分
         binaryScale = cv2.medianBlur(binaryScale,3)
-        ir_image2 = cv2.cvtColor(binaryScale,cv2.COLOR_GRAY2RGB)   
+        ir_image2 = cv2.cvtColor(binaryScale,cv2.COLOR_GRAY2RGB)
 
     #得られた二値画像から旋回角を求める
     step = 12
     branchsize = 24
     thickness = 5
     (maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList) = CalcTurningAngle(binaryScale,step,branchsize,thickness)
+    doubelLog.append(maxDoubel)
+    doubelLog.pop(0)
+    valueLog.append(maxValue1 + maxValue2 + maxValue3)
+    valueLog.pop(0)
+    print(maxValue1 + maxValue2 + maxValue3,maxDoubel)
+    XLog.append(maxY)
+    XLog.pop(0)
+    
+    #print("doubelLog")
+    #s = ""
+    #for i in range(len(doubelLog)):
+    #    s+='{:.2f}'.format(doubelLog[i]) + ","
+    #print(s)
 
-    #旋回角から仰角を求める
+    #print("valueLog")
+    #s = ""
+    #for i in range(len(valueLog)):
+    #    s+='{:.2f}'.format(valueLog[i]) + ","
+    #print(s)
+
+    #print("XLog")
+    #s = ""
+    #for i in range(len(XLog)):
+    #    s+='{:.2f}'.format(XLog[i]) + ","
+    #print(s)
+
+    #分岐の条件(N1=30、N2=10)
+    #1.直近N1ログ以内のvalueLog平均値が300以上
+    #3.直近N1ログ以内のvalueLog平均値が300以上の結果から推定された5ログあとのXLogの線形近似解がhを超えた
+    N1 = 30
+    N2 = 10
+
+    hoge1 = np.array(valueLog[len(valueLog) - N1:])
+    rule1 = np.average(hoge1) / 300
+    print("rule1達成率",rule1)
+
+    #p = np.zeros(N2)
+    #for i in range(N2):
+    #    if(doubelLog[len(doubelLog) - N2 + i] == 0):p[i] = 1
+    #    else:p[i] = doubelLog[len(doubelLog) - N2 + i ] / doubelLog[len(doubelLog) - N2 + i- 1]
+
+    #if(np.average(p) == 0):rule2 = 0
+    #else:rule2 = 0.8 / np.average(p) 
+    #print("rule2達成率",rule2)
+    #print(p)
+
+    hoge2 = np.array(XLog[len(XLog) - N1:])
+
+    
+    l1 = np.array([n for n in range(N1)])[np.nonzero(hoge1 > 300)]
+    l2 = hoge2[np.nonzero(hoge1 > 300)]
+    
+    if(len(l1) < 2):rule3 = 0
+    else:
+        a,b = reg1dim(l1,l2) 
+        rule3 = (b + a * (N1+5)) / h
+        print(a,b,rule3)
+    print("rule3達成率",rule3)
+
     LElevationAngle,RElevationAngle,ElevationImage = CalcElevationAngle(depth_scale,maxY,maxX,maxAngle1,maxAngle2,maxAngle3,minDistance,maxDistance,branchsize,thickness,h,w,maxX,maxY)
     #ElevationImage=ir_image2.copy()
     #ElevationAngle=0
-    print(maxX,maxY,ElevationAngle)
+    #print(maxX,maxY,LElevationAngle,RElevationAngle)
 
     #表示
     thickness = 5
@@ -756,19 +817,20 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
     cableway_image = DrawAngleLine(cableway_image,maxX,maxY,maxAngle2,(100,255,100,50),thickness)
     cableway_image = DrawAngleLine(cableway_image,maxX,maxY,maxAngle3,(100,100,255,50),thickness)
     cableway_image = cv2.putText(cableway_image,str(int(angleA)) + "/" + str(int(angleB)),(0,160),cv2.FONT_HERSHEY_PLAIN,2,(255,255,255))
-    brendImage = cv2.addWeighted(ir_image2, 0.5, cableway_image, 0.5, 0)
     rr,cc = disk((maxY,maxX), 24, shape=(h,w))
     mask = np.logical_and.reduce((rr >= 0, rr < h ,cc >= 0, cc < w))
     cableway_image[rr[mask],cc[mask]] = [255,255,0]
+    brendImage = cv2.addWeighted(ir_image2, 0.5, cableway_image, 0.5, 0)
 
     #img,x,y,fortunity,GammalAngle,TurnAngle,Rangle,Langle,XLog
-    return [CreteViewImage(color_image,depth_image,ir_image,brendImage,cvpaste(imageMap, np.zeros(ElevationImage.shape), 0, 0, 0,1),ElevationImage),0,0,0,0,0,0,0,XLog]
+    return [CreteViewImage(color_image,depth_image,ir_image,brendImage,cvpaste(imageMap, np.zeros(ElevationImage.shape), 0, 0, 0,1),ElevationImage),maxY,maxX,rule1,rule3,LElevationAngle,RElevationAngle,angleA,angleB]
 
 
 
 def ResetLog():
-    for i in range(5):
-        fortuneLog[i] = 0
+    for i in range(len(doubelLog)):
+        doubelLog[i] = 0
+        valueLog[i] = 0
         GammalAngleLog[i] = 0
         TurnAngleLog[i] = 0
         RangleLog[i] = 0
