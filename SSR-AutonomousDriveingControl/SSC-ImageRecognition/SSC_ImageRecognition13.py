@@ -13,6 +13,7 @@ import csv
 from KMeans import KMeans
 import matplotlib.pyplot as plt
 from skimage.draw import line #pip install scikit-image
+from skimage.draw import disk #pip install scikit-image
 from skimage import morphology #pip install scikit-image
 from functools import lru_cache
 
@@ -93,14 +94,19 @@ def weighted_line(y1, x1, y2, x2, w, rmin=0, rmax=np.inf):
     #return (yy[mask].astype(int), xx[mask].astype(int), vals[mask])
     return (yy.astype(int), xx.astype(int), vals)
 
-#@lru_cache(maxsize=1000)
-def getThetaArray(theta,len,thickness):
+@lru_cache(maxsize=5000)
+def getWeightedLineArray(theta,len,thickness,y,x,h,w):
     cos = math.cos(math.radians(theta))
     sin = math.sin(math.radians(theta))
     rr, cc,_ = weighted_line(0, 0,  int(len * sin),int(len * cos),thickness)
-    return (rr,cc)
+    mask = np.logical_and.reduce((rr + y >= 0, rr + y < h ,cc + x >= 0, cc + x < w))
+    return (rr[mask] + y,cc[mask] + x)
 
-
+@lru_cache(maxsize=1000)
+def getDiskArray(y,x,r,h,w):
+    rr,cc = disk((y,x), r, shape=(h,w))
+    mask = np.logical_and.reduce((rr >= 0, rr < h ,cc >= 0, cc < w))
+    return (rr[mask],cc[mask])
 
 #分岐点位置を与えたときにその位置を評価する
 def CalcScore(field,x,y,anglestep):
@@ -123,31 +129,18 @@ def CalcScore(field,x,y,anglestep):
 
     #anglestepずつ角度を変化させていく
     num = int(360 / anglestep)
-    scores = np.zeros((num + 1))
-    angles = range(0,360,anglestep)
-    
-
-    for i in range(num):
-        rr, cc = getThetaArray(angles[i],300,3)
-        if(angles[i] < 90):
-            hoge = np.where((rr + y < h) &  (cc + x < w))
-        elif(angles[i] < 180):
-            hoge = np.where((rr + y < h) & (cc + x >= 0) )
-        elif(angles[i] < 270):
-            hoge = np.where((rr + y >= 0) & (cc + x >= 0) )
-        elif(angles[i] < 360):
-            hoge = np.where((rr + y >= 0) & (cc + x < w))
-        scores[i] = np.sum(field[((rr[hoge] + y), (cc[hoge] + x))])
-
+    angles = range(0,360,anglestep)    
+    scores = np.array([np.sum(field[(getWeightedLineArray(angle,300,3,y,x,h,w))]) for angle in angles])
 
     angleScore = list(zip(scores,angles))
     angleScore.sort(reverse=True)
     maxValue = angleScore[0][0]
     maxAngle1 = angleScore[0][1]
-    count=np.count_nonzero(scores>0)
+    count = np.count_nonzero(scores > 0)
 
 
-    #return [maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3,doubel_max]
+    #return
+    #[maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3,doubel_max]
 
     angle90Score = 0
     for i in range(count):
@@ -156,7 +149,7 @@ def CalcScore(field,x,y,anglestep):
             break
 
 
-    ruleAngle=30
+    ruleAngle = 30
     for i in range(count):
         angle1 = int(angleScore[i][1])            
         for j in range(i,count):
@@ -164,7 +157,7 @@ def CalcScore(field,x,y,anglestep):
             if(CalcDiffAngle(angle1,angle2) < ruleAngle):continue
             if(angleScore[i][0] + angleScore[j][0] > doubel_max):
                 doubel_max = angleScore[i][0] + angleScore[j][0]
-            if(angleScore[i][0] + angleScore[j][0] +angle90Score < maxValue):break # + angleScore[0][0]
+            if(angleScore[i][0] + angleScore[j][0] + angle90Score < maxValue):break # + angleScore[0][0]
                     
             angle3 = 90
             if(CalcDiffAngle(angle2,angle3) < ruleAngle or CalcDiffAngle(angle1,angle3) < ruleAngle):continue
@@ -183,11 +176,14 @@ def CalcScore(field,x,y,anglestep):
                 break#ソートされているのでbreakしてOK
     return [maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3,doubel_max]
 
+def ClipArrayRange(target,y,x,Y,W,minY,maxY,minX,maxX):
+    return 
+
 def calcTurningAngle(binryScale):
     h, w = binryScale.shape
 
     maxValue = 0
-    step = 12*2
+    step = 12 * 2
     field = np.where(binryScale > 0,1,0)
     maxX = 0
     maxY = 0
@@ -198,69 +194,35 @@ def calcTurningAngle(binryScale):
     maxValue2 = -1
     maxValue3 = -1
     maxDoubel = -1
-    anglestep = 1
+    anglestep = 5
+    branchsize = 24
 
     PointList = np.zeros((int(h / step + 2),int(w / step + 2)))
     
-    if(False):
-        #解を調べる
-        for x in range(int(w*0.4),int(w*0.6),step):
-            for y in range(0,h,step):
-                score=np.sum(field[y-12:y+12,x-12:x+12])
-                field[y-12:y+12,x-12:x+12]=0
-                (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,anglestep)
-                value+=score
-                PointList[int(y / step)][int(x / step)] = value
-                if(maxValue < value):
-                    maxValue = value
-                    maxAngle1 = angle1
-                    maxAngle2 = angle2
-                    maxAngle3 = angle3
-                    maxValue1 = value1
-                    maxValue2 = value2
-                    maxValue3 = value3
-                    maxX = x
-                    maxY = y
-                    maxDoubel = doubel
-    else:
-        x=146
-        y=72
-        score=np.sum(field[y-12:y+12,x-12:x+12])
-        field[y-12:y+12,x-12:x+12]=0
-        (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,anglestep)
-        value+=score
-        PointList[int(y / step)][int(x / step)] = value
-        if(maxValue < value):
-            maxValue = value
-            maxAngle1 = angle1
-            maxAngle2 = angle2
-            maxAngle3 = angle3
-            maxValue1 = value1
-            maxValue2 = value2
-            maxValue3 = value3
-            maxX = x
-            maxY = y
-            maxDoubel = doubel
-    print(maxX,maxY,maxValue1,maxValue2,maxValue3)
 
-    ##解の周辺をさらに調べる
-    #detailStep = 5
-    #detailanglestep = 5
-    #for x in range(maxX - step,maxX + step,detailStep):
-    #    for y in range(maxY - step,maxY + step,detailStep):
-    #        (angle1,angle2,angle3,value,value1,value2,value3,doubel) =
-    #        CalcScore(field,x,y,detailanglestep)
-    #        if(maxValue < value):
-    #            maxValue = value
-    #            maxAngle1 = angle1
-    #            maxAngle2 = angle2
-    #            maxAngle3 = angle3
-    #            maxValue1 = value1
-    #            maxValue2 = value2
-    #            maxValue3 = value3
-    #            maxX = x
-    #            maxY = y
-    #            maxDoubel = doubel
+    #解を調べる
+    for x in range(int(w * 0.4),int(w * 0.6),step):
+        for y in range(0,h,step):
+            field = np.where(binryScale > 0,1,0)
+            rr,cc = getDiskArray(y,x,branchsize,h,w)
+            score = np.sum(field[rr,cc])
+            field[rr,cc] = 0
+
+            (angle1,angle2,angle3,value,value1,value2,value3,doubel) = CalcScore(field,x,y,anglestep)
+            value+=score
+            PointList[int(y / step)][int(x / step)] = value
+            if(maxValue < value):
+                maxValue = value
+                maxAngle1 = angle1
+                maxAngle2 = angle2
+                maxAngle3 = angle3
+                maxValue1 = value1
+                maxValue2 = value2
+                maxValue3 = value3
+                maxX = x
+                maxY = y
+                maxDoubel = doubel
+
 
     PointList = (PointList * 255 / maxValue).astype(np.uint8)
     return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList]
@@ -796,7 +758,7 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewRate=50)
     #デバッグ用
     if(True):
         step = 12 * 2
-        imageMap=np.dstack((PointList.repeat(step, axis=0).repeat(step, axis=1)[int(step/2):int(step/2)+h,int(step/2):int(step/2)+w].reshape((h,w,1)),np.zeros((h,w,2)))).astype(np.uint8)
+        imageMap = np.dstack((PointList.repeat(step, axis=0).repeat(step, axis=1)[int(step / 2):int(step / 2) + h,int(step / 2):int(step / 2) + w].reshape((h,w,1)),np.zeros((h,w,2)))).astype(np.uint8)
 
         x = maxX
         y = maxY
@@ -821,7 +783,12 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True,viewRate=50)
         ir_image2 = DrawAngleLine(ir_image2,x,y,topAngle3,(100,100,255,50),thickness)
         image2 = cv2.putText(ir_image2,str(int(topAngle3)),(x + int(100 * math.cos(math.radians(theta))),y + int(100 * math.sin(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,100,255))
         ir_image2 = cv2.putText(ir_image2,str(int(topAngle1)) + "/" + str(int(topAngle2)) + "/" + str(int(topAngle3)),(0,100),cv2.FONT_HERSHEY_PLAIN,3,(255,255,255))
-        ir_image2[max(0,y - 5):min(h-1,y + 5),max(0,x - 5):min(x + 5,w-1),:] = [255,255,0]
+        rr,cc = disk((y,x), 24, shape=(h,w))
+        mask = np.logical_and.reduce((rr >= 0, rr < h ,cc >= 0, cc < w))
+        
+        ir_image2[rr[mask],cc[mask]] = [255,255,0]
+
+
 
         result = [depth_image,0,00,0,0,0,0,0,0,0,0,0,0]
 
