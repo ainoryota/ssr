@@ -44,7 +44,7 @@ class RealSense(object):
         self.GyroLabelZ=GyroLabelZ
         self.RobotTheta=RobotTheta
         self.StopFlag=True
-
+        print("Open realsense",self.serialNo)
        
     def start(self):
         self.StopFlag=False

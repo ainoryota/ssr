@@ -80,6 +80,7 @@
     <Compile Include="VideoStream.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="WebCamera.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include=".pylintrc" />

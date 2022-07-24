@@ -20,7 +20,8 @@ import numpy as np
 import sys
 from numba import jit
 from ctypes import alignment, windll
-import RealSense 
+from RealSense import RealSense 
+from WebCamera import WebCameraMgr 
 
 
 
@@ -32,16 +33,12 @@ class Camera(object):
         self.br = branch
         self.data = data
     
-        devices=rs.context().query_devices()
-        max_n_device=2
-        print("list:",devices)
-
+        devices = rs.context().query_devices()
+        max_n_device = 2
         serial_numbers = list(map(lambda device: device.get_info(rs.camera_info.serial_number), devices))[:max_n_device]
 
-        print("_;",serial_numbers)
-
         for rscam in serial_numbers:
-            print("device:",rscam)
+            print("realsenseList:",rscam)
 
         img = Image.open('test.png')
         testImg = ImageTk.PhotoImage(img)
@@ -68,8 +65,17 @@ class Camera(object):
         self.GyroLabelZ.grid(row=6, column=34,columnspan=5)
         self.RobotTheta = tk.Label(self.infArea,text="",anchor="w",width = 50)
         self.RobotTheta.grid(row=7, column=34,columnspan=5)
-        self.rs1 = RealSense.RealSense(serial_numbers[0],self.imgArea,self.infArea,self.br,self.data,self.il,self.timerlabel,self.AccelLabelX,self.AccelLabelY,self.AccelLabelZ,self.GyroLabelX,self.GyroLabelY,self.GyroLabelZ,self.RobotTheta)
-        self.rs2 = RealSense.RealSense(serial_numbers[1],self.imgArea,self.infArea,self.br,self.data,self.il,self.timerlabel,self.AccelLabelX,self.AccelLabelY,self.AccelLabelZ,self.GyroLabelX,self.GyroLabelY,self.GyroLabelZ,self.RobotTheta)
+
+        print("Open webcam")
+        self.webcam = WebCameraMgr(self.imgArea,self.infArea,self.br,self.data,self.il)
+
+        print("Open realsense1")
+        self.rs1 = RealSense(serial_numbers[0],self.imgArea,self.infArea,self.br,self.data,self.il,self.timerlabel,self.AccelLabelX,self.AccelLabelY,self.AccelLabelZ,self.GyroLabelX,self.GyroLabelY,self.GyroLabelZ,self.RobotTheta)
+
+        print("Open realsense2")
+        self.rs2 = RealSense(serial_numbers[1],self.imgArea,self.infArea,self.br,self.data,self.il,self.timerlabel,self.AccelLabelX,self.AccelLabelY,self.AccelLabelZ,self.GyroLabelX,self.GyroLabelY,self.GyroLabelZ,self.RobotTheta)
+
+
         #self.rs2=RealSense.RealSense(self.imgArea,self.infArea,self.br,self.data,self.il,self.timerlabel,self.AccelLabelX,self.AccelLabelY,self.AccelLabelZ,self.GyroLabelX,self.GyroLabelY,self.GyroLabelZ,self.RobotTheta)
         #self.webcam=RealSense.RealSense(self.imgArea,self.infArea,self.br,self.data,self.il,self.timerlabel,self.AccelLabelX,self.AccelLabelY,self.AccelLabelZ,self.GyroLabelX,self.GyroLabelY,self.GyroLabelZ,self.RobotTheta)
 
@@ -89,7 +95,6 @@ class Camera(object):
         self.rs2.start()
 
     def stopRealsense2(self):
-        a = 1
         self.rs2.stop()
 
     def startWebCam(self):
@@ -98,5 +103,4 @@ class Camera(object):
         self.webcam.start()
 
     def stopWebCam(self):
-        a = 1
-        #self.webcam.stop()
+        self.webcam.stop()
