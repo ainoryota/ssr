@@ -22,7 +22,7 @@ from numba import jit
 from ctypes import alignment, windll
 from RealSense import RealSense 
 from WebCamera import WebCameraMgr 
-
+import os
 
 
 
@@ -36,18 +36,21 @@ class Camera(object):
         devices = rs.context().query_devices()
         max_n_device = 2
         serial_numbers = list(map(lambda device: device.get_info(rs.camera_info.serial_number), devices))[:max_n_device]
+        serial_numbers.sort()
 
         for rscam in serial_numbers:
             print("realsenseList:",rscam)
 
-        img = Image.open('test.png')
+        
+
+        img = Image.open(os.path.abspath('C:/Users/MSD/Documents/GitHub/SSR/SSR-AutonomousDriveingControl/SSC-ImageRecognition/test.png'))
         testImg = ImageTk.PhotoImage(img)
 
         self.il = tk.Label(self.imgArea,image=testImg)
         self.il.grid(row=1, column=1,columnspan=30,rowspan=20,ipadx=5)
 
         self.timerlabel = tk.Label(self.infArea,text="",anchor="w",width = 50)
-        self.timerlabel.grid(row=0, column=34,columnspan=5)
+        self.timerlabel.grid(row=1, column=34,columnspan=5)
 
         self.AccelLabelX = tk.Label(self.infArea,text="",anchor="w",width = 50)
         self.AccelLabelX.grid(row=1, column=34,columnspan=5)
@@ -66,16 +69,30 @@ class Camera(object):
         self.RobotTheta = tk.Label(self.infArea,text="",anchor="w",width = 50)
         self.RobotTheta.grid(row=7, column=34,columnspan=5)
 
-        print("Open webcam")
-        self.webcam = WebCameraMgr(self.imgArea,self.infArea,self.br,self.data,self.il)
 
-        print("Open realsense1")
-        self.rs1 = RealSense(serial_numbers[0],self.imgArea,self.infArea,self.br,self.data,self.il,self.timerlabel,self.AccelLabelX,self.AccelLabelY,self.AccelLabelZ,self.GyroLabelX,self.GyroLabelY,self.GyroLabelZ,self.RobotTheta)
+
+        try:
+            self.rs1 = RealSense(serial_numbers[0],self.imgArea,self.infArea,self.br,self.data,self.il,self.timerlabel,self.AccelLabelX,self.AccelLabelY,self.AccelLabelZ,self.GyroLabelX,self.GyroLabelY,self.GyroLabelZ,self.RobotTheta)
+        except Exception as e:
+            print("Realsense1 Start Error",e)
+            self.rs1=None
 
         print("Open realsense2")
-        self.rs2 = RealSense(serial_numbers[1],self.imgArea,self.infArea,self.br,self.data,self.il,self.timerlabel,self.AccelLabelX,self.AccelLabelY,self.AccelLabelZ,self.GyroLabelX,self.GyroLabelY,self.GyroLabelZ,self.RobotTheta)
+        
+        try:
+            self.rs2 = RealSense(serial_numbers[1],self.imgArea,self.infArea,self.br,self.data,self.il,self.timerlabel,self.AccelLabelX,self.AccelLabelY,self.AccelLabelZ,self.GyroLabelX,self.GyroLabelY,self.GyroLabelZ,self.RobotTheta)
+        except Exception as e:
+            print("Realsense2 Start Error",e)
+            self.rs2=None
 
+        print("Open webcam")
+        try:
+            self.webcam = WebCameraMgr(self.imgArea,self.infArea,self.br,self.data,self.il)
+        except Exception as e:
+            print("WebCamera Start Error",e)
+            self.webcam=None
 
+        print("Open realsense1")
         #self.rs2=RealSense.RealSense(self.imgArea,self.infArea,self.br,self.data,self.il,self.timerlabel,self.AccelLabelX,self.AccelLabelY,self.AccelLabelZ,self.GyroLabelX,self.GyroLabelY,self.GyroLabelZ,self.RobotTheta)
         #self.webcam=RealSense.RealSense(self.imgArea,self.infArea,self.br,self.data,self.il,self.timerlabel,self.AccelLabelX,self.AccelLabelY,self.AccelLabelZ,self.GyroLabelX,self.GyroLabelY,self.GyroLabelZ,self.RobotTheta)
 
@@ -84,23 +101,29 @@ class Camera(object):
     def startRealsense1(self):
         self.stopRealsense2()
         self.stopWebCam()
-        self.rs1.start()
+        if(self.rs1!=None):self.rs1.start()
+        else:print("no rs1")
 
     def stopRealsense1(self):
-        self.rs1.stop()
+        if(self.rs1!=None):self.rs1.stop()
+        else:print("no rs1")
 
     def startRealsense2(self):
         self.stopRealsense1()
         self.stopWebCam()
-        self.rs2.start()
+        if(self.rs2!=None):self.rs2.start()
+        else:print("no rs2")
 
     def stopRealsense2(self):
-        self.rs2.stop()
+        if(self.rs2!=None):self.rs2.stop()
+        else:print("no rs2")
 
     def startWebCam(self):
         self.stopRealsense1()
         self.stopRealsense2()
-        self.webcam.start()
+        if(self.webcam!=None):self.webcam.start()
+        else:print("no webcam")
 
     def stopWebCam(self):
-        self.webcam.stop()
+        if(self.webcam!=None):self.webcam.stop()
+        else:print("no webcam")

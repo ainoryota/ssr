@@ -10,8 +10,7 @@ import platform
 from functools import partial
 
 import sys
-import tkinter as tk
-from PIL import Image,ImageTk #udo pip install pillow
+
 from SSC_ImageRecognition13 import ImageReconition
 from SSC_ImageRecognition13 import IR
 from SSC_ImageRecognition13 import ResetLog

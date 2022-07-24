@@ -1,23 +1,18 @@
 import time
 from VideoStream import VideoStream
-from PIL import Image,ImageTk #udo pip install pillow
-import tkinter as tk
 import cv2
 import time
 
-###
 import platform
 from functools import partial
 
 import sys
-import tkinter as tk
-from PIL import Image,ImageTk #udo pip install pillow
-from SSC_ImageRecognition13 import ImageReconition
-from SSC_ImageRecognition13 import IR
-from SSC_ImageRecognition13 import ResetLog
+
 import math
 import pyrealsense2 as rs
 import numpy as np
+import tkinter as tk
+from PIL import Image,ImageTk #udo pip install pillow
 
 import sys
 from numba import jit
@@ -82,24 +77,28 @@ class WebCameraMgr(object):
         print("Camera List")
         for i in range(10):
             try:
-                self.capture = cv2.VideoCapture(i)
+                self.capture = cv2.VideoCapture(i,cv2.CAP_DSHOW)
                 ret, frame = self.capture.read()
+                self.capture.release()
                 print(i,ret,frame.shape)
-                if(shape == (1080,1920,3)):break
-                #if(ret):break;
             except:
-                print("WebCamera read error",i)
+                pass
 
         self.captureF = cv2.VideoCapture(2,cv2.CAP_DSHOW)
         print("Open camera front")
 
-        self.captureC = cv2.VideoCapture(3,cv2.CAP_DSHOW)
+        self.captureC = cv2.VideoCapture(2,cv2.CAP_DSHOW)
         print("Open camera center")
         
-        self.captureB = cv2.VideoCapture(4,cv2.CAP_DSHOW)
+        self.captureB = cv2.VideoCapture(3,cv2.CAP_DSHOW)
         print("Open camera back")
 
-        
+        #0 True (480, 640, 3)*front realsense
+        #2 webカメラ
+        #3 True (480, 640, 3)
+        #4 True (480, 640, 3)*back realsense
+
+        #7 True (480, 640, 3)*bug
 
 
        
@@ -123,18 +122,18 @@ class WebCameraMgr(object):
         imgB = np.zeros((self.h,self.w,3),dtype=np.uint8)
 
         try:
-            imgF = self.getImage(self.captureF)
+            imgF = self.getImage(self.captureF,imgF)
         except Exception as e:
             print("error CameraF",e)
 
         try:
-            imgC = self.getImage(self.captureC)
+            imgC = self.getImage(self.captureC,imgC)
             imgC = cvpaste(imgC,np.zeros((self.w,self.w,3),dtype=np.uint8),0,0,90,1)
         except Exception as e:
             print("error CameraC",e)
 
         try:
-            imgB = self.getImage(self.captureB)
+            imgB = self.getImage(self.captureB,imgB)
             imgB = cv2.rotate(imgB, cv2.ROTATE_180)
         except Exception as e:
             print("error CameraB",e)
@@ -150,9 +149,10 @@ class WebCameraMgr(object):
         self.il.configure(image=output)
         self.il.image = output
 
-        self.imgArea.after(10,self.getWebCamera)
+        self.imgArea.after(300,self.getWebCamera)
 
-    def getImage(self,cap):
-        _, frame = cap.read()
-        frame = cv2.resize(frame,(self.w,self.h))
-        return frame
+    def getImage(self,cap,img):
+        ret, frame = cap.read()
+        if(ret): img = cv2.resize(frame,(self.w,self.h))
+        else:print('cant read camera')
+        return img
