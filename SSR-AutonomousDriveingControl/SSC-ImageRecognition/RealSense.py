@@ -27,51 +27,39 @@ from ctypes import alignment, windll
 
 
 class RealSense(object):
-    def __init__(self,root,branch,data):
-        self.root = root
+    def __init__(self,serialNo,imgArea,infArea,branch,data,il,timerlabel,AccelLabelX,AccelLabelY,AccelLabelZ,GyroLabelX,GyroLabelY,GyroLabelZ,RobotTheta):
+        self.serialNo=serialNo
+        self.imgArea = imgArea
+        self.infArea=infArea
         self.br = branch
         self.data = data
-        self.vs = VideoStream((640,360))
+        self.vs = VideoStream(serialNo,(640,360))
+        self.il=il
+        self.timerlabel=timerlabel
+        self.AccelLabelX=AccelLabelX
+        self.AccelLabelY=AccelLabelY
+        self.AccelLabelZ=AccelLabelZ
+        self.GyroLabelX=GyroLabelX
+        self.GyroLabelY=GyroLabelY
+        self.GyroLabelZ=GyroLabelZ
+        self.RobotTheta=RobotTheta
+        self.StopFlag=True
+
+       
+    def start(self):
+        self.StopFlag=False
         time.sleep(1)
         self.vs.start()
-
-        
         time.sleep(1)
-    
-        img = Image.open('testResult/test.png')
-        testImgA = ImageTk.PhotoImage(img)
-        self.il = tk.Label(self.root,image=testImgA)
-        self.il.grid(row=1, column=1,columnspan=30,rowspan=20,ipadx=5)
-
-
-
-        self.timerlabel = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.timerlabel.grid(row=0, column=34,columnspan=5)
-
-        self.AccelLabelX = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.AccelLabelX.grid(row=1, column=34,columnspan=5)
-        self.AccelLabelY = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.AccelLabelY.grid(row=2, column=34,columnspan=5)
-        self.AccelLabelZ = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.AccelLabelZ.grid(row=3, column=34,columnspan=5)
-
-
-        self.GyroLableX = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.GyroLableX.grid(row=4, column=34,columnspan=5)
-        self.GyroLableY = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.GyroLableY.grid(row=5, column=34,columnspan=5)
-        self.GyroLableZ = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.GyroLableZ.grid(row=6, column=34,columnspan=5)
-        self.RobotTheta = tk.Label(self.root,text="",anchor="w",width = 50)
-        self.RobotTheta.grid(row=7, column=34,columnspan=5)
-
-
-
         self.getRealsense()
-       
+
+    def stop(self):
+        self.StopFlag=True
+        self.vs.stop()
 
     #@jit("f8[:,:]()")
     def getRealsense(self):
+        if(self.StopFlag==True):return
         start = time.time()
     
     
@@ -116,9 +104,9 @@ class RealSense(object):
         self.AccelLabelX.configure(text="加速度X:{0:.2f}".format(accel.x))
         self.AccelLabelY.configure(text="加速度Y:{0:.2f}".format(accel.y))
         self.AccelLabelZ.configure(text="加速度Z:{0:.2f}".format(accel.z))
-        self.GyroLableX.configure(text="ジャイロX:{0:.2f}".format(gyro.x))
-        self.GyroLableY.configure(text="ジャイロY:{0:.2f}".format(gyro.y))
-        self.GyroLableZ.configure(text="ジャイロY:{0:.2f}".format(gyro.z))
+        self.GyroLabelX.configure(text="ジャイロX:{0:.2f}".format(gyro.x))
+        self.GyroLabelY.configure(text="ジャイロY:{0:.2f}".format(gyro.y))
+        self.GyroLabelZ.configure(text="ジャイロY:{0:.2f}".format(gyro.z))
         self.timerlabel.configure(text="処理時間:{0} ms".format(timer))
         self.RobotTheta.configure(text="ロボットの角度(deg):{0:.2f} ".format(math.degrees(-math.atan2(accel.y,accel.z))))
 
@@ -156,8 +144,6 @@ class RealSense(object):
                 #Branch Angle:Exception in Tkinter callback 4:-5 5:-10 6:75
                 #7:70 v1:True v3:True v7:True v8:False
                 self.br.branchAngle(result[4],result[5],result[6],result[7],self.data["v1"].get(),self.data["v3"].get(),self.data["v7"].get(),self.data["v8"].get())
-            
 
 
-
-        self.root.after(10,self.getRealsense)
+        self.imgArea.after(10,self.getRealsense)

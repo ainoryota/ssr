@@ -22,7 +22,9 @@ import threading
 
 
 class VideoStream(object):
-        def __init__(self, resolution=(640, 360), framerate=15):
+        def __init__(self, serialNo,resolution=(640, 360), framerate=15):
+            self.serialNo=serialNo
+            self.stopOrder=False;
             self.USE_IMU=True
 
             self.debugMode = False
@@ -36,6 +38,7 @@ class VideoStream(object):
             if(self.USE_IMU):
                 self.imu_pipe = rs.pipeline()
                 self.imu_config = rs.config()
+                self.imu_config.enable_device(self.serialNo)
                 self.imu_config.enable_stream(rs.stream.gyro)
                 self.imu_config.enable_stream(rs.stream.accel)
             
@@ -44,14 +47,18 @@ class VideoStream(object):
         
             self.vid_pipe = rs.pipeline()
             self.config = rs.config()
+            self.config.enable_device(self.serialNo)
             self.config.enable_stream(rs.stream.depth, resolution[0], resolution[1], rs.format.z16, framerate)
             self.config.enable_stream(rs.stream.color, resolution[0], resolution[1], rs.format.bgr8, framerate)
             self.config.enable_stream(rs.stream.infrared, 1, resolution[0], resolution[1], rs.format.y8, framerate)
             self.config.enable_stream(rs.stream.infrared, 2, resolution[0], resolution[1], rs.format.y8, framerate)
             self.align=rs.align(rs.stream.color)
-
         
+        def stop(self):
+            self.stopOrder=True;
+
         def start(self):
+            self.stopOrder=False;
             if(self.USE_IMU):
                 self.start_imu()
             self.start_camera()
@@ -83,6 +90,7 @@ class VideoStream(object):
                     self.ir_image1 = np.asanyarray(ir_frame1.get_data())
                     self.ir_image2 = np.asanyarray(ir_frame2.get_data())
                     if(self.debugMode):break
+                    if(self.stopOrder):break;
             except:
                 self.vid_pipe.stop()
                 print("Error in Vision", sys.exc_info())
@@ -99,6 +107,7 @@ class VideoStream(object):
                     self.acc = mot_frames[0].as_motion_frame().get_motion_data()
                     self.gyro = mot_frames[1].as_motion_frame().get_motion_data()
                     if(self.debugMode):break
+                    if(self.stopOrder):break;
             except:
                 self.imu_pipe.stop()
                 print("Error in Vision", sys.exc_info())

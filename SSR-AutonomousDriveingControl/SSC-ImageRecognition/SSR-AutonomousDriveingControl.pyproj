@@ -26,6 +26,9 @@
     <Compile Include="Branch.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Camera.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Form.py">
       <SubType>Code</SubType>
     </Compile>

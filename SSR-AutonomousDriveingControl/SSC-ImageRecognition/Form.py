@@ -9,11 +9,12 @@ from Order import ResetMotorOrder
 from Order import ResetEncoderOrder
 from OutputController import OutputController
 from OutputController import MotorMode
-from RealSense import RealSense
+from Camera import Camera
 from Branch import Branch
 import numpy as np
 import math
 import time
+import tkinter.ttk as ttk
 
 class PushButton:
     button = []
@@ -39,24 +40,73 @@ class Form(object):
         self.root.geometry('1280x720+75+0')
 
 
+        pw_main = tk.PanedWindow(self.root, orient='horizontal')
+        pw_main.pack(expand=False, fill = tk.BOTH, side="left")
+
+        pw_left = tk.PanedWindow(pw_main, bg="gray", orient='vertical')
+        pw_main.add(pw_left)
+        pw_right = tk.PanedWindow(pw_main, bg="gray", orient='vertical')
+        pw_main.add(pw_right)
+
+        pw_ru = tk.PanedWindow(pw_right, bg="gray", orient='vertical')
+        pw_right.add(pw_ru)
+        pw_rd = tk.PanedWindow(pw_right, bg="gray", orient='horizontal')
+        pw_right.add(pw_rd)
+
+        pw_img = tk.PanedWindow(pw_rd, bg="gray", orient='vertical')
+        pw_rd.add(pw_img)
+        pw_inf = tk.PanedWindow(pw_rd, bg="gray", orient='vertical')
+        pw_rd.add(pw_inf)
+
+        leftArea = tk.Frame(pw_left, bd=2, relief="ridge")
+        pw_left.add(leftArea)
+
+        upArea = tk.Frame(pw_ru, bd=2, relief="ridge")
+        pw_ru.add(upArea)
+        self.imgArea = tk.Frame(pw_img, bd=2, relief="ridge")
+        pw_img.add(self.imgArea)
+        self.infArea = tk.Frame(pw_inf, bd=2, relief="ridge")
+        pw_inf.add(self.infArea)
+
+
+
+        #self.notebook = ttk.Notebook(self.root)
+
+        #self.autoFrontRunTab = tk.Frame(self.notebook, bg='white')
+        #self.autoBackRunTab = tk.Frame(self.notebook, bg='white')
+        #self.cameraTab = tk.Frame(self.notebook, bg='white')
+        #self.notebook.add(self.autoFrontRunTab, text="tab1", underline=0)
+        #self.notebook.add(self.autoBackRunTab, text="tab2")
+        #self.notebook.add(self.cameraTab, text="tab3")
+
+        #self.autoFrontRunTab.grid(row=1,
+        #column=1,columnspan=30,rowspan=20,ipadx=5)
+        #self.autoBackRunTab.grid(row=1,
+        #column=1,columnspan=30,rowspan=20,ipadx=5)
+        #self.cameraTab.grid(row=1, column=1,columnspan=30,rowspan=20,ipadx=5)
+        #self.notebook.pack(expand=True, fill='both', padx=10, pady=10)
+
+
+
         #ラベルの生成
-        Label(tk,self.root,0,0,'斜度_回転角_右旋回角_左旋回角')
+        Label(tk,leftArea,0,0,'斜度_回転角_右旋回角_左旋回角')
 
 
         #ボタンの作成
-        PushButton(tk,self.root,0,2,' 前進 ',self.forward)
-        PushButton(tk,self.root,0,3,' 後退',self.back)
-        PushButton(tk,self.root,0,4,' 停止 ',self.stop)
-        PushButton(tk,self.root,0,5,' フリー ',self.free)
-        PushButton(tk,self.root,0,6,' 左右切り替え',self.change)
-        PushButton(tk,self.root,0,7,' 前輪切り替え',self.change_f)
-        PushButton(tk,self.root,0,8,' 後輪切り替え',self.change_r)
-        
-        PushButton(tk,self.root,0,10,' 巻取り ',self.wintchWind)
-        PushButton(tk,self.root,0,11,' 繰り出し',self.wintchFeed)
-        PushButton(tk,self.root,0,12,' 停止  ',self.wintchStop)
-        
-        PushButton(tk,self.root,0,14,' 初期化 ',self.init)
+        PushButton(tk,upArea,0,2,' 前進 ',self.forward)
+        PushButton(tk,upArea,0,3,' 後退',self.back)
+        PushButton(tk,upArea,0,4,' 停止 ',self.stop)
+        PushButton(tk,upArea,0,5,' フリー ',self.free)
+        PushButton(tk,upArea,0,6,' 左右切り替え',self.change)
+        #PushButton(tk,upArea,0,7,' 前輪切り替え',self.change_f)
+        #PushButton(tk,upArea,0,8,' 後輪切り替え',self.change_r)
+        #PushButton(tk,upArea,0,10,' 巻取り ',self.wintchWind)
+        #PushButton(tk,upArea,0,11,' 繰り出し',self.wintchFeed)
+        #PushButton(tk,upArea,0,12,' 停止 ',self.wintchStop)
+        PushButton(tk,upArea,0,14,' 初期化 ',self.init)
+        PushButton(tk,upArea,0,15,' 前進カメラ ',self.frontCam)
+        PushButton(tk,upArea,0,16,' 後退カメラ ',self.backCam)
+        PushButton(tk,upArea,0,17,' webカメラ ',self.webCam)
 
         #チェックボックスの作成
         self.data = dict()
@@ -81,15 +131,15 @@ class Form(object):
         self.data["v8"].set(False)
         self.data["v_auto"].set(False)
 
-        self.data["cb1"] = tk.Checkbutton(self.root,width="10",anchor="w",text='前進　',variable = self.data["v1"])
-        self.data["cb2"] = tk.Checkbutton(self.root,width="10",anchor="w",text='後退　',variable = self.data["v2"])
-        self.data["cb3"] = tk.Checkbutton(self.root,width="10",anchor="w",text='右分岐',variable = self.data["v3"])
-        self.data["cb4"] = tk.Checkbutton(self.root,width="10",anchor="w",text='左分岐',variable = self.data["v4"])
-        self.data["cb5"] = tk.Checkbutton(self.root,width="10",anchor="w",text='前輪T　',variable = self.data["v5"])
-        self.data["cb6"] = tk.Checkbutton(self.root,width="10",anchor="w",text='後輪T　',variable = self.data["v6"])
-        self.data["cb7"] = tk.Checkbutton(self.root,width="10",anchor="w",text='テンション',variable = self.data["v7"])
-        self.data["cb8"] = tk.Checkbutton(self.root,width="10",anchor="w",text='セーブモード',variable = self.data["v8"])
-        self.data["cb_auto"] = tk.Checkbutton(self.root,anchor="w",text='auto分岐',variable = self.data["v_auto"])
+        self.data["cb1"] = tk.Checkbutton(self.infArea,anchor="w",text='前進　',variable = self.data["v1"])
+        self.data["cb2"] = tk.Checkbutton(self.infArea,anchor="w",text='後退　',variable = self.data["v2"])
+        self.data["cb3"] = tk.Checkbutton(self.infArea,anchor="w",text='右分岐',variable = self.data["v3"])
+        self.data["cb4"] = tk.Checkbutton(self.infArea,anchor="w",text='左分岐',variable = self.data["v4"])
+        self.data["cb5"] = tk.Checkbutton(self.infArea,anchor="w",text='前輪T　',variable = self.data["v5"])
+        self.data["cb6"] = tk.Checkbutton(self.infArea,anchor="w",text='後輪T　',variable = self.data["v6"])
+        self.data["cb7"] = tk.Checkbutton(self.infArea,anchor="w",text='テンション',variable = self.data["v7"])
+        self.data["cb8"] = tk.Checkbutton(self.infArea,anchor="w",text='セーブモード',variable = self.data["v8"])
+        self.data["cb_auto"] = tk.Checkbutton(self.infArea,anchor="w",text='auto分岐',variable = self.data["v_auto"])
 
         self.data["cb1"].grid(row = 0, column =33, padx = 5, pady = 5)
         self.data["cb2"].grid(row = 1, column =33, padx = 5, pady = 5)
@@ -99,58 +149,59 @@ class Form(object):
         self.data["cb6"].grid(row = 5, column =33, padx = 5, pady = 5)
         self.data["cb7"].grid(row = 6, column =33, padx = 5, pady = 5)
         self.data["cb8"].grid(row = 7, column =33, padx = 5, pady = 5)
-        self.data["cb_auto"].grid(row = 13, column =0, padx = 5, pady = 5)
+        self.data["cb_auto"].grid(row = 8, column =33, padx = 5, pady = 5)
 
-        #self.data["scale"] = tk.Scale(self.root,orient=tk.HORIZONTAL,from_=0,to=100)
+        #self.data["scale"] =
+        #tk.Scale(leftArea,orient=tk.HORIZONTAL,from_=0,to=100)
         #self.data["scale"].grid(row=32, column=5,columnspan=10,rowspan=1)
 
         ##１セット目
         #入力ウィンドウの作成
-        self.data["entry1"] = tk.Entry(self.root,width = 20)
+        self.data["entry1"] = tk.Entry(leftArea,width = 20)
         self.data["entry1"].grid(row = 1, column =0, padx = 5, pady = 5)
-        PushButton(tk,self.root,1,1,'分岐',self.branch,1)
+        PushButton(tk,leftArea,1,1,'分岐',self.branch,1)
 
-        self.data["entry2"] = tk.Entry(self.root,width = 20)
+        self.data["entry2"] = tk.Entry(leftArea,width = 20)
         self.data["entry2"].grid(row = 2, column =0, padx = 5, pady = 5)
-        PushButton(tk,self.root,2,1,'分岐',self.branch,2)
+        PushButton(tk,leftArea,2,1,'分岐',self.branch,2)
 
-        self.data["entry3"] = tk.Entry(self.root,width = 20)
+        self.data["entry3"] = tk.Entry(leftArea,width = 20)
         self.data["entry3"].grid(row = 3, column =0, padx = 5, pady = 5)
-        PushButton(tk,self.root,3,1,'分岐',self.branch,3)
+        PushButton(tk,leftArea,3,1,'分岐',self.branch,3)
 
-        self.data["entry4"] = tk.Entry(self.root,width = 20)
+        self.data["entry4"] = tk.Entry(leftArea,width = 20)
         self.data["entry4"].grid(row = 4, column =0, padx = 5, pady = 5)
-        PushButton(tk,self.root,4,1,'分岐',self.branch,4)
+        PushButton(tk,leftArea,4,1,'分岐',self.branch,4)
 
-        self.data["entry5"] = tk.Entry(self.root,width = 20)
+        self.data["entry5"] = tk.Entry(leftArea,width = 20)
         self.data["entry5"].grid(row = 5, column =0, padx = 5, pady = 5)
-        PushButton(tk,self.root,5,1,'分岐',self.branch,5)
+        PushButton(tk,leftArea,5,1,'分岐',self.branch,5)
 
-        self.data["entry6"] = tk.Entry(self.root,width = 20)
+        self.data["entry6"] = tk.Entry(leftArea,width = 20)
         self.data["entry6"].grid(row = 6, column =0, padx = 5, pady = 5)
-        PushButton(tk,self.root,6,1,'分岐',self.branch,6)
+        PushButton(tk,leftArea,6,1,'分岐',self.branch,6)
 
-        self.data["entry7"] = tk.Entry(self.root,width = 20)
+        self.data["entry7"] = tk.Entry(leftArea,width = 20)
         self.data["entry7"].grid(row = 7, column =0, padx = 5, pady = 5)
-        PushButton(tk,self.root,7,1,'分岐',self.branch,7)
+        PushButton(tk,leftArea,7,1,'分岐',self.branch,7)
         
-        self.data["entry8"] = tk.Entry(self.root,width = 20)
+        self.data["entry8"] = tk.Entry(leftArea,width = 20)
         self.data["entry8"].grid(row = 8, column =0, padx = 5, pady = 5)
-        PushButton(tk,self.root,8,1,'分岐',self.branch,8)
+        PushButton(tk,leftArea,8,1,'分岐',self.branch,8)
         
-        self.data["entry9"] = tk.Entry(self.root,width = 20)
+        self.data["entry9"] = tk.Entry(leftArea,width = 20)
         self.data["entry9"].grid(row = 9, column =0, padx = 5, pady = 5)
-        PushButton(tk,self.root,9,1,'分岐',self.branch,9)
+        PushButton(tk,leftArea,9,1,'分岐',self.branch,9)
 
-        self.data["entry10"] = tk.Entry(self.root,width = 20)
+        self.data["entry10"] = tk.Entry(leftArea,width = 20)
         self.data["entry10"].grid(row = 10, column =0, padx = 5, pady = 5)
-        PushButton(tk,self.root,10,1,'分岐',self.branch,10)
+        PushButton(tk,leftArea,10,1,'分岐',self.branch,10)
 
-        self.data["entry11"] = tk.Entry(self.root,width = 20)
+        self.data["entry11"] = tk.Entry(leftArea,width = 20)
         self.data["entry11"].grid(row = 11, column =0, padx = 5, pady = 5)
-        PushButton(tk,self.root,11,1,'分岐',self.branch,11)
+        PushButton(tk,leftArea,11,1,'分岐',self.branch,11)
 
-        self.data["branchEntry"] = tk.Entry(self.root,width = 20)
+        self.data["branchEntry"] = tk.Entry(leftArea,width = 20)
         self.data["branchEntry"].grid(row = 12, column =0, padx = 5, pady = 5)
         
         self.data["entry1"].delete(0,'end')
@@ -186,8 +237,8 @@ class Form(object):
         self.data["branchEntry"].delete(0,'end')
         self.data["branchEntry"].insert(0,'1')
         
-        self.rs = RealSense(self.root,self.br,self.data)
-        self.root.mainloop()
+        self.camMgr = Camera(self.imgArea,self.infArea,self.br,self.data)
+        leftArea.mainloop()
 
 
 
@@ -286,6 +337,15 @@ class Form(object):
         self.robot.motors[11].insertOrder(VelocityOrder(0,0))
         OutputController().pushStep()
     
+    def frontCam(self):
+        self.camMgr.startRealsense1()
+
+    def backCam(self):
+        self.camMgr.startRealsense2()
+
+    def webCam(self):
+        self.camMgr.startWebCam()
+
     def change(self):           
         print("○○○Change○○○")
         if self.data["v3"].get() == True:
