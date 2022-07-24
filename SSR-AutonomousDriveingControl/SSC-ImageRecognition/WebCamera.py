@@ -1,7 +1,5 @@
 import time
-from VideoStream import VideoStream
 import cv2
-import time
 
 import platform
 from functools import partial
@@ -13,9 +11,6 @@ import pyrealsense2 as rs
 import numpy as np
 import tkinter as tk
 from PIL import Image,ImageTk #udo pip install pillow
-
-import sys
-from numba import jit
 from ctypes import alignment, windll
 
 
@@ -153,6 +148,6 @@ class WebCameraMgr(object):
 
     def getImage(self,cap,img):
         ret, frame = cap.read()
-        if(ret): img = cv2.resize(frame,(self.w,self.h))
+        if(ret): img = cv2.cvtColor(cv2.resize(frame,(self.w,self.h)),cv2.COLOR_BGR2RGB)
         else:print('cant read camera')
         return img
