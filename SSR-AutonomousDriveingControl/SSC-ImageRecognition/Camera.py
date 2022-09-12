@@ -40,7 +40,7 @@ class Camera(object):
 
         for rscam in serial_numbers:
             print("realsenseList:",rscam)
-
+        serial_numbers.sort()
         
 
         img = Image.open(os.path.abspath('C:/Users/MSD/Documents/GitHub/SSR/SSR-AutonomousDriveingControl/SSC-ImageRecognition/test.png'))
@@ -53,21 +53,21 @@ class Camera(object):
         self.timerlabel.grid(row=1, column=34,columnspan=5)
 
         self.AccelLabelX = tk.Label(self.infArea,text="",anchor="w",width = 50)
-        self.AccelLabelX.grid(row=1, column=34,columnspan=5)
+        self.AccelLabelX.grid(row=2, column=34,columnspan=5)
         self.AccelLabelY = tk.Label(self.infArea,text="",anchor="w",width = 50)
-        self.AccelLabelY.grid(row=2, column=34,columnspan=5)
+        self.AccelLabelY.grid(row=3, column=34,columnspan=5)
         self.AccelLabelZ = tk.Label(self.infArea,text="",anchor="w",width = 50)
-        self.AccelLabelZ.grid(row=3, column=34,columnspan=5)
+        self.AccelLabelZ.grid(row=4, column=34,columnspan=5)
 
 
         self.GyroLabelX = tk.Label(self.infArea,text="",anchor="w",width = 50)
-        self.GyroLabelX.grid(row=4, column=34,columnspan=5)
+        self.GyroLabelX.grid(row=5, column=34,columnspan=5)
         self.GyroLabelY = tk.Label(self.infArea,text="",anchor="w",width = 50)
-        self.GyroLabelY.grid(row=5, column=34,columnspan=5)
+        self.GyroLabelY.grid(row=6, column=34,columnspan=5)
         self.GyroLabelZ = tk.Label(self.infArea,text="",anchor="w",width = 50)
-        self.GyroLabelZ.grid(row=6, column=34,columnspan=5)
+        self.GyroLabelZ.grid(row=7, column=34,columnspan=5)
         self.RobotTheta = tk.Label(self.infArea,text="",anchor="w",width = 50)
-        self.RobotTheta.grid(row=7, column=34,columnspan=5)
+        self.RobotTheta.grid(row=8, column=34,columnspan=5)
 
 
 
@@ -87,6 +87,7 @@ class Camera(object):
 
         print("Open webcam")
         try:
+            raise ValueError("no cam mode")
             self.webcam = WebCameraMgr(self.imgArea,self.infArea,self.br,self.data,self.il)
         except Exception as e:
             print("WebCamera Start Error",e)

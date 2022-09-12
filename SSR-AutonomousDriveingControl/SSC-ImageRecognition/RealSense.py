@@ -17,48 +17,107 @@ from SSC_ImageRecognition13 import ResetLog
 import math
 import pyrealsense2 as rs
 import numpy as np
-
+import os
 import sys
 from numba import jit
 from ctypes import alignment, windll
 
 
+def getLikeAngle(a1,b1,c1,d1):
+    a = int(a1 / 5) * 5
+    b = int(b1 / 5) * 5
+    c = int(c1 / 5) * 5
+    d = int(d1 / 5) * 5
 
+    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    if(os.path.exists(path)):return (a,b,c,d)
+
+    a = int(a1 / 10) * 10
+    b = int(b1 / 10) * 10
+    c = int(c1 / 10) * 10
+    d = int(d1 / 10) * 10
+
+
+    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    if(os.path.exists(path)):return (a,b,c,d)
+
+
+    a = int(a1 / 10) * 10 + 10
+    b = int(b1 / 10) * 10
+    c = int(c1 / 10) * 10
+    d = int(d1 / 10) * 10
+
+
+    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    if(os.path.exists(path)):return (a,b,c,d)
+
+
+    a = int(a1 / 10) * 10
+    b = int(b1 / 10) * 10 + 10
+    c = int(c1 / 10) * 10
+    d = int(d1 / 10) * 10
+
+
+    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    if(os.path.exists(path)):return (a,b,c,d)
+
+
+    a = int(a1 / 10) * 10
+    b = int(b1 / 10) * 10
+    c = int(c1 / 10) * 10 + 10
+    d = int(d1 / 10) * 10
+
+
+    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    if(os.path.exists(path)):return (a,b,c,d)
+
+
+    a = int(a1 / 10) * 10
+    b = int(b1 / 10) * 10
+    c = int(c1 / 10) * 10
+    d = int(d1 / 10) * 10 + 10
+
+
+    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    if(os.path.exists(path)):return (a,b,c,d)
+
+    print("out ofj range angle")
+    return (a,b,c,d)
 
 class RealSense(object):
     def __init__(self,serialNo,imgArea,infArea,branch,data,il,timerlabel,AccelLabelX,AccelLabelY,AccelLabelZ,GyroLabelX,GyroLabelY,GyroLabelZ,RobotTheta):
-        self.serialNo=serialNo
+        self.serialNo = serialNo
         self.imgArea = imgArea
-        self.infArea=infArea
+        self.infArea = infArea
         self.br = branch
         self.data = data
         self.vs = VideoStream(serialNo,(640,360))
-        self.il=il
-        self.timerlabel=timerlabel
-        self.AccelLabelX=AccelLabelX
-        self.AccelLabelY=AccelLabelY
-        self.AccelLabelZ=AccelLabelZ
-        self.GyroLabelX=GyroLabelX
-        self.GyroLabelY=GyroLabelY
-        self.GyroLabelZ=GyroLabelZ
-        self.RobotTheta=RobotTheta
-        self.StopFlag=True
+        self.il = il
+        self.timerlabel = timerlabel
+        self.AccelLabelX = AccelLabelX
+        self.AccelLabelY = AccelLabelY
+        self.AccelLabelZ = AccelLabelZ
+        self.GyroLabelX = GyroLabelX
+        self.GyroLabelY = GyroLabelY
+        self.GyroLabelZ = GyroLabelZ
+        self.RobotTheta = RobotTheta
+        self.StopFlag = True
         print("Open realsense",self.serialNo)
        
     def start(self):
-        self.StopFlag=False
+        self.StopFlag = False
         time.sleep(1)
         self.vs.start()
         time.sleep(1)
         self.getRealsense()
 
     def stop(self):
-        self.StopFlag=True
+        self.StopFlag = True
         self.vs.stop()
 
     #@jit("f8[:,:]()")
     def getRealsense(self):
-        if(self.StopFlag==True):return
+        if(self.StopFlag == True):return
         start = time.time()
     
     
@@ -92,8 +151,9 @@ class RealSense(object):
         rule3 = result[4]
         LElevationAngle = result[5]
         RElevationAngle = result[6]
-        Rangle = result[7]
-        Langle = result[8]
+        LRE = result[7]
+        Rangle = result[8]
+        Langle = result[9]
 
         self.il.configure(image=testImg)
         self.il.image = testImg
@@ -111,8 +171,13 @@ class RealSense(object):
 
         print()
 
-        print("★rule",rule1,rule3,":","Place",(y,x),"TurnAngle",Langle,Rangle,"ElevationAngle",LElevationAngle,RElevationAngle,"GammaAngle",math.degrees(-math.atan2(accel.y,accel.z)))
-        if(False):
+        print("★rule",rule1,rule3,":","Place",(y,x),"GammaAngle",math.degrees(-math.atan2(accel.y,accel.z)),"ElevationAngle",LRE,"TurnAngle",Langle,Rangle)
+
+
+
+        if(rule1 > 1 and rule3 > 1):
+            tangle=math.degrees(-math.atan2(accel.y,accel.z))
+            (tangle,LRE,angleA,angleB) = getLikeAngle(tangle,LRE,Rangle,Langle)
             print("■■■■■分岐",result[4],result[5],result[6],result[7],result[8])
             if(self.data["v_auto"].get()):
                 SleepLength = 0

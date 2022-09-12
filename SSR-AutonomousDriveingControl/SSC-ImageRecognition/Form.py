@@ -205,11 +205,11 @@ class Form(object):
         self.data["branchEntry"].grid(row = 12, column =0, padx = 5, pady = 5)
         
         self.data["entry1"].delete(0,'end')
-        self.data["entry1"].insert(0,'30_-15_70_40')
+        self.data["entry1"].insert(0,'30_10_70_70')#1
         self.data["entry2"].delete(0,'end')
-        self.data["entry2"].insert(0,'15_10_70_70')
+        self.data["entry2"].insert(0,'0_10_50_70')#2
         self.data["entry3"].delete(0,'end')
-        self.data["entry3"].insert(0,'-15_0_40_10')
+        self.data["entry3"].insert(0,'-10_5_60_40')#3
         self.data["entry4"].delete(0,'end')
         self.data["entry4"].insert(0,'-5_0_60_80')
         self.data["entry5"].delete(0,'end')

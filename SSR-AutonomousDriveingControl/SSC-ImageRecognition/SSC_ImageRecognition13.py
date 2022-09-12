@@ -251,10 +251,14 @@ def CalcElevationAngle(depthScale,y,x,angle1,angle2,angle3,minDistance,maxDistan
         Y2 = int(maxDistance - 1 - int(x * aR1 + bR1))
         if(x > branchX and Y1 < int(maxDistance - minDistance) and Y1 >= 0): elevationImage[Y1][x] = [255,0,255]
         if(x < branchX and Y2 < int(maxDistance - minDistance) and Y2 >= 0): elevationImage[Y2][x] = [0,255,255]
+    leftY= bR1
+    rightY=w * aR1 + bR1
+    LRelevationAngle = math.degrees(math.atan((rightY-leftY)/w))
+    
 
     LelevationAngle = math.degrees(math.atan(aL1))
     RelevationAngle = math.degrees(math.atan(aR1))
-    return LelevationAngle,RelevationAngle,elevationImage
+    return LelevationAngle,RelevationAngle,elevationImage,LRelevationAngle
 
 
 c = 100
@@ -778,15 +782,17 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
 
     hoge1 = np.array(valueLog[len(valueLog) - N1:])
     rule1 = np.average(hoge1) / 300
+    print(valueLog)
     print("rule1達成率",rule1)
 
     #p = np.zeros(N2)
     #for i in range(N2):
     #    if(doubelLog[len(doubelLog) - N2 + i] == 0):p[i] = 1
-    #    else:p[i] = doubelLog[len(doubelLog) - N2 + i ] / doubelLog[len(doubelLog) - N2 + i- 1]
+    #    else:p[i] = doubelLog[len(doubelLog) - N2 + i ] /
+    #    doubelLog[len(doubelLog) - N2 + i- 1]
 
     #if(np.average(p) == 0):rule2 = 0
-    #else:rule2 = 0.8 / np.average(p) 
+    #else:rule2 = 0.8 / np.average(p)
     #print("rule2達成率",rule2)
     #print(p)
 
@@ -799,11 +805,12 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
     if(len(l1) < 2):rule3 = 0
     else:
         a,b = reg1dim(l1,l2) 
-        rule3 = (b + a * (N1+5)) / h
+        rule3 = (b + a * (N1 + 5)) / h
         print(a,b,rule3)
+    print(XLog)
     print("rule3達成率",rule3)
 
-    LElevationAngle,RElevationAngle,ElevationImage = CalcElevationAngle(depth_scale,maxY,maxX,maxAngle1,maxAngle2,maxAngle3,minDistance,maxDistance,branchsize,thickness,h,w,maxX,maxY)
+    LElevationAngle,RElevationAngle,ElevationImage,LRE = CalcElevationAngle(depth_scale,maxY,maxX,maxAngle1,maxAngle2,maxAngle3,minDistance,maxDistance,branchsize,thickness,h,w,maxX,maxY)
     #ElevationImage=ir_image2.copy()
     #ElevationAngle=0
     #print(maxX,maxY,LElevationAngle,RElevationAngle)
@@ -823,7 +830,7 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
     brendImage = cv2.addWeighted(ir_image2, 0.5, cableway_image, 0.5, 0)
 
     #img,x,y,fortunity,GammalAngle,TurnAngle,Rangle,Langle,XLog
-    return [CreteViewImage(color_image,depth_image,ir_image,brendImage,cvpaste(imageMap, np.zeros(ElevationImage.shape), 0, 0, 0,1),ElevationImage),maxY,maxX,rule1,rule3,LElevationAngle,RElevationAngle,angleA,angleB]
+    return [CreteViewImage(color_image,depth_image,ir_image,brendImage,cvpaste(imageMap, np.zeros(ElevationImage.shape), 0, 0, 0,1),ElevationImage),maxY,maxX,rule1,rule3,LElevationAngle,RElevationAngle,LRE,angleA,angleB]
 
 
 
