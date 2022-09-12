@@ -5,7 +5,7 @@
     <ProjectGuid>d586afa5-f9e4-4de4-b4f6-c666ee761802</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>Main.py</StartupFile>
+    <StartupFile>test.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -60,6 +60,9 @@
     <Compile Include="SSC_ImageRecognition11.py" />
     <Compile Include="SSC_ImageRecognition13.py" />
     <Compile Include="SSC_ImageRecognition12.py" />
+    <Compile Include="SSC_ImageRecognition14.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="SSC_ImageRecognition7.py" />
     <Compile Include="SSC_ImageRecognition6.py" />
     <Compile Include="SSC_ImageRecognition5.py" />

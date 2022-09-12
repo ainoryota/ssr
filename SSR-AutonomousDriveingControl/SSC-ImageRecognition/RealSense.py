@@ -11,9 +11,9 @@ from functools import partial
 
 import sys
 
-from SSC_ImageRecognition13 import ImageReconition
-from SSC_ImageRecognition13 import IR
-from SSC_ImageRecognition13 import ResetLog
+from SSC_ImageRecognition14 import ImageReconition
+from SSC_ImageRecognition14 import IR
+from SSC_ImageRecognition14 import ResetLog
 import math
 import pyrealsense2 as rs
 import numpy as np
@@ -140,74 +140,74 @@ class RealSense(object):
         # np.zeros(ElevationImage.shape), 0, 0,
         # 0,1),ElevationImage),y,x,rule1,rule2,rule3,LElevationAngle,RElevationAngle,angleA,angleB]
 
+        if(len(result)>1):#エラーのときはFalseだけ返ってくる
+            testImg = result[0]
+            testImg = Image.fromarray(testImg)
+            testImg = ImageTk.PhotoImage(testImg)
 
-        testImg = result[0]
-        testImg = Image.fromarray(testImg)
-        testImg = ImageTk.PhotoImage(testImg)
+            y = result[1]
+            x = result[2]
+            rule1 = result[3]
+            rule3 = result[4]
+            LElevationAngle = result[5]
+            RElevationAngle = result[6]
+            LRE = result[7]
+            Rangle = result[8]
+            Langle = result[9]
 
-        y = result[1]
-        x = result[2]
-        rule1 = result[3]
-        rule3 = result[4]
-        LElevationAngle = result[5]
-        RElevationAngle = result[6]
-        LRE = result[7]
-        Rangle = result[8]
-        Langle = result[9]
-
-        self.il.configure(image=testImg)
-        self.il.image = testImg
+            self.il.configure(image=testImg)
+            self.il.image = testImg
     
-        timer = math.floor((time.time() - start) * 1000)
+            timer = math.floor((time.time() - start) * 1000)
 
-        self.AccelLabelX.configure(text="加速度X:{0:.2f}".format(accel.x))
-        self.AccelLabelY.configure(text="加速度Y:{0:.2f}".format(accel.y))
-        self.AccelLabelZ.configure(text="加速度Z:{0:.2f}".format(accel.z))
-        self.GyroLabelX.configure(text="ジャイロX:{0:.2f}".format(gyro.x))
-        self.GyroLabelY.configure(text="ジャイロY:{0:.2f}".format(gyro.y))
-        self.GyroLabelZ.configure(text="ジャイロY:{0:.2f}".format(gyro.z))
-        self.timerlabel.configure(text="処理時間:{0} ms".format(timer))
-        self.RobotTheta.configure(text="ロボットの角度(deg):{0:.2f} ".format(math.degrees(-math.atan2(accel.y,accel.z))))
+            self.AccelLabelX.configure(text="加速度X:{0:.2f}".format(accel.x))
+            self.AccelLabelY.configure(text="加速度Y:{0:.2f}".format(accel.y))
+            self.AccelLabelZ.configure(text="加速度Z:{0:.2f}".format(accel.z))
+            self.GyroLabelX.configure(text="ジャイロX:{0:.2f}".format(gyro.x))
+            self.GyroLabelY.configure(text="ジャイロY:{0:.2f}".format(gyro.y))
+            self.GyroLabelZ.configure(text="ジャイロY:{0:.2f}".format(gyro.z))
+            self.timerlabel.configure(text="処理時間:{0} ms".format(timer))
+            self.RobotTheta.configure(text="ロボットの角度(deg):{0:.2f} ".format(math.degrees(-math.atan2(accel.y,accel.z))))
 
-        print()
+            print()
 
-        print("★rule",rule1,rule3,":","Place",(y,x),"GammaAngle",math.degrees(-math.atan2(accel.y,accel.z)),"ElevationAngle",LRE,"TurnAngle",Langle,Rangle)
-
-
-
-        if(rule1 > 1 and rule3 > 1):
-            tangle=math.degrees(-math.atan2(accel.y,accel.z))
-            (tangle,LRE,angleA,angleB) = getLikeAngle(tangle,LRE,Rangle,Langle)
-            print("■■■■■分岐",result[4],result[5],result[6],result[7],result[8])
-            if(self.data["v_auto"].get()):
-                SleepLength = 0
-                TimeCounter = 1
-                for i in range(4):
-                    SleepLength+=max(0,result[8][i] - result[8][i + 1])
-                    if(result[8][i] - result[8][i + 1] > 0):TimeCounter+=700
-                #TimeCounterでSleepLengthだけ進んでいる
-                SleepVel = 1000 * SleepLength / TimeCounter
-
-                SleepTime = result[1] / SleepVel
-                SleepTime = max(0,SleepTime)
-
-                print("Sleep",SleepTime)
-                ResetLog()
+            print("★rule",rule1,rule3,":","Place",(y,x),"GammaAngle",math.degrees(-math.atan2(accel.y,accel.z)),"ElevationAngle",LRE,"TurnAngle",Langle,Rangle)
 
 
-                time.sleep(SleepTime)
-                result[4] = max(-20,result[4])
-                result[4] = min(20,result[4])
-                result[5] = max(-20,result[5])
-                result[5] = min(20,result[5])
-                result[6] = max(-80,result[6])
-                result[6] = min(80,result[6])
-                result[7] = max(-80,result[7])
-                result[7] = min(80,result[7])
-                print("Branch Angle:",result[4],result[5],result[6],result[7],self.data["v1"].get(),self.data["v3"].get(),self.data["v7"].get(),self.data["v8"].get())
-                #Branch Angle:Exception in Tkinter callback 4:-5 5:-10 6:75
-                #7:70 v1:True v3:True v7:True v8:False
-                self.br.branchAngle(result[4],result[5],result[6],result[7],self.data["v1"].get(),self.data["v3"].get(),self.data["v7"].get(),self.data["v8"].get())
+
+            if(rule1 > 1 and rule3 > 1):
+                tangle=math.degrees(-math.atan2(accel.y,accel.z))
+                (tangle,LRE,angleA,angleB) = getLikeAngle(tangle,LRE,Rangle,Langle)
+                print("■■■■■分岐",result[4],result[5],result[6],result[7],result[8])
+                if(self.data["v_auto"].get()):
+                    SleepLength = 0
+                    TimeCounter = 1
+                    for i in range(4):
+                        SleepLength+=max(0,result[8][i] - result[8][i + 1])
+                        if(result[8][i] - result[8][i + 1] > 0):TimeCounter+=700
+                    #TimeCounterでSleepLengthだけ進んでいる
+                    SleepVel = 1000 * SleepLength / TimeCounter
+
+                    SleepTime = result[1] / SleepVel
+                    SleepTime = max(0,SleepTime)
+
+                    print("Sleep",SleepTime)
+                    ResetLog()
+
+
+                    time.sleep(SleepTime)
+                    result[4] = max(-20,result[4])
+                    result[4] = min(20,result[4])
+                    result[5] = max(-20,result[5])
+                    result[5] = min(20,result[5])
+                    result[6] = max(-80,result[6])
+                    result[6] = min(80,result[6])
+                    result[7] = max(-80,result[7])
+                    result[7] = min(80,result[7])
+                    print("Branch Angle:",result[4],result[5],result[6],result[7],self.data["v1"].get(),self.data["v3"].get(),self.data["v7"].get(),self.data["v8"].get())
+                    #Branch Angle:Exception in Tkinter callback 4:-5 5:-10 6:75
+                    #7:70 v1:True v3:True v7:True v8:False
+                    self.br.branchAngle(result[4],result[5],result[6],result[7],self.data["v1"].get(),self.data["v3"].get(),self.data["v7"].get(),self.data["v8"].get())
 
 
         self.imgArea.after(10,self.getRealsense)
