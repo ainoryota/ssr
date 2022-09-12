@@ -135,12 +135,13 @@ class RealSense(object):
         #print("IR1:",ir_image1.shape)
         #print("IR2:",ir_image2.shape)
         result = IR(color_image,depth_image,ir_image1,accel,True)
-        # return
-        # [CreteViewImage(color_image,depth_image,ir_image,brendImage,cvpaste(imageMap,
-        # np.zeros(ElevationImage.shape), 0, 0,
-        # 0,1),ElevationImage),y,x,rule1,rule2,rule3,LElevationAngle,RElevationAngle,angleA,angleB]
+        if(len(result)>1):#不正ならFalseだけが返る
+            # return
+            # [CreteViewImage(color_image,depth_image,ir_image,brendImage,cvpaste(imageMap,
+            # np.zeros(ElevationImage.shape), 0, 0,
+            # 0,1),ElevationImage),y,x,rule1,rule2,rule3,LElevationAngle,RElevationAngle,angleA,angleB]
 
-        if(len(result)>1):#エラーのときはFalseだけ返ってくる
+
             testImg = result[0]
             testImg = Image.fromarray(testImg)
             testImg = ImageTk.PhotoImage(testImg)

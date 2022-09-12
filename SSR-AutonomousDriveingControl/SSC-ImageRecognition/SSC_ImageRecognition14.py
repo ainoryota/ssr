@@ -18,6 +18,7 @@ from skimage.draw import disk #pip install scikit-image
 from skimage import morphology #pip install scikit-image
 from functools import lru_cache
 import scipy.ndimage
+from scipy.optimize import minimize
 
 #一次式で最小二乗近似する
 def reg1dim(x, y):
@@ -34,6 +35,17 @@ def reg1dim(x, y):
         b = 0
 
     return a, b
+
+
+
+#一次式で最小絶対値法近似する。かなり重たいので高速化の必要あり
+def L_abs_minimize(x, y):
+    init = np.array([0.0, 0.0])
+    def loss(args):
+        a, b = args
+        return np.sum(np.abs(y - (a*x+b)))
+    ret = minimize(loss, init)
+    return  ret.x[0],ret.x[1]
 
 #unitの倍数になるようvalueを調節する
 def getUnitValue(value,unit):
@@ -492,18 +504,21 @@ def CalcElevationAngle(depthScale,y,x,angle1,angle2,angle3,minDistance,maxDistan
     
     data1_x = idx[1][Ymask]
     data1_depth = EffectiveDepthScale[idx][Ymask]
-    maskL = np.nonzero((data1_x > branchX))#リアル空間で左分岐=画像上で右分岐
-    maskR = np.nonzero((data1_x < branchX))
+    maskL = np.nonzero((data1_x > branchX*1.2))#リアル空間で左分岐=画像上で右分岐
+    maskR = np.nonzero((data1_x < branchX*0.7))
 
     if(len(data1_x[maskL]) < 2):(aL1,bL1) = (0,0)
-    else:aL1,bL1 = reg1dim(data1_x[maskL],data1_depth[maskL])
+    else:aL1,bL1 = L_abs_minimize(data1_x[maskL],data1_depth[maskL])
+    for hoge in range(len(data1_x[maskL]-1)):
+        print(data1_x[maskL][hoge],data1_depth[maskL][hoge])
+    print("ans:",aL1,bL1)
     if(len(data1_x[maskR]) < 2):(aR1,bR1) = (0,0)
-    else:aR1,bR1 = reg1dim(data1_x[maskR],data1_depth[maskR])
+    else:aR1,bR1 = L_abs_minimize(data1_x[maskR],data1_depth[maskR])
     for x in range(w):
         Y1 = int(maxDistance - 1 - int(x * aL1 + bL1))
         Y2 = int(maxDistance - 1 - int(x * aR1 + bR1))
-        if(x > branchX and Y1 < int(maxDistance - minDistance) and Y1 >= 0): elevationImage[Y1][x] = [255,0,255]
-        if(x < branchX and Y2 < int(maxDistance - minDistance) and Y2 >= 0): elevationImage[Y2][x] = [0,255,255]
+        if(x > branchX*1.2 and Y1 < int(maxDistance - minDistance) and Y1 >= 0): elevationImage[Y1][x] = [255,0,255]
+        if(x < branchX*0.7 and Y2 < int(maxDistance - minDistance) and Y2 >= 0): elevationImage[Y2][x] = [0,255,255]
     leftY= bR1
     rightY=w * aR1 + bR1
     LRelevationAngle = math.degrees(math.atan((rightY-leftY)/w))
@@ -895,21 +910,28 @@ def RegionGrowing(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale)
             seeds.extend(seedPlus)
     return flag
 
+counter=0
 #赤外線画像とdepth画像を合成した二値画像を生成する
 def WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale):
+    global counter
+    counter+=1
+    #np.savetxt('result/data'+str(counter)+".csv", depth_scale)
     resultScale = np.zeros((h,w),dtype=np.uint8)
         
-    #depth要素のある部分にフラグ3を付ける
-    flag = np.where((minDistance <= depth_scale) & (depth_scale < maxDistance),3,0)
-        
-    #遠くのdepth要素がある部分にフラグ4を付ける
+    print(depth_scale[30:60,60:40])
+
+    #IR要素が小さい部分にフラグ2(緑)をつけ（だめな部分）、そうでない部分に5（黄色）をつける（不明な部分）
+    flag = np.where((ir_scale <= 100) ,2,5)
+
+    #遠くのdepth要素がある部分にフラグ4（水色）を付ける（だめな部分）
     flag = np.where((depth_scale > overDistance),4,flag)
 
-    #データが不正の位置にフラグ1をつける
-    flag = np.where((depth_scale == 0) ,1,flag)
-            
-    #IR要素が小さい部分にフラグ2をつける
-    flag = np.where((ir_scale <= 100) ,2,flag)
+    #データが不正の位置にフラグ1（赤）をつける（グレーな部分）
+    flag = np.where((depth_scale==0) ,1,flag)
+
+    #depth要素のある部分にフラグ3（青）を付ける
+    flag = np.where((1 <= depth_scale) & (depth_scale < maxDistance),3,flag)
+    
 
     binaryScale = np.where(flag == 3,255,0).astype(np.uint8)
     #binaryScale = np.where(flag == 0,ir_scale,binaryScale).astype(np.uint8)
@@ -931,10 +953,11 @@ def CreteViewImage(img11,img12,img21,img22,img31,img32):
 
 def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
 
+    
     #索道などのパラメータ
     minDistance = 200
     maxDistance = 500
-    overDistance = 3000
+    overDistance = 2000
 
     #戻り値
     GammalAngle = 0
@@ -962,6 +985,7 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
     #画角合わせ
     color_image = np.delete(color_image,slice(0,maxX),1)
     depth_scale = np.delete(depth_scale,slice(0,maxX),1)
+    #depth_scale = np.where(depth_scale>700,700,0)
     ir_image = cvpaste(ir_image, np.zeros((h,w,3)), 0, 0, angle, scale)
     ir_image = np.delete(ir_image,slice(w - maxX,w),1)
 
@@ -969,8 +993,8 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
     w = w - maxX
 
     #表示用画像と処理用データをそれぞれ生成
-    depth_image = ScalarImage2RGB(depth_scale,minDistance,overDistance)
-    depth_image[:,int(depth_image.shape[1] / 2),:] = np.array([255,0,0])
+    depth_image = ScalarImage2RGB(depth_scale,minDistance,2000)
+    #depth_image[:,int(depth_image.shape[1] / 2),:] = np.array([255,0,0])#中心線を入れる
     ir_scale = cv2.cvtColor(ir_image,cv2.COLOR_RGB2GRAY)
 
     #デバッグ用
@@ -995,6 +1019,7 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
         imageMap[np.where(flag == 4)] = [0,255,255]#depth要素が遠い部分
         imageMap[np.where(flag == 1)] = [255,0,0]#データが不正の位置
         imageMap[np.where(flag == 2)] = [0,255,0]#IR要素が小さい部分
+        imageMap[np.where(flag == 5)] = [255,255,0]#テスト用
         binaryScale = cv2.medianBlur(binaryScale,3)
         ir_image2 = cv2.cvtColor(binaryScale,cv2.COLOR_GRAY2RGB)
 
