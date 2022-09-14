@@ -5,15 +5,9 @@ import tkinter as tk
 import cv2
 import time
 
-###
 import platform
 from functools import partial
-
 import sys
-
-from SSC_ImageRecognition14 import ImageReconition
-from SSC_ImageRecognition14 import IR
-from SSC_ImageRecognition14 import ResetLog
 import math
 import pyrealsense2 as rs
 import numpy as np

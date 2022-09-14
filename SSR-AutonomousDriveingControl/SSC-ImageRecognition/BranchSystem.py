@@ -1,9 +1,9 @@
 from SSC_ImageRecognition14 import IR
 import cv2
-from Utilty import cvpaste,CreteViewImage,ScalarImage2RGB
+from Utilty import cvpaste,CreteViewImage,ScalarImage2RGB,reg1dim,getImageFromFile,rounddown
 import numpy as np
 from PIL import Image,ImageTk
-
+import math
 
 class BranchSystem:
     def __init__(self):
@@ -15,7 +15,7 @@ class BranchSystem:
         self.depth_image=np.zeros((1,1,3))#RGB
         self.depth_scale=np.zeros((1,1))
         self.EffectiveDepthScale=np.zeros(307)#x軸方向に探査したときの有効な深度情報
-
+        self.DepthIRFlag=np.zeros((1,1))
         
         self.Error=False
         self.y=0
@@ -23,6 +23,11 @@ class BranchSystem:
         self.InclinationAngle=0
         self.Rangle=0
         self.Langle=0
+        self.branchValue=0
+
+        self.LogNumber = 100
+        self.valueLog = [0 for a in range(self.LogNumber)]
+        self.YLog = [0 for a in range(self.LogNumber)]
 
 
         #索道などのパラメータ
@@ -37,10 +42,10 @@ class BranchSystem:
         self.color_image=color_image
         self.ir_image1=ir_image1
         self.ir_image2=ir_image2
-        self.depth_image=depth_image#後にRGB画像になる
+        self.depth_image=ScalarImage2RGB(depth_image,self.minDistance,self.overDistance)
+        self.depth_scale=depth_image
         self.adjustView()
-        self.depth_scale=self.depth_image.copy()
-        self.ir_scale=ir_image1.copy()
+        self.ir_scale=cv2.cvtColor(self.ir_image1.copy(),cv2.COLOR_RGB2GRAY)
 
     def adjustView(self):
         #画像の標準サイズ
@@ -59,42 +64,71 @@ class BranchSystem:
         self.depth_image = cv2.resize(self.depth_image, (w,h))
         self.ir_image1 = cv2.resize(self.ir_image1, (w,h))
         self.ir_image1 = ScalarImage2RGB(self.ir_image1,0,255)
+        self.depth_scale = cv2.resize(self.depth_scale, (w,h))
         self.ir_image2= cv2.resize(self.ir_image2, (w,h))
         self.ir_image2 = ScalarImage2RGB(self.ir_image2,0,255)
+
 
         #画角合わせ（赤外線カメラ2を除く）
         self.color_image = np.delete(self.color_image,slice(0,maxX),1)
         self.depth_image = np.delete(self.depth_image,slice(0,maxX),1)
+        self.depth_scale = np.delete(self.depth_scale,slice(0,maxX),1)
         self.ir_image1 = cvpaste(self.ir_image1, np.zeros((h,w,3)), 0, 0, angle, scale)#若干拡大する
         self.ir_image1 = np.delete(self.ir_image1,slice(w - maxX,w),1)
 
     def calcCablewayInf(self,accel,extMode):
         self.Error=False
         self.IsBranch=False
-        if(np.sum(self.ir_image1)<0.1):#赤外線カメラが真っ暗
+        if(np.sum(self.ir_image1)<0.1 or np.sum(self.color_image)<0.1):#カメラがほぼ真っ暗
             self.Error=True
+            print("Camera is black")
             return
-        result=IR(self.color_image,self.depth_image,self.ir_image1,self.ir_scale,accel,self.minDistance,self.maxDistance,self.overDistance,extMode)
+        result=IR(self.color_image,self.depth_image,self.ir_image1,self.depth_scale,self.ir_scale,accel,self.minDistance,self.maxDistance,self.overDistance,extMode)
         if(len(result)==1):#不正ならFalseだけが返ってくる
             self.Error=True
             return
-        (self.y,self.x,self.InclinationAngle,self.Rangle,self.Langle,self.EffectiveDepthScale)=result;
+        (self.y,self.x,self.branchValue,self.InclinationAngle,self.Rangle,self.Langle,self.EffectiveDepthScale,self.DepthIRFlag)=result;
+        self.appendLog()
+        tangle=math.degrees(-math.atan2(accel.y,accel.z))
 
-        rule1=0
-        if(rule1 > 1 and rule3 > 1):
+        (rule1,rule2)=self.calcRule()
+        print("y=",self.y,"x=",self.x,"InclinationAngle（回転角）=",rounddown(self.InclinationAngle,1),"ElevationAngle（仰角）=",rounddown(tangle,1),"RightAngle=",rounddown(self.Rangle,0),"LAngle=",rounddown(self.Langle,0),"branchValue=",self.branchValue,"rule1=",rounddown(rule1,2),"rule2=",rounddown(rule2,2))
+        if(rule1 > 1 and rule2 > 1):
             self.IsBranch=True
-            tangle=math.degrees(-math.atan2(accel.y,accel.z))
             (tangle,LRE,angleA,angleB) = getLikeAngle(tangle,LRE,Rangle,Langle)
 
     def getOutputImage(self):
-        if(self.Error):return  ImageTk.PhotoImage(Image.fromarray(Image.open('./test.png')))
-        
-        depth_view_image = ScalarImage2RGB(self.depth_image,300,2000)
+        if(self.Error):return  ImageTk.PhotoImage(getImageFromFile("test.png"))
+        depth_view_image = ScalarImage2RGB(self.depth_scale,self.minDistance,self.overDistance)
         InclinationImage=self.getInclinationImage()
-        brendImage=np.zeros(self.ir_image1.shape);
+        cablewayImage=self.getCablewayImage()
         imageMap=np.zeros(InclinationImage.shape);
-        image=CreteViewImage(self.color_image,depth_view_image,self.ir_image1,brendImage,cvpaste(imageMap, np.zeros(InclinationImage.shape), 0, 0, 0,1),InclinationImage)
+        depthIRImage=cvpaste(self.getDepthIRMap(), np.zeros(InclinationImage.shape), 0, 0, 0,1)
+        image=CreteViewImage(self.color_image,depth_view_image,self.ir_image1,cablewayImage,depthIRImage,InclinationImage)
         return ImageTk.PhotoImage(Image.fromarray(image.astype(np.uint8)))
+
+    def appendLog(self):
+        self.valueLog.append(self.branchValue)
+        self.valueLog.pop(0)
+        self.YLog.append(self.y)
+        self.YLog.pop(0)
+
+    def calcRule(self):
+        #1.直近N1ログ以内のvalueLog平均値が300以上
+        #2.直近N1ログ以内のvalueLog平均値が300以上の結果から推定された5ログあとのYLogの線形近似解が高さhの1.2倍を超えた
+        N1 = 30
+        valueLogList = np.array(self.valueLog[len(self.valueLog) - N1:])
+        rule1= np.average(valueLogList) / 300
+
+        hoge2 = np.array(self.YLog[len(self.YLog) - N1:])
+        l1 = np.array([n for n in range(N1)])[np.nonzero(valueLogList > 300)]
+        l2 = hoge2[np.nonzero(valueLogList > 300)]
+    
+        if(len(l1) < 2):rule2 = 0
+        else:
+            a,b = reg1dim(l1,l2) 
+            rule2 = (b + a * (N1 + 5)) / (self.h*1.2)
+        return (rule1,rule2)
 
     def getBranch(self):#分岐すべきならそのタイミングや角度を返す
         SleepTime=0
@@ -110,6 +144,37 @@ class BranchSystem:
     def getInclinationImage(self):
         InclinationImage = np.zeros((int(self.maxDistance - self.minDistance),self.w,3),dtype=np.uint8) + 100
         idx = np.nonzero(self.EffectiveDepthScale > 0)
-        if(len(idx)>1):
+        if(len(idx)>1 and len(idx[0])>0 and len(idx[1])>0):
             InclinationImage[self.maxDistance - self.EffectiveDepthScale[idx] - 1,idx[1]] = [255,255,255]
         return InclinationImage
+
+    def getDepthIRMap(self):
+        DepthIRMap = self.ir_image1.copy()
+        DepthIRMap[np.where(self.DepthIRFlag == 3)] = [0,0,255]#depthの大きさから索道と予想される部分
+        DepthIRMap[np.where(self.DepthIRFlag == 4)] = [0,255,255]#depth要素が遠い部分
+        DepthIRMap[np.where(self.DepthIRFlag == 1)] = [255,0,0]#データが不正の位置
+        DepthIRMap[np.where(self.DepthIRFlag == 2)] = [0,255,0]#IR要素が小さい部分
+        DepthIRMap[np.where(self.DepthIRFlag == 5)] = [255,255,0]#テスト用
+        return DepthIRMap
+
+    def getCablewayImage(self):
+        cablewayImage = np.zeros(self.depth_image.shape)
+        cablewayImage[np.where(self.DepthIRFlag == 3)] =[255,255,255]#depthの大きさから索道と予想される部分
+        x=self.x
+        y=self.y
+        img=cablewayImage
+        thickness=30
+
+        theta=270-self.Rangle-90
+        img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(255,100,100,50),thickness=thickness)
+        img = cv2.putText(img,str(int(theta)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(255,100,100))
+        theta = 270+self.Langle-90
+        img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(100,255,100,50),thickness=thickness)#緑
+        img = cv2.putText(img,str(int(theta)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,255,100))
+        theta = 90-90
+        img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(100,100,255,50),thickness=thickness)
+        img = cv2.putText(img,str(int(theta)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,100,255))
+        img = cv2.putText(img,str(int(self.Rangle)) + "/" + str(int(self.Langle)) + "/" + str(int(90)),(0,100),cv2.FONT_HERSHEY_PLAIN,3,(255,255,255))
+
+
+        return img

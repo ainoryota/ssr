@@ -23,6 +23,7 @@ from ctypes import alignment, windll
 from RealSense import RealSense 
 from WebCamera import WebCameraMgr 
 import os
+from Utilty import getImageFromFile
 
 
 
@@ -43,7 +44,7 @@ class Camera(object):
         serial_numbers.sort()
         
 
-        img = Image.open('test.png')
+        img = getImageFromFile("test.png")
         testImg = ImageTk.PhotoImage(img)
 
         self.il = tk.Label(self.imgArea,image=testImg)
