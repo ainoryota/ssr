@@ -19,6 +19,7 @@ from skimage import morphology #pip install scikit-image
 from functools import lru_cache
 import scipy.ndimage
 from scipy.optimize import minimize
+from Utilty import cvpaste
 
 #一次式で最小二乗近似する
 def reg1dim(x, y):
@@ -35,7 +36,6 @@ def reg1dim(x, y):
         b = 0
 
     return a, b
-
 
 
 #一次式で最小絶対値法近似する。かなり重たいので高速化の必要あり
@@ -151,7 +151,6 @@ def CalcScore(field,x,y,anglestep,thickness):
     angles = np.array(range(0,360,anglestep))
     angles = angles[np.where((CalcDiffAngleNP(angles,angle3) >= ruleAngle))]
     angles = angles[np.where(((190<angles)&(angles<260))|((280<angles)&(angles<350)))]
-    print(angles)
     scores = np.array([np.sum(field[(getWeightedLineArray(angle,300,thickness,y,x,h,w))]) for angle in angles])
     maxValue3 = np.sum(field[(getWeightedLineArray(90,300,thickness,y,x,h,w))])
 
@@ -267,9 +266,7 @@ def HoughConvert(imageData): # https://qiita.com/ikuo0/items/c591b61fe8a07546688
         plt.ylabel("r")#ハフ空間（波形全体） https://ja.wikipedia.org/wiki/%E3%83%8F%E3%83%95%E5%A4%89%E6%8F%9B　正弦波同士が重なった個数が多いところが直線。
         plt.show()
 
-    #print("len(PX)", len(PX))
-    #print("len(PY)", len(PY))
-    #print("len(theta_arr)", len(theta_arr))
+
 
     # 2次元配列にして交差している点をカウントする
     # 対角線の長さを求め距離の最大値とする
@@ -373,7 +370,6 @@ def HoughConvert(imageData): # https://qiita.com/ikuo0/items/c591b61fe8a07546688
             x2 = CANVAS_WIDTH
             y1 = -(math.cos(rad) / math.sin(rad)) * x1 + ((d - diagonalDistance) / math.sin(rad))
             y2 = -(math.cos(rad) / math.sin(rad)) * x2 + ((d - diagonalDistance) / math.sin(rad))
-        print(rad, x1, x2, y1, y2)
         if plotMode:
             plotLine(x, int(x1), int(y1), int(x2), int(y2), broken=1, variance=0)
     if plotMode:
@@ -472,9 +468,8 @@ def CalcTurningAngle(binryScale,step,branchsize,thickness):
                 maxX = x
                 maxY = y
 
-
+    print(maxX,maxY,maxAngle1,maxAngle2,maxValue1,maxValue2,maxValue)
     PointList = (PointList * 255 / maxValue).astype(np.uint8)
-    print(maxX,maxY,maxAngle1,maxAngle2,maxAngle3)
     return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList]
 
 def CalcElevationAngle(depthScale,y,x,angle1,angle2,angle3,minDistance,maxDistance,branchsize,thickness,h,w,branchX,branchY):
@@ -511,9 +506,6 @@ def CalcElevationAngle(depthScale,y,x,angle1,angle2,angle3,minDistance,maxDistan
 
     if(len(data1_x[maskL]) < 2):(aL1,bL1) = (0,0)
     else:aL1,bL1 = L_abs_minimize(data1_x[maskL],data1_depth[maskL])
-    for hoge in range(len(data1_x[maskL]-1)):
-        print(data1_x[maskL][hoge],data1_depth[maskL][hoge])
-    print("ans:",aL1,bL1)
     if(len(data1_x[maskR]) < 2):(aR1,bR1) = (0,0)
     else:aR1,bR1 = L_abs_minimize(data1_x[maskR],data1_depth[maskR])
     for x in range(w):
@@ -736,9 +728,7 @@ def ImageReconition(binaryScale):
     doubelLog.pop(0)
     doubelLog.append(fortunity)
     fortunity = sum(doubelLog) / 5
-    print("angle1",angle1,angle2,angle3)
     (GammalAngle,TurnAngle,Rangle,Langle) = getRobotAngle(img,y,x,angle1,angle2,angle3,rotation)
-    print("Newangle1",GammalAngle,TurnAngle,Rangle,Langle)
 
     GammalAngleLog.pop(0)
     GammalAngleLog.append(GammalAngle)
@@ -761,8 +751,6 @@ def ImageReconition(binaryScale):
     Rangle = getUnitValue(Rangle,5)
     Langle = getUnitValue(Langle,5)
 
-    #描画など
-    print(x,y,GammalAngle,TurnAngle,Rangle,Langle,'{:.2f}'.format(fortunity))
 
     thickness = 1
     try:
@@ -806,46 +794,7 @@ def ShiftTrim(image,Yshift,Xshift):
     #print(w,h,Xshift,Yshift)
     return image
 
-def cvpaste(img, imgback, x, y, angle, scale):  
-    # x and y are the distance from the center of the background image
 
-    r = img.shape[0]
-    c = img.shape[1]
-    rb = imgback.shape[0]
-    cb = imgback.shape[1]
-    hrb = round(rb / 2)
-    hcb = round(cb / 2)
-    hr = round(r / 2)
-    hc = round(c / 2)
-
-    # Copy the forward image and move to the center of the background image
-    imgrot = np.zeros((rb,cb,3),np.uint8)
-    imgrot[hrb - hr:hrb + hr,hcb - hc:hcb + hc,:] = img[:hr * 2,:hc * 2,:]
-
-    # Rotation and scaling
-    M = cv2.getRotationMatrix2D((hcb,hrb),angle,scale)
-    imgrot = cv2.warpAffine(imgrot,M,(cb,rb))
-    # Translation
-    M = np.float32([[1,0,x],[0,1,y]])
-    imgrot = cv2.warpAffine(imgrot,M,(cb,rb))
-
-    # Makeing mask
-    imggray = cv2.cvtColor(imgrot,cv2.COLOR_BGR2GRAY)
-    ret, mask = cv2.threshold(imggray, 10, 255, cv2.THRESH_BINARY)
-    mask_inv = cv2.bitwise_not(mask)
-
-    # Now black-out the area of the forward image in the background image
-    img1_bg = cv2.bitwise_and(imgback,imgback,mask = mask_inv)
-
-    # Take only region of the forward image.
-    img2_fg = cv2.bitwise_and(imgrot,imgrot,mask = mask)
-
-    # Paste the forward image on the background image
-    #print(img1_bg.shape)
-    #print(img2_fg.shape)
-    imgpaste = cv2.add(img1_bg,img2_fg, dtype = cv2.CV_8U)
-
-    return imgpaste
 
 #2ms
 def ScalarImage2RGB(img,ClipMinDistance,ClipMaxDistance):
@@ -920,7 +869,6 @@ def WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scal
     #np.savetxt('result/data'+str(counter)+".csv", depth_scale)
     resultScale = np.zeros((h,w),dtype=np.uint8)
         
-    print(depth_scale[30:60,60:40])
 
     #IR要素が小さい部分にフラグ2(緑)をつけ（だめな部分）、そうでない部分に5（黄色）をつける（不明な部分）
     flag = np.where((ir_scale <= 100) ,2,5)
@@ -953,46 +901,16 @@ def CreteViewImage(img11,img12,img21,img22,img31,img32):
     return result
     
 
-def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
-
-    
-    #索道などのパラメータ
-    minDistance = 200
-    maxDistance = 500
-    overDistance = 2000
-
+def IR(color_image,depth_scale,ir_image,robot_rotation,minDistance,maxDistance,overDistance,extMode=True):
     #戻り値
     GammalAngle = 0
     TurnAngle = 0
     Rangle = 0
     Langle = 0
 
-    #画像の標準サイズ
-    w = 320
-    h = 180
-
-    #赤外線カメラとdepthカメラの位置変換用定数
-    maxX = 13
-    angle = 0
-    scale = 1.4
-
-    #リサイズとファイル形式の変換
-    color_image = cv2.resize(color_image, (w,h))
-    depth_scale = cv2.resize(depth_scale, (w,h))
-    ir_image = cv2.resize(ir_image, (w,h))
-    if(np.sum(ir_image)<0.1):
-        return [False]
-    ir_image = cv2.cvtColor(ir_image,cv2.COLOR_GRAY2RGB)
-
-    #画角合わせ
-    color_image = np.delete(color_image,slice(0,maxX),1)
-    depth_scale = np.delete(depth_scale,slice(0,maxX),1)
-    #depth_scale = np.where(depth_scale>700,700,0)
-    ir_image = cvpaste(ir_image, np.zeros((h,w,3)), 0, 0, angle, scale)
-    ir_image = np.delete(ir_image,slice(w - maxX,w),1)
-
     #画角の結果に合わせた画像サイズ修正
-    w = w - maxX
+    h =color_image.shape[0]
+    w =color_image.shape[1]
 
     #表示用画像と処理用データをそれぞれ生成
     depth_image = ScalarImage2RGB(depth_scale,minDistance,2000)
@@ -1034,7 +952,6 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
     doubelLog.pop(0)
     valueLog.append(maxValue1 + maxValue2 + maxValue3)
     valueLog.pop(0)
-    print(maxValue1 + maxValue2 + maxValue3,maxDoubel)
     XLog.append(maxY)
     XLog.pop(0)
     
@@ -1064,8 +981,7 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
 
     hoge1 = np.array(valueLog[len(valueLog) - N1:])
     rule1 = np.average(hoge1) / 300
-    print(valueLog)
-    print("rule1達成率",rule1)
+
 
     #p = np.zeros(N2)
     #for i in range(N2):
@@ -1088,9 +1004,7 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
     else:
         a,b = reg1dim(l1,l2) 
         rule3 = (b + a * (N1 + 5)) / h
-        print(a,b,rule3)
-    print(XLog)
-    print("rule3達成率",rule3)
+
 
     LElevationAngle,RElevationAngle,ElevationImage,LRE = CalcElevationAngle(depth_scale,maxY,maxX,maxAngle1,maxAngle2,maxAngle3,minDistance,maxDistance,branchsize,thickness,h,w,maxX,maxY)
     #ElevationImage=ir_image2.copy()

@@ -43,7 +43,7 @@ class Camera(object):
         serial_numbers.sort()
         
 
-        img = Image.open(os.path.abspath('C:/Users/MSD/Documents/GitHub/SSR/SSR-AutonomousDriveingControl/SSC-ImageRecognition/test.png'))
+        img = Image.open('test.png')
         testImg = ImageTk.PhotoImage(img)
 
         self.il = tk.Label(self.imgArea,image=testImg)
