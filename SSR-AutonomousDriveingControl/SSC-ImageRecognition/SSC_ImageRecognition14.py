@@ -170,13 +170,13 @@ def CalcScore(field,x,y,anglestep,thickness):
 
         angle2 = angles[i:][idx][0]
         score2 = scores[i:][idx][0]
+        if(maxValue > score1 + score2 + maxValue3):continue;
         maxValue = score1 + score2 + maxValue3
         maxAngle1 = angle1
         maxAngle2 = angle2
         maxAngle3 = angle3
         maxValue1 = score1
         maxValue2 = score2
-        break
 
     return [maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3]
 
