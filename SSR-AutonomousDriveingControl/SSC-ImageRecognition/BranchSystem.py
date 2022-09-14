@@ -1,6 +1,6 @@
 from SSC_ImageRecognition14 import IR
 import cv2
-from Utilty import cvpaste,CreteViewImage,ScalarImage2RGB,reg1dim,getImageFromFile,rounddown
+from Utilty import cvpaste,CreteViewImage,ScalarImage2RGB,reg1dim,getImageFromFile,rounddown,disk,DrawAngleLine
 import numpy as np
 from PIL import Image,ImageTk
 import math
@@ -92,7 +92,7 @@ class BranchSystem:
         tangle=math.degrees(-math.atan2(accel.y,accel.z))
 
         (rule1,rule2)=self.calcRule()
-        print("y=",self.y,"x=",self.x,"InclinationAngle（回転角）=",rounddown(self.InclinationAngle,1),"ElevationAngle（仰角）=",rounddown(tangle,1),"RightAngle=",rounddown(self.Rangle,0),"LAngle=",rounddown(self.Langle,0),"branchValue=",self.branchValue,"rule1=",rounddown(rule1,2),"rule2=",rounddown(rule2,2))
+        print("y=",self.y,"x=",self.x,"仰角Ele=",rounddown(tangle,1),"回転角Inc=",rounddown(self.InclinationAngle,1),"RightAngle=",rounddown(self.Rangle,0),"LAngle=",rounddown(self.Langle,0),"branchValue=",self.branchValue,"rule1=",rounddown(rule1,2),"rule2=",rounddown(rule2,2))
         if(rule1 > 1 and rule2 > 1):
             self.IsBranch=True
             (tangle,LRE,angleA,angleB) = getLikeAngle(tangle,LRE,Rangle,Langle)
@@ -158,23 +158,24 @@ class BranchSystem:
         return DepthIRMap
 
     def getCablewayImage(self):
-        cablewayImage = np.zeros(self.depth_image.shape)
-        cablewayImage[np.where(self.DepthIRFlag == 3)] =[255,255,255]#depthの大きさから索道と予想される部分
-        x=self.x
-        y=self.y
-        img=cablewayImage
-        thickness=30
+        depthExtendImage = np.zeros(self.depth_image.shape)
+        depthExtendImage[np.where(self.DepthIRFlag == 3)] =[255,255,255]#depthの大きさから索道と予想される部分
+        maxX=self.x
+        maxY=self.y
+        maxAngle1=270+self.Rangle
+        maxAngle2=270-self.Langle
+        maxAngle3=90
+        thickness=15
+        h=self.h
+        w=self.w
 
-        theta=270-self.Rangle-90
-        img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(255,100,100,50),thickness=thickness)
-        img = cv2.putText(img,str(int(theta)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(255,100,100))
-        theta = 270+self.Langle-90
-        img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(100,255,100,50),thickness=thickness)#緑
-        img = cv2.putText(img,str(int(theta)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,255,100))
-        theta = 90-90
-        img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(100,100,255,50),thickness=thickness)
-        img = cv2.putText(img,str(int(theta)),(x + int(100 * math.sin(math.radians(theta))),y + int(100 * math.cos(math.radians(theta)))),cv2.FONT_HERSHEY_PLAIN,1,(100,100,255))
-        img = cv2.putText(img,str(int(self.Rangle)) + "/" + str(int(self.Langle)) + "/" + str(int(90)),(0,100),cv2.FONT_HERSHEY_PLAIN,3,(255,255,255))
+        cablewayImage = DrawAngleLine(np.zeros((h,w,3),dtype=np.uint8),maxX,maxY,maxAngle1,(255,100,100,50),thickness)
+        cablewayImage = DrawAngleLine(cablewayImage,maxX,maxY,maxAngle2,(100,255,100,50),thickness)
+        cablewayImage = DrawAngleLine(cablewayImage,maxX,maxY,maxAngle3,(100,100,255,50),thickness)
+        cablewayImage = cv2.putText(cablewayImage,str(int(self.Rangle)) + "/" + str(int(self.Langle)),(0,160),cv2.FONT_HERSHEY_PLAIN,2,(255,255,255))
+        rr,cc = disk((maxY,maxX), 24, shape=(h,w))
+        mask = np.logical_and.reduce((rr >= 0, rr < h ,cc >= 0, cc < w))
+        cablewayImage[rr[mask],cc[mask]] = [255,255,0]
+        brendImage = cv2.addWeighted(depthExtendImage, 0.5, cablewayImage, 0.5, 0,dtype=cv2.CV_32F)
 
-
-        return img
+        return brendImage
