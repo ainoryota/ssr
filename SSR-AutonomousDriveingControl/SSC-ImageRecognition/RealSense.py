@@ -138,12 +138,12 @@ class RealSense(object):
         self.RobotTheta.configure(text="ロボットの角度(deg):{0:.2f} ".format(math.degrees(-math.atan2(accel.y,accel.z))))
 
         (IsBranch,SleepTime,InclinationAngle,ElevationAngle,RTurningAngle,LTurningAngle)=self.branchSystem.getBranch()
-
-        testImg=self.branchSystem.setCablewayInf(color_image,depth_image,ir_image1,ir_image2,accel,True)
-        testImg = ImageTk.PhotoImage(Image.fromarray(testImg))
+        self.branchSystem.setImage(color_image,depth_image,ir_image1,ir_image2)
+        self.branchSystem.calcCablewayInf(accel,True)
+        testImg=self.branchSystem.getOutputImage()
         self.il.configure(image=testImg)
         self.il.image = testImg
-        self.timerlabel.configure(text="処理時間:{0} ms".format(time.time()-start))
+        self.timerlabel.configure(text="処理時間:{0} ms".format(math.floor((time.time()-start)*1000)))
 
         if(IsBranch):
             print("■■■■■分岐",LElevationAngle,RElevationAngle,Langle,Rangle)

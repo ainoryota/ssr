@@ -472,8 +472,8 @@ def CalcTurningAngle(binryScale,step,branchsize,thickness):
     PointList = (PointList * 255 / maxValue).astype(np.uint8)
     return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList]
 
-def CalcElevationAngle(depthScale,y,x,angle1,angle2,angle3,minDistance,maxDistance,branchsize,thickness,h,w,branchX,branchY):
-    elevationAngle = 0
+def CalcInclinationAngle(depthScale,y,x,angle1,angle2,angle3,minDistance,maxDistance,branchsize,thickness,h,w,branchX,branchY):
+    InclinationAngle = 0
     
     #索道の触れうる部分のidxをすべて持ってくる
     #分岐点周りのデータ+索道3本のデータ
@@ -490,15 +490,11 @@ def CalcElevationAngle(depthScale,y,x,angle1,angle2,angle3,minDistance,maxDistan
     IsCableway[rr4,cc4] = 1
     EffectiveDepthScale = np.where((depthScale >= minDistance) & (depthScale < maxDistance),depthScale,0) * IsCableway
 
-    #描画用
-    elevationImage = np.zeros((int(maxDistance - minDistance),w,3),dtype=np.uint8) + 100
-
     #最小二乗法で平面の傾きを考える
     idx = np.nonzero(EffectiveDepthScale > 0)
     ydata = idx[0]
     Ymask = np.nonzero(ydata < branchY)
-    elevationImage[maxDistance - EffectiveDepthScale[idx] - 1,idx[1]] = [255,255,255]
-    
+        
     data1_x = idx[1][Ymask]
     data1_depth = EffectiveDepthScale[idx][Ymask]
     maskL = np.nonzero((data1_x > branchX*1.2))#リアル空間で左分岐=画像上で右分岐
@@ -508,19 +504,10 @@ def CalcElevationAngle(depthScale,y,x,angle1,angle2,angle3,minDistance,maxDistan
     else:aL1,bL1 = L_abs_minimize(data1_x[maskL],data1_depth[maskL])
     if(len(data1_x[maskR]) < 2):(aR1,bR1) = (0,0)
     else:aR1,bR1 = L_abs_minimize(data1_x[maskR],data1_depth[maskR])
-    for x in range(w):
-        Y1 = int(maxDistance - 1 - int(x * aL1 + bL1))
-        Y2 = int(maxDistance - 1 - int(x * aR1 + bR1))
-        if(x > branchX*1.2 and Y1 < int(maxDistance - minDistance) and Y1 >= 0): elevationImage[Y1][x] = [255,0,255]
-        if(x < branchX*0.7 and Y2 < int(maxDistance - minDistance) and Y2 >= 0): elevationImage[Y2][x] = [0,255,255]
     leftY= bR1
     rightY=w * aR1 + bR1
-    LRelevationAngle = math.degrees(math.atan((rightY-leftY)/w))
-    
-
-    LelevationAngle = math.degrees(math.atan(aL1))
-    RelevationAngle = math.degrees(math.atan(aR1))
-    return LelevationAngle,RelevationAngle,elevationImage,LRelevationAngle
+    InclinationAngle = math.degrees(math.atan((rightY-leftY)/w))
+    return InclinationAngle,EffectiveDepthScale
 
 
 c = 100
@@ -901,7 +888,7 @@ def CreteViewImage(img11,img12,img21,img22,img31,img32):
     return result
     
 
-def IR(color_image,depth_scale,ir_image,robot_rotation,minDistance,maxDistance,overDistance,extMode=True):
+def IR(color_image,depth_scale,ir_image,ir_scale,robot_rotation,minDistance,maxDistance,overDistance,extMode=True):
     #戻り値
     GammalAngle = 0
     TurnAngle = 0
@@ -912,16 +899,8 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,minDistance,maxDistance,o
     h =color_image.shape[0]
     w =color_image.shape[1]
 
-    #表示用画像と処理用データをそれぞれ生成
-    depth_image = ScalarImage2RGB(depth_scale,minDistance,2000)
-    #depth_image[:,int(depth_image.shape[1] / 2),:] = np.array([255,0,0])#中心線を入れる
+    #処理用データを生成
     ir_scale = cv2.cvtColor(ir_image,cv2.COLOR_RGB2GRAY)
-
-    #デバッグ用
-    if(False):
-        result = [depth_image,0,00,0,0,0,0,0,0,0,0,0,0]
-        brendImage = cv2.addWeighted(ir_image, viewRate / 100, depth_image, 1 - viewRate / 100, 0)
-        return [np.vstack((np.hstack((color_image,depth_image)),np.hstack((ir_image,brendImage)))),result[1],result[2],result[3],result[4],result[5],result[6],result[7],XLog]
 
     #領域拡張法
     if(False):
@@ -954,24 +933,6 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,minDistance,maxDistance,o
     valueLog.pop(0)
     XLog.append(maxY)
     XLog.pop(0)
-    
-    #print("doubelLog")
-    #s = ""
-    #for i in range(len(doubelLog)):
-    #    s+='{:.2f}'.format(doubelLog[i]) + ","
-    #print(s)
-
-    #print("valueLog")
-    #s = ""
-    #for i in range(len(valueLog)):
-    #    s+='{:.2f}'.format(valueLog[i]) + ","
-    #print(s)
-
-    #print("XLog")
-    #s = ""
-    #for i in range(len(XLog)):
-    #    s+='{:.2f}'.format(XLog[i]) + ","
-    #print(s)
 
     #分岐の条件(N1=30、N2=10)
     #1.直近N1ログ以内のvalueLog平均値が300以上
@@ -981,18 +942,6 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,minDistance,maxDistance,o
 
     hoge1 = np.array(valueLog[len(valueLog) - N1:])
     rule1 = np.average(hoge1) / 300
-
-
-    #p = np.zeros(N2)
-    #for i in range(N2):
-    #    if(doubelLog[len(doubelLog) - N2 + i] == 0):p[i] = 1
-    #    else:p[i] = doubelLog[len(doubelLog) - N2 + i ] /
-    #    doubelLog[len(doubelLog) - N2 + i- 1]
-
-    #if(np.average(p) == 0):rule2 = 0
-    #else:rule2 = 0.8 / np.average(p)
-    #print("rule2達成率",rule2)
-    #print(p)
 
     hoge2 = np.array(XLog[len(XLog) - N1:])
 
@@ -1006,27 +955,12 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,minDistance,maxDistance,o
         rule3 = (b + a * (N1 + 5)) / h
 
 
-    LElevationAngle,RElevationAngle,ElevationImage,LRE = CalcElevationAngle(depth_scale,maxY,maxX,maxAngle1,maxAngle2,maxAngle3,minDistance,maxDistance,branchsize,thickness,h,w,maxX,maxY)
-    #ElevationImage=ir_image2.copy()
-    #ElevationAngle=0
-    #print(maxX,maxY,LElevationAngle,RElevationAngle)
-
-    #表示
-    thickness = 5
+    LRE,EffectiveDepthScale = CalcInclinationAngle(depth_scale,maxY,maxX,maxAngle1,maxAngle2,maxAngle3,minDistance,maxDistance,branchsize,thickness,h,w,maxX,maxY)
     angleA = abs(maxAngle1 - 270)
     angleB = abs(maxAngle2 - 270)
     if(angleA > angleB):(angleB,angleA) = (angleA,angleB)
-    cableway_image = DrawAngleLine(np.zeros((h,w,3),dtype=np.uint8),maxX,maxY,maxAngle1,(255,100,100,50),thickness)
-    cableway_image = DrawAngleLine(cableway_image,maxX,maxY,maxAngle2,(100,255,100,50),thickness)
-    cableway_image = DrawAngleLine(cableway_image,maxX,maxY,maxAngle3,(100,100,255,50),thickness)
-    cableway_image = cv2.putText(cableway_image,str(int(angleA)) + "/" + str(int(angleB)),(0,160),cv2.FONT_HERSHEY_PLAIN,2,(255,255,255))
-    rr,cc = disk((maxY,maxX), 24, shape=(h,w))
-    mask = np.logical_and.reduce((rr >= 0, rr < h ,cc >= 0, cc < w))
-    cableway_image[rr[mask],cc[mask]] = [255,255,0]
-    brendImage = cv2.addWeighted(ir_image2, 0.5, cableway_image, 0.5, 0)
 
-    #img,x,y,fortunity,GammalAngle,TurnAngle,Rangle,Langle,XLog
-    return [CreteViewImage(color_image,depth_image,ir_image,brendImage,cvpaste(imageMap, np.zeros(ElevationImage.shape), 0, 0, 0,1),ElevationImage),maxY,maxX,rule1,rule3,LElevationAngle,RElevationAngle,LRE,angleA,angleB]
+    return [maxY,maxX,LRE,angleA,angleB,EffectiveDepthScale]
 
 
 

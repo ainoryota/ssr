@@ -55,3 +55,19 @@ def cvpaste(img, imgback, x, y, angle, scale):
     imgpaste = cv2.add(img1_bg,img2_fg, dtype = cv2.CV_8U)
 
     return imgpaste
+
+
+def CreteViewImage(img11,img12,img21,img22,img31,img32):
+    a = np.hstack((img11,img12))
+    b = np.hstack((img21,img22))
+    c = np.hstack((img31,img32))
+    result = np.vstack((a,b))
+    result = np.vstack((result,c))
+
+    return result
+
+
+def ScalarImage2RGB(img,ClipMinDistance,ClipMaxDistance):
+    rate = 255.0 / (ClipMaxDistance - ClipMinDistance)
+    img = np.where((img <= ClipMinDistance) | (img >= ClipMaxDistance),255,rate * (img - ClipMinDistance))
+    return np.dstack([img,img,img]).astype(np.uint8)
