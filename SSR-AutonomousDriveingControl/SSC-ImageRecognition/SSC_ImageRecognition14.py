@@ -150,6 +150,8 @@ def CalcScore(field,x,y,anglestep,thickness):
     angle3 = 90
     angles = np.array(range(0,360,anglestep))
     angles = angles[np.where((CalcDiffAngleNP(angles,angle3) >= ruleAngle))]
+    angles = angles[np.where(((190<angles)&(angles<260))|((280<angles)&(angles<350)))]
+    print(angles)
     scores = np.array([np.sum(field[(getWeightedLineArray(angle,300,thickness,y,x,h,w))]) for angle in angles])
     maxValue3 = np.sum(field[(getWeightedLineArray(90,300,thickness,y,x,h,w))])
 
