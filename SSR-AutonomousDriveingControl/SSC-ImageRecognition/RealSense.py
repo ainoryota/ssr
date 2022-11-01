@@ -90,9 +90,9 @@ class RealSense(object):
         if(self.stop_branch_time > 0):
             self.stop_branch_time-=1
         elif(IsBranch):
-            print("■■■■■分岐",tangle,InclinationAngle,Langle,Rangle)
+            print("■■■■■分岐",tangle,InclinationAngle,Rangle,Langle)
             (InclinationAngle,tangle,Rangle,Langle) = getLikeAngle(InclinationAngle,tangle,Rangle,Langle)
-            print("■■■■■■Like:",tangle,InclinationAngle,Langle,Rangle)
+            print("■■■■■■Like:",tangle,InclinationAngle,Rangle,Langle)
 
             if(self.data["v_auto"].get()):
                 self.branchSystem.ResetLog()
@@ -105,8 +105,8 @@ class RealSense(object):
                 #RTurningAngle =int(min(80,RTurningAngle)//5*5)
                 #LTurningAngle =int(max(-80,LTurningAngle)//5*5)
                 #LTurningAngle =int(min(80,LTurningAngle)//5*5)
-                print("Branch Angle:",InclinationAngle,ElevationAngle,RTurningAngle,LTurningAngle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
-                self.br.branchAngle(InclinationAngle,ElevationAngle,RTurningAngle,LTurningAngle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
+                print("Branch Angle:",ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
+                self.br.branchAngle(ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
                 self.stop_branch_time = 70
 
         self.imgArea.after(10,self.getRealsense)

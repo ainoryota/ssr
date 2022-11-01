@@ -127,7 +127,7 @@ class BranchSystem:
         if(len(l1) < 2):rule2 = 0
         else:
             a,b = reg1dim(l1,l2) 
-            rule2 = (b + a * (N1 + 5)) / (self.h)
+            rule2 = (b + a * (N1 + 5)) / (self.h*1.1)
         return (rule1,rule2)
 
     def getBranch(self):#分岐すべきならそのタイミングや角度を返す
