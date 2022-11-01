@@ -18,66 +18,7 @@ from ctypes import alignment, windll
 from BranchSystem import BranchSystem 
 
 
-def getLikeAngle(a1,b1,c1,d1):
-    a = int(a1 / 5) * 5
-    b = int(b1 / 5) * 5
-    c = int(c1 / 5) * 5
-    d = int(d1 / 5) * 5
 
-    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
-    if(os.path.exists(path)):return (a,b,c,d)
-
-    a = int(a1 / 10) * 10
-    b = int(b1 / 10) * 10
-    c = int(c1 / 10) * 10
-    d = int(d1 / 10) * 10
-
-
-    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
-    if(os.path.exists(path)):return (a,b,c,d)
-
-
-    a = int(a1 / 10) * 10 + 10
-    b = int(b1 / 10) * 10
-    c = int(c1 / 10) * 10
-    d = int(d1 / 10) * 10
-
-
-    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
-    if(os.path.exists(path)):return (a,b,c,d)
-
-
-    a = int(a1 / 10) * 10
-    b = int(b1 / 10) * 10 + 10
-    c = int(c1 / 10) * 10
-    d = int(d1 / 10) * 10
-
-
-    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
-    if(os.path.exists(path)):return (a,b,c,d)
-
-
-    a = int(a1 / 10) * 10
-    b = int(b1 / 10) * 10
-    c = int(c1 / 10) * 10 + 10
-    d = int(d1 / 10) * 10
-
-
-    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
-    if(os.path.exists(path)):return (a,b,c,d)
-
-
-    a = int(a1 / 10) * 10
-    b = int(b1 / 10) * 10
-    c = int(c1 / 10) * 10
-    d = int(d1 / 10) * 10 + 10
-
-
-    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
-    if(os.path.exists(path)):return (a,b,c,d)
-
-    print("out ofj range angle")
-    return (a,b,c,d)
 
 class RealSense(object):
     def __init__(self,serialNo,imgArea,infArea,branch,data,il,timerlabel,AccelLabelX,AccelLabelY,AccelLabelZ,GyroLabelX,GyroLabelY,GyroLabelZ,RobotTheta):

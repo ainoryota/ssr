@@ -210,3 +210,64 @@ def getImageFromFile(filePath):
 #指定の桁数に丸める
 def rounddown(value,n):
     return math.floor(value * 10 ** n) / (10 ** n)
+
+def getLikeAngle(a1,b1,c1,d1):
+    a = int(a1 / 5) * 5
+    b = int(b1 / 5) * 5
+    c = int(c1 / 5) * 5
+    d = int(d1 / 5) * 5
+
+    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    if(os.path.exists(path)):return (a,b,c,d)
+
+    a = int(a1 / 10) * 10
+    b = int(b1 / 10) * 10
+    c = int(c1 / 10) * 10
+    d = int(d1 / 10) * 10
+
+
+    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    if(os.path.exists(path)):return (a,b,c,d)
+
+
+    a = int(a1 / 10) * 10 + 10
+    b = int(b1 / 10) * 10
+    c = int(c1 / 10) * 10
+    d = int(d1 / 10) * 10
+
+
+    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    if(os.path.exists(path)):return (a,b,c,d)
+
+
+    a = int(a1 / 10) * 10
+    b = int(b1 / 10) * 10 + 10
+    c = int(c1 / 10) * 10
+    d = int(d1 / 10) * 10
+
+
+    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    if(os.path.exists(path)):return (a,b,c,d)
+
+
+    a = int(a1 / 10) * 10
+    b = int(b1 / 10) * 10
+    c = int(c1 / 10) * 10 + 10
+    d = int(d1 / 10) * 10
+
+
+    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    if(os.path.exists(path)):return (a,b,c,d)
+
+
+    a = int(a1 / 10) * 10
+    b = int(b1 / 10) * 10
+    c = int(c1 / 10) * 10
+    d = int(d1 / 10) * 10 + 10
+
+
+    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    if(os.path.exists(path)):return (a,b,c,d)
+
+    print("out ofj range angle")
+    return (a,b,c,d)

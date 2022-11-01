@@ -488,7 +488,8 @@ def IR(color_image,depth_image,ir_image,robot_rotation,extMode=True):
     width = 320
     height = 320
 
-    start_position = [int(width / 2),int(height / 2)]
+    start
+    _position = [int(width / 2),int(height / 2)]
     threshold = 127#分割領域の閾値
     pix = ir_image[start_position[0]][start_position[1]][0]#グループ化させる領域の画素値
 

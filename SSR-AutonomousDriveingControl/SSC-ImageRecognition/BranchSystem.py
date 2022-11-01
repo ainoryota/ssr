@@ -1,6 +1,6 @@
 from SSC_ImageRecognition14 import IR
 import cv2
-from Utilty import cvpaste,CreteViewImage,ScalarImage2RGB,reg1dim,getImageFromFile,rounddown,disk,DrawAngleLine
+from Utilty import cvpaste,CreteViewImage,ScalarImage2RGB,reg1dim,getImageFromFile,rounddown,disk,DrawAngleLine,getLikeAngle
 import numpy as np
 from PIL import Image,ImageTk
 import math
@@ -95,7 +95,7 @@ class BranchSystem:
         print("y=",self.y,"x=",self.x,"仰角Ele=",rounddown(tangle,1),"回転角Inc=",rounddown(self.InclinationAngle,1),"RightAngle=",rounddown(self.Rangle,0),"LAngle=",rounddown(self.Langle,0),"branchValue=",self.branchValue,"rule1=",rounddown(rule1,2),"rule2=",rounddown(rule2,2))
         if(rule1 > 1 and rule2 > 1):
             self.IsBranch=True
-            (tangle,LRE,angleA,angleB) = getLikeAngle(tangle,LRE,Rangle,Langle)
+            (self.InclinationAngle,tangle,self.Rangle,self.Langle) = getLikeAngle(self.InclinationAngle,tangle,self.Rangle,self.Langle)
 
     def getOutputImage(self):
         if(self.Error):return  ImageTk.PhotoImage(getImageFromFile("test.png"))
