@@ -117,7 +117,7 @@ class Form(object):
         self.data["v4"] = tk.BooleanVar()#左分岐
         self.data["v5"] = tk.BooleanVar()#auto分岐
         self.data["v6"] = tk.BooleanVar()#前輪T
-        self.data["v7"] = tk.BooleanVar()
+        self.data["v_tention"] = tk.BooleanVar()
         self.data["v8"] = tk.BooleanVar()
         self.data["v_auto"] = tk.BooleanVar()
 
@@ -127,7 +127,7 @@ class Form(object):
         self.data["v4"].set(False)
         self.data["v5"].set(True) 
         self.data["v6"].set(True)
-        self.data["v7"].set(False)
+        self.data["v_tention"].set(True)
         self.data["v8"].set(False)
         self.data["v_auto"].set(False)
 
@@ -137,7 +137,7 @@ class Form(object):
         self.data["cb4"] = tk.Checkbutton(self.infArea,anchor="w",text='左分岐',variable = self.data["v4"])
         self.data["cb5"] = tk.Checkbutton(self.infArea,anchor="w",text='前輪T　',variable = self.data["v5"])
         self.data["cb6"] = tk.Checkbutton(self.infArea,anchor="w",text='後輪T　',variable = self.data["v6"])
-        self.data["cb7"] = tk.Checkbutton(self.infArea,anchor="w",text='テンション',variable = self.data["v7"])
+        self.data["cb7"] = tk.Checkbutton(self.infArea,anchor="w",text='テンション',variable = self.data["v_tention"])
         self.data["cb8"] = tk.Checkbutton(self.infArea,anchor="w",text='セーブモード',variable = self.data["v8"])
         self.data["cb_auto"] = tk.Checkbutton(self.infArea,anchor="w",text='auto分岐',variable = self.data["v_auto"])
 
@@ -150,6 +150,7 @@ class Form(object):
         self.data["cb7"].grid(row = 6, column =33, padx = 5, pady = 5)
         self.data["cb8"].grid(row = 7, column =33, padx = 5, pady = 5)
         self.data["cb_auto"].grid(row = 8, column =33, padx = 5, pady = 5)
+
 
         #self.data["scale"] =
         #tk.Scale(leftArea,orient=tk.HORIZONTAL,from_=0,to=100)
@@ -459,7 +460,7 @@ class Form(object):
         elif(num == 11):value = self.data["entry11"].get()
 
         csv_name = value + '_' + str(mode) + '.csv'    
-        if self.data["v7"].get() == True:
+        if self.data["v_tention"].get() == True:
             csv_name = value + '_' + str(mode) + '_T' + '.csv'
             self.data["v5"].set(self.reverse(self.data["v5"].get()))
             self.data["v6"].set(self.reverse(self.data["v6"].get()))

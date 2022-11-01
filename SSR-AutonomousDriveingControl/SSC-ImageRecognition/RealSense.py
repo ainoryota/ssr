@@ -16,7 +16,7 @@ import sys
 from numba import jit
 from ctypes import alignment, windll
 from BranchSystem import BranchSystem 
-
+from Utilty import getLikeAngle
 
 
 
@@ -38,7 +38,9 @@ class RealSense(object):
         self.GyroLabelZ = GyroLabelZ
         self.RobotTheta = RobotTheta
         self.StopFlag = True
-        self.branchSystem=BranchSystem()
+        self.branchSystem = BranchSystem()
+        self.stop_branch_time = 0
+
         print("Open realsense",self.serialNo)
        
     def start(self):
@@ -72,28 +74,39 @@ class RealSense(object):
         self.GyroLabelZ.configure(text="ジャイロY:{0:.2f}".format(gyro.z))
         self.RobotTheta.configure(text="ロボットの角度(deg):{0:.2f} ".format(math.degrees(-math.atan2(accel.y,accel.z))))
 
-        (IsBranch,SleepTime,InclinationAngle,ElevationAngle,RTurningAngle,LTurningAngle)=self.branchSystem.getBranch()
+        (IsBranch,SleepTime,InclinationAngle,ElevationAngle,RTurningAngle,LTurningAngle) = self.branchSystem.getBranch()
         self.branchSystem.setImage(color_image,depth_image,ir_image1,ir_image2)
         self.branchSystem.calcCablewayInf(accel,True)
-        testImg=self.branchSystem.getOutputImage()
+        testImg = self.branchSystem.getOutputImage()
         self.il.configure(image=testImg)
         self.il.image = testImg
-        self.timerlabel.configure(text="処理時間:{0} ms".format(math.floor((time.time()-start)*1000)))
+        self.timerlabel.configure(text="処理時間:{0} ms".format(math.floor((time.time() - start) * 1000)))
+        tangle = self.branchSystem.tangle
+        InclinationAngle = self.branchSystem.InclinationAngle
+        Rangle = self.branchSystem.Rangle
+        Langle = self.branchSystem.Langle
+        
+        print("time:",self.stop_branch_time)
+        if(self.stop_branch_time > 0):
+            self.stop_branch_time-=1
+        elif(IsBranch):
+            print("■■■■■分岐",tangle,InclinationAngle,Langle,Rangle)
+            (InclinationAngle,tangle,Rangle,Langle) = getLikeAngle(InclinationAngle,tangle,Rangle,Langle)
+            print("■■■■■■Like:",tangle,InclinationAngle,Langle,Rangle)
 
-        if(IsBranch):
-            print("■■■■■分岐",LElevationAngle,RElevationAngle,Langle,Rangle)
             if(self.data["v_auto"].get()):
                 self.branchSystem.ResetLog()
                 time.sleep(SleepTime)
-                InclinationAngle =int(max(-20,InclinationAngle)//5*5)
-                InclinationAngle =int(min(20,InclinationAngle)//5*5)
-                ElevationAngle=int(max(-20,ElevationAngle)//5*5)
-                ElevationAngle=int(min(20,ElevationAngle)//5*5)
-                RTurningAngle =int(max(-80,RTurningAngle)//5*5)
-                RTurningAngle =int(min(80,RTurningAngle)//5*5)
-                LTurningAngle =int(max(-80,LTurningAngle)//5*5)
-                LTurningAngle =int(min(80,LTurningAngle)//5*5)
-                print("Branch Angle:",InclinationAngle,ElevationAngle,RTurningAngle,LTurningAngle,self.data["v1"].get(),self.data["v3"].get(),self.data["v7"].get(),self.data["v8"].get())
-                self.br.branchAngle(InclinationAngle,ElevationAngle,RTurningAngle,LTurningAngle,self.data["v1"].get(),self.data["v3"].get(),self.data["v7"].get(),self.data["v8"].get())
+                #InclinationAngle =int(max(-20,InclinationAngle)//5*5)
+                #InclinationAngle =int(min(20,InclinationAngle)//5*5)
+                #ElevationAngle=int(max(-20,ElevationAngle)//5*5)
+                #ElevationAngle=int(min(20,ElevationAngle)//5*5)
+                #RTurningAngle =int(max(-80,RTurningAngle)//5*5)
+                #RTurningAngle =int(min(80,RTurningAngle)//5*5)
+                #LTurningAngle =int(max(-80,LTurningAngle)//5*5)
+                #LTurningAngle =int(min(80,LTurningAngle)//5*5)
+                print("Branch Angle:",InclinationAngle,ElevationAngle,RTurningAngle,LTurningAngle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
+                self.br.branchAngle(InclinationAngle,ElevationAngle,RTurningAngle,LTurningAngle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
+                self.stop_branch_time = 70
 
         self.imgArea.after(10,self.getRealsense)

@@ -101,7 +101,7 @@ def L_abs_minimize(x, y):
     init = np.array([0.0, 0.0])
     def loss(args):
         a, b = args
-        return np.sum(np.abs(y - (a*x+b)))
+        return np.sum(np.abs(y - (a * x + b)))
     ret = minimize(loss, init)
     return  ret.x[0],ret.x[1]
 
@@ -205,7 +205,7 @@ def IsArea(value,min,max):
 
 #現在のパスから画像ファイルを開く
 def getImageFromFile(filePath):
-    return Image.open(os.path.abspath("C:/Users/MSD/Documents/GitHub/SSR/SSR-AutonomousDriveingControl/SSC-ImageRecognition/"+filePath))
+    return Image.open(os.path.abspath("C:/Users/MSD/Documents/GitHub/SSR/SSR-AutonomousDriveingControl/SSC-ImageRecognition/" + filePath))
 
 #指定の桁数に丸める
 def rounddown(value,n):
@@ -217,7 +217,7 @@ def getLikeAngle(a1,b1,c1,d1):
     c = int(c1 / 5) * 5
     d = int(d1 / 5) * 5
 
-    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
     if(os.path.exists(path)):return (a,b,c,d)
 
     a = int(a1 / 10) * 10
@@ -226,7 +226,7 @@ def getLikeAngle(a1,b1,c1,d1):
     d = int(d1 / 10) * 10
 
 
-    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
     if(os.path.exists(path)):return (a,b,c,d)
 
 
@@ -236,7 +236,7 @@ def getLikeAngle(a1,b1,c1,d1):
     d = int(d1 / 10) * 10
 
 
-    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
     if(os.path.exists(path)):return (a,b,c,d)
 
 
@@ -246,7 +246,7 @@ def getLikeAngle(a1,b1,c1,d1):
     d = int(d1 / 10) * 10
 
 
-    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
     if(os.path.exists(path)):return (a,b,c,d)
 
 
@@ -256,7 +256,7 @@ def getLikeAngle(a1,b1,c1,d1):
     d = int(d1 / 10) * 10
 
 
-    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
     if(os.path.exists(path)):return (a,b,c,d)
 
 
@@ -266,8 +266,8 @@ def getLikeAngle(a1,b1,c1,d1):
     d = int(d1 / 10) * 10 + 10
 
 
-    path = str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + ".csv"
+    path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
     if(os.path.exists(path)):return (a,b,c,d)
 
-    print("out ofj range angle")
+    print("out of range angle")
     return (a,b,c,d)
