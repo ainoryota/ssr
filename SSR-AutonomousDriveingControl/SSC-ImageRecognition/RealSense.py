@@ -18,6 +18,7 @@ from ctypes import alignment, windll
 from BranchSystem import BranchSystem 
 from Utilty import getLikeAngle
 from OutputController import OutputController
+from FormSingleton import FormSingleton
 
 
 class RealSense(object):
@@ -75,6 +76,15 @@ class RealSense(object):
         self.RobotTheta.configure(text="ロボットの角度(deg):{0:.2f} ".format(math.degrees(-math.atan2(accel.y,accel.z))))
 
         (IsBranch,SleepTime,InclinationAngle,ElevationAngle,RTurningAngle,LTurningAngle) = self.branchSystem.getBranch()
+
+        (h,w)=depth_image.shape
+
+        OutputController().msgPrint("value")
+        hoge=np.where((depth_image<500) & (depth_image>200))
+        OutputController().msgPrint(hoge)
+        FormSingleton().updateThreeGraph(hoge[1],hoge[0],depth_image[hoge])
+
+
         self.branchSystem.setImage(color_image,depth_image,ir_image1,ir_image2)
         self.branchSystem.calcCablewayInf(accel,True)
         testImg = self.branchSystem.getOutputImage()
@@ -97,14 +107,6 @@ class RealSense(object):
             if(self.data["v_auto"].get()):
                 self.branchSystem.ResetLog()
                 time.sleep(SleepTime)
-                #InclinationAngle =int(max(-20,InclinationAngle)//5*5)
-                #InclinationAngle =int(min(20,InclinationAngle)//5*5)
-                #ElevationAngle=int(max(-20,ElevationAngle)//5*5)
-                #ElevationAngle=int(min(20,ElevationAngle)//5*5)
-                #RTurningAngle =int(max(-80,RTurningAngle)//5*5)
-                #RTurningAngle =int(min(80,RTurningAngle)//5*5)
-                #LTurningAngle =int(max(-80,LTurningAngle)//5*5)
-                #LTurningAngle =int(min(80,LTurningAngle)//5*5)
                 OutputController().msgPrint("Branch Angle:",ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
                 self.br.branchAngle(ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
                 self.stop_branch_time = 70

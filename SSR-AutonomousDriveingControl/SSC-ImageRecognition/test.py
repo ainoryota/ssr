@@ -1,27 +1,25 @@
-from functools import partial
-import sys
-import cv2
-import time
-import math
-import pyrealsense2 as rs
-import numpy as np
-from numba import jit
-from threading import Thread
-import threading
-from System import System
-from Robot import RealRobot
-from Form import Form
-from OutputController import OutputDone
-from OutputController import OutputController
-from multiprocessing import Process, Manager
-import tkinter as tk
-import platform
-from PIL import Image,ImageTk #udo pip install pillow
-from ctypes import alignment, windll
-import os
+# 3次元リアルタイムグラフの雛形
+# Library   
+import numpy as np # プロットするデータ配列を作成するため
+import matplotlib.pyplot as plt # グラフ表示のため
+from mpl_toolkits.mplot3d import Axes3D # ３Dグラフ作成のため
 
+# params
+frame = 100  # プロットするフレーム数
+sleepTime = 0.001  # １フレーム表示する時間[s]
+dataLength = 10  # プロットするデータ配列の点数
 
-system = System()
-robot = RealRobot()
-time.sleep(2);
-form = Form(robot)
+# making 3d figure object
+fig = plt.figure() # figureオブジェクトを作る
+ax = Axes3D(fig)
+
+for i in range(frame):
+    # getting data
+    x = np.arange(0, 10, 1) # 0 ~ 10 の１次元配列
+    y = np.arange(0, 10, 1) # 0 ~ 10 の１次元配列
+    z = np.random.rand(10) # 0 ~ 10 の１次元乱数配列
+    # plotting
+    ax.plot(x, y, z)
+    plt.draw()
+    plt.pause(sleepTime)
+    plt.cla()

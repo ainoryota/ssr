@@ -1,3 +1,4 @@
+
 import time
 import serial#pip install pyserial
 from Order import InitOrder
@@ -15,8 +16,15 @@ from multiprocessing import Process
 import platform
 import threading
 import tkinter as tk
+import numpy as np
+from matplotlib import pyplot as plt
+import tkinter as tk
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg, NavigationToolbar2Tk)
+import matplotlib.colors
+from mpl_toolkits.mplot3d import Axes3D # ３Dグラフ作成のため
 
-class OutputController(object):
+class FormSingleton(object):
 
     _instance = None
     _lock = threading.Lock()
@@ -26,39 +34,66 @@ class OutputController(object):
             if cls._instance is None:
                 print("New Singleton is OutputController")
                 cls._instance = super().__new__(cls)
-                cls.orderList = []
-                cls.stepQueue = queue.Queue()
         return cls._instance
 
-    def setStepQueue(self,stepQueue):
-        self.stepQueue = stepQueue
-
-    def insertOrder(self,order):
-        self.orderList.insert(0,order)
-        #OutputController().msgPrint("Order Set:",order)
-
-
-    def pushStep(self):
-        self.stepQueue.put(sorted(self.orderList,key=lambda x: -x.delay - (0.001 if isinstance(x,PosOrder) else 0.002 if  isinstance(x,VelocityOrder) else 0)))
-        self.orderList.clear()
-
-    def setMsgbox(self,box):
-        self.box=box
-
-    def setData(self,data):
+    def setFormData(self,data):
         self.data=data
-
     
-    def getData(self):
+    def getFormData(self):
         return self.data
 
-    def msgPrint(self,*msg):
-        print(",".join([str(_) for _ in msg]))
+    def setThreeGraph(self,root):
+        self.graphRoot=root
+
+        plt.rcParams['font.size'] = 15
+        plt.rcParams['font.family'] = 'Arial'
+
+        fig = plt.figure(figsize=(3, 3), dpi=100)
+
+        self.ax = Axes3D(fig)
+        self.ax.set_xlabel('x', labelpad=10)
+        self.ax.set_ylabel('y', labelpad=10)
+        self.ax.set_zlabel('z', labelpad=10)
+
+        self.graph = FigureCanvasTkAgg(fig, master=root)
+
+        self.updateThreeGraph([0,1,2],[0,2,5],[0,3,4])
+
+        return self.graph
+
+    def updateThreeGraph(self,x,y,z):
+        self.ax.cla()
+        self.ax.scatter(x, y, z)
+
         try:
-            self.box.insert('end',",".join([str(_) for _ in msg])+"\n")
-            self.box.see(tk.END)
+            # do fit
+            tmp_A = []
+            tmp_b = []
+            for i in range(len(x)):
+                tmp_A.append([x[i], y[i], 1])
+                tmp_b.append(z[i])
+            b = np.matrix(tmp_b).T
+            A = np.matrix(tmp_A)
+            fit = (A.T * A).I * A.T * b
+            errors = b - A * fit
+            residual = np.linalg.norm(errors)
+
+
+            xlim = self.ax.get_xlim()
+            ylim = self.ax.get_ylim()
+            X,Y = np.meshgrid(np.arange(xlim[0], xlim[1],100),
+                              np.arange(ylim[0], ylim[1],100))
+            Z = np.zeros(X.shape)
+            for r in range(X.shape[0]):
+                for c in range(X.shape[1]):
+                    Z[r,c] = fit[0] * X[r,c] + fit[1] * Y[r,c] + fit[2]
+            self.ax.plot_wireframe(X,Y,Z, color='k')
         except:
-            print("Print Exception")
+            pass
+        
+        
+        self.graph.draw()
+
 
 
 

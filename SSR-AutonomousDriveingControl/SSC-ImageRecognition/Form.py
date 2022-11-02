@@ -16,7 +16,8 @@ import numpy as np
 import math
 import time
 import tkinter.ttk as ttk
-
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from FormSingleton import  FormSingleton
 
 class PushButton:
     button = []
@@ -72,26 +73,10 @@ class Form(object):
 
 
 
-        #self.notebook = ttk.Notebook(self.root)
-
-        #self.autoFrontRunTab = tk.Frame(self.notebook, bg='white')
-        #self.autoBackRunTab = tk.Frame(self.notebook, bg='white')
-        #self.cameraTab = tk.Frame(self.notebook, bg='white')
-        #self.notebook.add(self.autoFrontRunTab, text="tab1", underline=0)
-        #self.notebook.add(self.autoBackRunTab, text="tab2")
-        #self.notebook.add(self.cameraTab, text="tab3")
-
-        #self.autoFrontRunTab.grid(row=1,
-        #column=1,columnspan=30,rowspan=20,ipadx=5)
-        #self.autoBackRunTab.grid(row=1,
-        #column=1,columnspan=30,rowspan=20,ipadx=5)
-        #self.cameraTab.grid(row=1, column=1,columnspan=30,rowspan=20,ipadx=5)
-        #self.notebook.pack(expand=True, fill='both', padx=10, pady=10)
-
-
 
         #ラベルの生成
-        Label(tk,leftArea,0,0,'斜度_回転角_右旋回角_左旋回角')
+        label = tk.Label(leftArea,text = '斜度_回転角_右旋回角_左旋回角')
+        label.grid(row = 0, column =0,columnspan=2, padx = 5, pady = 5)      
 
 
         #ボタンの作成
@@ -122,8 +107,6 @@ class Form(object):
         self.data["v_tention"] = tk.BooleanVar()
         self.data["v8"] = tk.BooleanVar()
         self.data["v_auto"] = tk.BooleanVar()
-
-
         self.data["msg"] = ScrolledText(self.infArea,width = 50)
 
         self.data["v1"].set(True)
@@ -136,119 +119,64 @@ class Form(object):
         self.data["v8"].set(False)
         self.data["v_auto"].set(False)
 
-        self.data["cb1"] = tk.Checkbutton(self.infArea,anchor="w",text='前進　',variable = self.data["v1"])
-        self.data["cb2"] = tk.Checkbutton(self.infArea,anchor="w",text='後退　',variable = self.data["v2"])
-        self.data["cb3"] = tk.Checkbutton(self.infArea,anchor="w",text='右分岐',variable = self.data["v3"])
-        self.data["cb4"] = tk.Checkbutton(self.infArea,anchor="w",text='左分岐',variable = self.data["v4"])
-        self.data["cb5"] = tk.Checkbutton(self.infArea,anchor="w",text='前輪T　',variable = self.data["v5"])
-        self.data["cb6"] = tk.Checkbutton(self.infArea,anchor="w",text='後輪T　',variable = self.data["v6"])
-        self.data["cb7"] = tk.Checkbutton(self.infArea,anchor="w",text='テンション',variable = self.data["v_tention"])
-        self.data["cb8"] = tk.Checkbutton(self.infArea,anchor="w",text='セーブモード',variable = self.data["v8"])
-        self.data["cb_auto"] = tk.Checkbutton(self.infArea,anchor="w",text='auto分岐',variable = self.data["v_auto"])
-
-        self.data["cb1"].grid(row = 0, column =33, padx = 5, pady = 5)
-        self.data["cb2"].grid(row = 1, column =33, padx = 5, pady = 5)
-        self.data["cb3"].grid(row = 2, column =33, padx = 5, pady = 5)
-        self.data["cb4"].grid(row = 3, column =33, padx = 5, pady = 5)
-        self.data["cb5"].grid(row = 4, column =33, padx = 5, pady = 5)
-        self.data["cb6"].grid(row = 5, column =33, padx = 5, pady = 5)
-        self.data["cb7"].grid(row = 6, column =33, padx = 5, pady = 5)
-        self.data["cb8"].grid(row = 7, column =33, padx = 5, pady = 5)
-        self.data["cb_auto"].grid(row = 8, column =33, padx = 5, pady = 5)
-        self.data["msg"].grid(row = 9, column =33,columnspan=2, padx = 5, pady = 5)
-
-        OutputController().setMsgbox(self.data["msg"])
         
 
-        #self.data["scale"] =
-        #tk.Scale(leftArea,orient=tk.HORIZONTAL,from_=0,to=100)
-        #self.data["scale"].grid(row=32, column=5,columnspan=10,rowspan=1)
+        
 
-        ##１セット目
         #入力ウィンドウの作成
-        self.data["entry1"] = tk.Entry(leftArea,width = 20)
+        self.data["entry1"] = tk.Entry(leftArea,width = 12)
         self.data["entry1"].grid(row = 1, column =0, padx = 5, pady = 5)
         PushButton(tk,leftArea,1,1,'分岐',self.branch,1)
-
-        self.data["entry2"] = tk.Entry(leftArea,width = 20)
+        self.data["entry2"] = tk.Entry(leftArea,width = 12)
         self.data["entry2"].grid(row = 2, column =0, padx = 5, pady = 5)
         PushButton(tk,leftArea,2,1,'分岐',self.branch,2)
-
-        self.data["entry3"] = tk.Entry(leftArea,width = 20)
+        self.data["entry3"] = tk.Entry(leftArea,width = 12)
         self.data["entry3"].grid(row = 3, column =0, padx = 5, pady = 5)
         PushButton(tk,leftArea,3,1,'分岐',self.branch,3)
-
-        self.data["entry4"] = tk.Entry(leftArea,width = 20)
+        self.data["entry4"] = tk.Entry(leftArea,width = 12)
         self.data["entry4"].grid(row = 4, column =0, padx = 5, pady = 5)
         PushButton(tk,leftArea,4,1,'分岐',self.branch,4)
 
-        self.data["entry5"] = tk.Entry(leftArea,width = 20)
-        self.data["entry5"].grid(row = 5, column =0, padx = 5, pady = 5)
-        PushButton(tk,leftArea,5,1,'分岐',self.branch,5)
-
-        self.data["entry6"] = tk.Entry(leftArea,width = 20)
-        self.data["entry6"].grid(row = 6, column =0, padx = 5, pady = 5)
-        PushButton(tk,leftArea,6,1,'分岐',self.branch,6)
-
-        self.data["entry7"] = tk.Entry(leftArea,width = 20)
-        self.data["entry7"].grid(row = 7, column =0, padx = 5, pady = 5)
-        PushButton(tk,leftArea,7,1,'分岐',self.branch,7)
         
-        self.data["entry8"] = tk.Entry(leftArea,width = 20)
-        self.data["entry8"].grid(row = 8, column =0, padx = 5, pady = 5)
-        PushButton(tk,leftArea,8,1,'分岐',self.branch,8)
-        
-        self.data["entry9"] = tk.Entry(leftArea,width = 20)
-        self.data["entry9"].grid(row = 9, column =0, padx = 5, pady = 5)
-        PushButton(tk,leftArea,9,1,'分岐',self.branch,9)
+        self.data["cb1"] = tk.Checkbutton(leftArea,anchor="w",text='前進　',variable = self.data["v1"])
+        self.data["cb2"] = tk.Checkbutton(leftArea,anchor="w",text='後退　',variable = self.data["v2"])
+        self.data["cb3"] = tk.Checkbutton(leftArea,anchor="w",text='右分岐',variable = self.data["v3"])
+        self.data["cb4"] = tk.Checkbutton(leftArea,anchor="w",text='左分岐',variable = self.data["v4"])
+        self.data["cb5"] = tk.Checkbutton(leftArea,anchor="w",text='前輪T　',variable = self.data["v5"])
+        self.data["cb6"] = tk.Checkbutton(leftArea,anchor="w",text='後輪T　',variable = self.data["v6"])
+        self.data["cb7"] = tk.Checkbutton(leftArea,anchor="w",text='テンション',variable = self.data["v_tention"])
+        self.data["cb8"] = tk.Checkbutton(leftArea,anchor="w",text='セーブモード',variable = self.data["v8"])
+        self.data["cb_auto"] = tk.Checkbutton(leftArea,anchor="w",text='auto分岐',variable = self.data["v_auto"])
 
-        self.data["entry10"] = tk.Entry(leftArea,width = 20)
-        self.data["entry10"].grid(row = 10, column =0, padx = 5, pady = 5)
-        PushButton(tk,leftArea,10,1,'分岐',self.branch,10)
+        self.data["cb1"].grid(row = 5, column =0, padx = 5, pady = 5)
+        self.data["cb2"].grid(row = 6, column =0, padx = 5, pady = 5)
+        self.data["cb3"].grid(row = 7, column =0, padx = 5, pady = 5)
+        self.data["cb4"].grid(row = 8, column =0, padx = 5, pady = 5)
+        self.data["cb5"].grid(row = 9, column =0, padx = 5, pady = 5)
+        self.data["cb6"].grid(row = 10, column =0, padx = 5, pady = 5)
+        self.data["cb7"].grid(row = 11, column =0, padx = 5, pady = 5)
+        self.data["cb8"].grid(row = 12, column =0, padx = 5, pady = 5)
+        self.data["cb_auto"].grid(row = 13, column =0, padx = 5, pady = 5)
 
-        self.data["entry11"] = tk.Entry(leftArea,width = 20)
-        self.data["entry11"].grid(row = 11, column =0, padx = 5, pady = 5)
-        PushButton(tk,leftArea,11,1,'分岐',self.branch,11)
 
-        self.data["branchEntry"] = tk.Entry(leftArea,width = 20)
-        self.data["branchEntry"].grid(row = 12, column =0, padx = 5, pady = 5)
-        
 
 
         self.data["entry1"].delete(0,'end')
-        self.data["entry1"].insert(0,'30_10_70_70')#1
+        self.data["entry1"].insert(0,'30_10_70_70')
         self.data["entry2"].delete(0,'end')
-        self.data["entry2"].insert(0,'0_10_70_70')#2
+        self.data["entry2"].insert(0,'0_10_70_70')
         self.data["entry3"].delete(0,'end')
-        self.data["entry3"].insert(0,'-10_5_60_40')#3
+        self.data["entry3"].insert(0,'-10_5_60_40')
         self.data["entry4"].delete(0,'end')
         self.data["entry4"].insert(0,'-5_0_60_80')
-        self.data["entry5"].delete(0,'end')
-        self.data["entry5"].insert(0,'5_10_85_85')
-        self.data["entry6"].delete(0,'end')
-        #selfdata..#entry6.insert(0,'-2_4_80_51')
-        self.data["entry7"].delete(0,'end')
-        #selfdata..#entry7.insert(0,'5_0_55_60')
-        self.data["entry8"].delete(0,'end')
-        self.data["entry8"].insert(0,'2_6_70_53.5')
-        self.data["entry9"].delete(0,'end')
-        self.data["entry9"].insert(0,'6_35_70_22.5')
-        self.data["entry10"].delete(0,'end')
-        self.data["entry10"].insert(0,'-30_0_80_92')
-        #self.#entry7.delete(0,'end')
-        #self.#entry7.insert(0,'5_0_55_60')
-        #self.#entry8.delete(0,'end')
-        #self.#entry8.insert(0,'2_5_65_65')
-        #self.#entry9.delete(0,'end')
-        #self.#entry9.insert(0,'5_-28_45_60')
-        #self.#entry10.delete(0,'end')
-        #self.#entry10.insert(0,'-10_5_35_87.5')
-        self.data["entry11"].delete(0,'end')
-        #self.#entry11.insert(0,'-3_0_45_65')
-        self.data["branchEntry"].delete(0,'end')
-        self.data["branchEntry"].insert(0,'1')
         
-        self.camMgr = Camera(self.imgArea,self.infArea,self.br,self.data)
+
+
+        self.camMgr = Camera(self.imgArea,leftArea,self.br,self.data)
+        FormSingleton().setFormData(self.data)
+        FormSingleton().setThreeGraph(self.infArea).get_tk_widget().grid(row = 1, column =0,columnspan=1,rowspan=8, padx = 5, pady = 5)
+        self.data["msg"].grid(row = 9, column =0,columnspan=1, padx = 5, pady = 5)
+        OutputController().setMsgbox(self.data["msg"])
         leftArea.mainloop()
 
 

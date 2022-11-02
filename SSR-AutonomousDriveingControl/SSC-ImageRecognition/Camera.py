@@ -50,25 +50,24 @@ class Camera(object):
         self.il = tk.Label(self.imgArea,image=testImg)
         self.il.grid(row=1, column=1,columnspan=30,rowspan=20,ipadx=5)
 
-        self.timerlabel = tk.Label(self.infArea,text="",anchor="w",width = 50)
-        self.timerlabel.grid(row=1, column=34,columnspan=5)
 
-        self.AccelLabelX = tk.Label(self.infArea,text="",anchor="w",width = 50)
-        self.AccelLabelX.grid(row=2, column=34,columnspan=5)
-        self.AccelLabelY = tk.Label(self.infArea,text="",anchor="w",width = 50)
-        self.AccelLabelY.grid(row=3, column=34,columnspan=5)
-        self.AccelLabelZ = tk.Label(self.infArea,text="",anchor="w",width = 50)
-        self.AccelLabelZ.grid(row=4, column=34,columnspan=5)
+        self.timerlabel = tk.Label(self.infArea,text="",anchor="w",width = 20)
+        self.timerlabel.grid(row=5, column=1)
 
-
-        self.GyroLabelX = tk.Label(self.infArea,text="",anchor="w",width = 50)
-        self.GyroLabelX.grid(row=5, column=34,columnspan=5)
-        self.GyroLabelY = tk.Label(self.infArea,text="",anchor="w",width = 50)
-        self.GyroLabelY.grid(row=6, column=34,columnspan=5)
-        self.GyroLabelZ = tk.Label(self.infArea,text="",anchor="w",width = 50)
-        self.GyroLabelZ.grid(row=7, column=34,columnspan=5)
-        self.RobotTheta = tk.Label(self.infArea,text="",anchor="w",width = 50)
-        self.RobotTheta.grid(row=8, column=34,columnspan=5)
+        self.AccelLabelX = tk.Label(self.infArea,text="",anchor="w",width = 20)
+        self.AccelLabelX.grid(row=6, column=1)
+        self.AccelLabelY = tk.Label(self.infArea,text="",anchor="w",width = 20)
+        self.AccelLabelY.grid(row=7, column=1)
+        self.AccelLabelZ = tk.Label(self.infArea,text="",anchor="w",width = 20)
+        self.AccelLabelZ.grid(row=8, column=1)
+        self.GyroLabelX = tk.Label(self.infArea,text="",anchor="w",width = 20)
+        self.GyroLabelX.grid(row=9, column=1)
+        self.GyroLabelY = tk.Label(self.infArea,text="",anchor="w",width = 20)
+        self.GyroLabelY.grid(row=10, column=1)
+        self.GyroLabelZ = tk.Label(self.infArea,text="",anchor="w",width = 20)
+        self.GyroLabelZ.grid(row=11, column=1)
+        self.RobotTheta = tk.Label(self.infArea,text="",anchor="w",width = 20)
+        self.RobotTheta.grid(row=12, column=1)
 
 
 

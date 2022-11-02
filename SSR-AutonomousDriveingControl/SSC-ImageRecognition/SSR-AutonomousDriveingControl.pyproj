@@ -35,6 +35,9 @@
     <Compile Include="Form.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="FormSingleton.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="functest.py">
       <SubType>Code</SubType>
     </Compile>
@@ -54,6 +57,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="RealSense.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="RealtimePlot1D.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Robot.py">

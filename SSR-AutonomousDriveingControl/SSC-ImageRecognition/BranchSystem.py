@@ -5,6 +5,11 @@ import numpy as np
 from PIL import Image,ImageTk
 import math
 from OutputController import OutputController
+import numpy as np
+from matplotlib import pyplot as plt
+import tkinter as tk
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+import matplotlib.colors
 
 class BranchSystem:
     def __init__(self):
@@ -98,6 +103,35 @@ class BranchSystem:
         if(rule1 > 1 and rule2 > 1):
             self.IsBranch = True
 
+    def get3DImages(self):
+        # データを用意する
+        x = np.arange(-10, 10, 0.1) # x軸を作成
+        y = np.arange(-10, 10, 0.1) # y軸を作成
+        X, Y = np.meshgrid(x, y)    # グリッドデータの作成
+        Z=np.sqrt((np.square(X)+np.square(Y))) #Z軸を作成
+
+        # フォントの種類とサイズを設定する。
+        plt.rcParams['font.size'] = 15
+        plt.rcParams['font.family'] = 'Arial'
+
+        # グラフの入れ物を用意する。
+        fig = plt.figure()
+        ax1 = fig.add_subplot(111, projection='3d')  
+
+        # 軸のラベルを設定する。
+        ax1.set_xlabel('x', labelpad=10)
+        ax1.set_ylabel('y', labelpad=10)
+        ax1.set_zlabel('z', labelpad=10)
+
+        # データプロットする。
+        ax=ax1.plot_surface(X, Y, Z, cmap='jet',label="z")
+
+        #カラーバーの設定
+        cbar = fig.colorbar(ax, shrink = 0.6)
+        cbar.set_label("Z", fontsize=15)
+
+        return fig
+
     def getOutputImage(self):
         if(self.Error):return  ImageTk.PhotoImage(getImageFromFile("test.png"))
         depth_view_image = ScalarImage2RGB(self.depth_scale,self.minDistance,self.overDistance)
@@ -105,6 +139,8 @@ class BranchSystem:
         cablewayImage = self.getCablewayImage()
         imageMap = np.zeros(InclinationImage.shape)
         depthIRImage = cvpaste(self.getDepthIRMap(), np.zeros(InclinationImage.shape), 0, 0, 0,1)
+
+
         image = CreteViewImage(self.color_image,depth_view_image,self.ir_image1,cablewayImage,depthIRImage,InclinationImage)
         return ImageTk.PhotoImage(Image.fromarray(image.astype(np.uint8)))
 
