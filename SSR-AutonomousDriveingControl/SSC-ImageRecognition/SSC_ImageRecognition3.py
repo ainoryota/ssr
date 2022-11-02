@@ -40,7 +40,7 @@ def Calc(original_img):
                 maxValue=value;
                 maxX=x;
                 maxY=y
-    print([maxX,maxY,W])
+    OutputController().msgPrint([maxX,maxY,W])
     return [maxX,maxY,W]
 
 
@@ -57,10 +57,10 @@ def ImageReconition(original_img):
     W=data[2]
     height, width, channels = img.shape[:3]
     if(0<x and x<width):
-        #print(x,y);
+        #OutputController().msgPrint(x,y);
         img = cv2.rectangle(img,( x-W,y-W),( x+W,y+W),(255,0,0), 3)
     else:
-        #print("none")
+        #OutputController().msgPrint("none")
         x=-1
         y=-1
 

@@ -24,7 +24,7 @@ from RealSense import RealSense
 from WebCamera import WebCameraMgr 
 import os
 from Utilty import getImageFromFile
-
+from OutputController import OutputController
 
 
 class Camera(object):
@@ -40,7 +40,7 @@ class Camera(object):
         serial_numbers.sort()
 
         for rscam in serial_numbers:
-            print("realsenseList:",rscam)
+            OutputController().msgPrint("realsenseList:",rscam)
         serial_numbers.sort()
         
 
@@ -75,26 +75,26 @@ class Camera(object):
         try:
             self.rs1 = RealSense(serial_numbers[0],self.imgArea,self.infArea,self.br,self.data,self.il,self.timerlabel,self.AccelLabelX,self.AccelLabelY,self.AccelLabelZ,self.GyroLabelX,self.GyroLabelY,self.GyroLabelZ,self.RobotTheta)
         except Exception as e:
-            print("Realsense1 Start Error",e)
+            OutputController().msgPrint("Realsense1 Start Error",e)
             self.rs1=None
 
-        print("Open realsense2")
+        OutputController().msgPrint("Open realsense2")
         
         try:
             self.rs2 = RealSense(serial_numbers[1],self.imgArea,self.infArea,self.br,self.data,self.il,self.timerlabel,self.AccelLabelX,self.AccelLabelY,self.AccelLabelZ,self.GyroLabelX,self.GyroLabelY,self.GyroLabelZ,self.RobotTheta)
         except Exception as e:
-            print("Realsense2 Start Error",e)
+            OutputController().msgPrint("Realsense2 Start Error",e)
             self.rs2=None
 
-        print("Open webcam")
+        OutputController().msgPrint("Open webcam")
         try:
             raise ValueError("no cam mode")
             self.webcam = WebCameraMgr(self.imgArea,self.infArea,self.br,self.data,self.il)
         except Exception as e:
-            print("WebCamera Start Error",e)
+            OutputController().msgPrint("WebCamera Start Error",e)
             self.webcam=None
 
-        print("Open realsense1")
+        OutputController().msgPrint("Open realsense1")
         #self.rs2=RealSense.RealSense(self.imgArea,self.infArea,self.br,self.data,self.il,self.timerlabel,self.AccelLabelX,self.AccelLabelY,self.AccelLabelZ,self.GyroLabelX,self.GyroLabelY,self.GyroLabelZ,self.RobotTheta)
         #self.webcam=RealSense.RealSense(self.imgArea,self.infArea,self.br,self.data,self.il,self.timerlabel,self.AccelLabelX,self.AccelLabelY,self.AccelLabelZ,self.GyroLabelX,self.GyroLabelY,self.GyroLabelZ,self.RobotTheta)
 
@@ -104,28 +104,28 @@ class Camera(object):
         self.stopRealsense2()
         self.stopWebCam()
         if(self.rs1!=None):self.rs1.start()
-        else:print("no rs1")
+        else:OutputController().msgPrint("no rs1")
 
     def stopRealsense1(self):
         if(self.rs1!=None):self.rs1.stop()
-        else:print("no rs1")
+        else:OutputController().msgPrint("no rs1")
 
     def startRealsense2(self):
         self.stopRealsense1()
         self.stopWebCam()
         if(self.rs2!=None):self.rs2.start()
-        else:print("no rs2")
+        else:OutputController().msgPrint("no rs2")
 
     def stopRealsense2(self):
         if(self.rs2!=None):self.rs2.stop()
-        else:print("no rs2")
+        else:OutputController().msgPrint("no rs2")
 
     def startWebCam(self):
         self.stopRealsense1()
         self.stopRealsense2()
         if(self.webcam!=None):self.webcam.start()
-        else:print("no webcam")
+        else:OutputController().msgPrint("no webcam")
 
     def stopWebCam(self):
         if(self.webcam!=None):self.webcam.stop()
-        else:print("no webcam")
+        else:OutputController().msgPrint("no webcam")

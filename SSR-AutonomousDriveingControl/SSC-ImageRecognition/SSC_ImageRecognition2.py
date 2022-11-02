@@ -51,10 +51,10 @@ def ImageReconition(img):
     W=data[2]
     height, width, channels = img.shape[:3]
     if(width*0.3<x and x<width*0.7):
-        #print(x,y);
+        #OutputController().msgPrint(x,y);
         img = cv2.rectangle(img,( x-W,y-W),( x+W,y+W),(255,0,0), 3)
     else:
-        #print("none")
+        #OutputController().msgPrint("none")
         x=-1
         y=-1
     return [img,x,y]

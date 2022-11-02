@@ -27,7 +27,7 @@ def reg1dim(x, y):
         if n == 0:b = 0
         else:       b = (y.sum() - a * x.sum()) / n
     except:
-        print("reg1dim Error",len(x),":",len(y))
+        OutputController().msgPrint("reg1dim Error",len(x),":",len(y))
         a = 0
         b = 0
 
@@ -39,7 +39,7 @@ def getUnitValue(value,unit):
         if(value > 0):    return int((value + unit / 2) / unit) * unit
         else:    return int((value - unit / 2) / unit) * unit
     except:
-        print("getUnitValue Error")
+        OutputController().msgPrint("getUnitValue Error")
         return 0
 
 
@@ -393,10 +393,10 @@ def getRobotAngle(img,x,y,angle1,angle2,angle3,rotation):
     g = 9.8
     div = min(g,rotation.z) / g
     tieAngle = math.degrees(math.acos(div))
-    #print("仰角:",math.degrees(math.atan(a1)) ,
+    #OutputController().msgPrint("仰角:",math.degrees(math.atan(a1)) ,
     #tieAngle,"/旋回角:",-math.degrees(math.atan(a2)),"/R角:",newAngles[1] - 90 -
     #(newAngles[2] - 270),"/L角:", 90 - newAngles[0] + (newAngles[2] - 270))
-    #print("new角",newAngles,"/a1,a2:",a1,a2)
+    #OutputController().msgPrint("new角",newAngles,"/a1,a2:",a1,a2)
 
     GammalAngle = math.degrees(math.atan(a1)) + tieAngle
     TurnAngle = -math.degrees(math.atan(a2))
@@ -412,7 +412,7 @@ def getRobotAngle(img,x,y,angle1,angle2,angle3,rotation):
         Langle = getUnitValue(Langle,5)
         
     except:
-        print("errorAngle")
+        OutputController().msgPrint("errorAngle")
         GammalAngle = 0
         TurnAngle = 0
         Rangle = 0
@@ -432,7 +432,7 @@ def getRobotAngle(img,x,y,angle1,angle2,angle3,rotation):
 
 
     
-    #print("output",GammalAngle,TurnAngle,Rangle,Langle)
+    #OutputController().msgPrint("output",GammalAngle,TurnAngle,Rangle,Langle)
 
     return (GammalAngle,TurnAngle,Rangle,Langle)
 
@@ -466,9 +466,9 @@ def ImageReconition(binaryScale):
     doubelLog.pop(0)
     doubelLog.append(fortunity)
     fortunity = sum(doubelLog) / 5
-    print("angle1",angle1,angle2,angle3)
+    OutputController().msgPrint("angle1",angle1,angle2,angle3)
     (GammalAngle,TurnAngle,Rangle,Langle) = getRobotAngle(img,y,x,angle1,angle2,angle3,rotation)
-    print("Newangle1",GammalAngle,TurnAngle,Rangle,Langle)
+    OutputController().msgPrint("Newangle1",GammalAngle,TurnAngle,Rangle,Langle)
 
     GammalAngleLog.pop(0)
     GammalAngleLog.append(GammalAngle)
@@ -492,7 +492,7 @@ def ImageReconition(binaryScale):
     Langle = getUnitValue(Langle,5)
 
     #描画など
-    print(x,y,GammalAngle,TurnAngle,Rangle,Langle,'{:.2f}'.format(fortunity))
+    OutputController().msgPrint(x,y,GammalAngle,TurnAngle,Rangle,Langle,'{:.2f}'.format(fortunity))
 
     thickness = 1
     try:
@@ -511,7 +511,7 @@ def ImageReconition(binaryScale):
             for theta in [angle1]:
                 img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(255,0,0,50),thickness=thickness)
     except:
-        print("error")
+        OutputController().msgPrint("error")
 
 
     XLog.pop(0)
@@ -533,7 +533,7 @@ def ShiftTrim(image,Yshift,Xshift):
         image[h + Yshift:] = 0
 
 
-    #print(w,h,Xshift,Yshift)
+    #OutputController().msgPrint(w,h,Xshift,Yshift)
     return image
 
 def cvpaste(img, imgback, x, y, angle, scale):  
@@ -571,8 +571,8 @@ def cvpaste(img, imgback, x, y, angle, scale):
     img2_fg = cv2.bitwise_and(imgrot,imgrot,mask = mask)
 
     # Paste the forward image on the background image
-    #print(img1_bg.shape)
-    #print(img2_fg.shape)
+    #OutputController().msgPrint(img1_bg.shape)
+    #OutputController().msgPrint(img2_fg.shape)
     imgpaste = cv2.add(img1_bg,img2_fg, dtype = cv2.CV_8U)
 
     return imgpaste
@@ -752,27 +752,27 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
     doubelLog.pop(0)
     valueLog.append(maxValue1 + maxValue2 + maxValue3)
     valueLog.pop(0)
-    print(maxValue1 + maxValue2 + maxValue3,maxDoubel)
+    OutputController().msgPrint(maxValue1 + maxValue2 + maxValue3,maxDoubel)
     XLog.append(maxY)
     XLog.pop(0)
     
-    #print("doubelLog")
+    #OutputController().msgPrint("doubelLog")
     #s = ""
     #for i in range(len(doubelLog)):
     #    s+='{:.2f}'.format(doubelLog[i]) + ","
-    #print(s)
+    #OutputController().msgPrint(s)
 
-    #print("valueLog")
+    #OutputController().msgPrint("valueLog")
     #s = ""
     #for i in range(len(valueLog)):
     #    s+='{:.2f}'.format(valueLog[i]) + ","
-    #print(s)
+    #OutputController().msgPrint(s)
 
-    #print("XLog")
+    #OutputController().msgPrint("XLog")
     #s = ""
     #for i in range(len(XLog)):
     #    s+='{:.2f}'.format(XLog[i]) + ","
-    #print(s)
+    #OutputController().msgPrint(s)
 
     #分岐の条件(N1=30、N2=10)
     #1.直近N1ログ以内のvalueLog平均値が300以上
@@ -782,8 +782,8 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
 
     hoge1 = np.array(valueLog[len(valueLog) - N1:])
     rule1 = np.average(hoge1) / 300
-    print(valueLog)
-    print("rule1達成率",rule1)
+    OutputController().msgPrint(valueLog)
+    OutputController().msgPrint("rule1達成率",rule1)
 
     #p = np.zeros(N2)
     #for i in range(N2):
@@ -793,8 +793,8 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
 
     #if(np.average(p) == 0):rule2 = 0
     #else:rule2 = 0.8 / np.average(p)
-    #print("rule2達成率",rule2)
-    #print(p)
+    #OutputController().msgPrint("rule2達成率",rule2)
+    #OutputController().msgPrint(p)
 
     hoge2 = np.array(XLog[len(XLog) - N1:])
 
@@ -806,14 +806,14 @@ def IR(color_image,depth_scale,ir_image,robot_rotation,extMode=True):
     else:
         a,b = reg1dim(l1,l2) 
         rule3 = (b + a * (N1 + 5)) / h
-        print(a,b,rule3)
-    print(XLog)
-    print("rule3達成率",rule3)
+        OutputController().msgPrint(a,b,rule3)
+    OutputController().msgPrint(XLog)
+    OutputController().msgPrint("rule3達成率",rule3)
 
     LElevationAngle,RElevationAngle,ElevationImage,LRE = CalcElevationAngle(depth_scale,maxY,maxX,maxAngle1,maxAngle2,maxAngle3,minDistance,maxDistance,branchsize,thickness,h,w,maxX,maxY)
     #ElevationImage=ir_image2.copy()
     #ElevationAngle=0
-    #print(maxX,maxY,LElevationAngle,RElevationAngle)
+    #OutputController().msgPrint(maxX,maxY,LElevationAngle,RElevationAngle)
 
     #表示
     thickness = 5

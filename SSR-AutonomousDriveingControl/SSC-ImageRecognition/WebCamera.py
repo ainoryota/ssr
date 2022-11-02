@@ -12,7 +12,7 @@ import numpy as np
 import tkinter as tk
 from PIL import Image,ImageTk #udo pip install pillow
 from ctypes import alignment, windll
-
+from OutputController import OutputController
 
 def cvpaste(img, imgback, x, y, angle, scale):  
     # x and y are the distance from the center of the background image
@@ -49,8 +49,8 @@ def cvpaste(img, imgback, x, y, angle, scale):
     img2_fg = cv2.bitwise_and(imgrot,imgrot,mask = mask)
 
     # Paste the forward image on the background image
-    #print(img1_bg.shape)
-    #print(img2_fg.shape)
+    #OutputController().msgPrint(img1_bg.shape)
+    #OutputController().msgPrint(img2_fg.shape)
     imgpaste = cv2.add(img1_bg,img2_fg, dtype = cv2.CV_8U)
 
     return imgpaste
@@ -69,24 +69,24 @@ class WebCameraMgr(object):
         self.il = il
         self.StopFlag = True
 
-        print("Camera List")
+        OutputController().msgPrint("Camera List")
         for i in range(10):
             try:
                 self.capture = cv2.VideoCapture(i,cv2.CAP_DSHOW)
                 ret, frame = self.capture.read()
                 self.capture.release()
-                print(i,ret,frame.shape)
+                OutputController().msgPrint(i,ret,frame.shape)
             except:
                 pass
 
         self.captureF = cv2.VideoCapture(2,cv2.CAP_DSHOW)
-        print("Open camera front")
+        OutputController().msgPrint("Open camera front")
 
         self.captureC = cv2.VideoCapture(2,cv2.CAP_DSHOW)
-        print("Open camera center")
+        OutputController().msgPrint("Open camera center")
         
         self.captureB = cv2.VideoCapture(3,cv2.CAP_DSHOW)
-        print("Open camera back")
+        OutputController().msgPrint("Open camera back")
 
         #0 True (480, 640, 3)*front realsense
         #2 webカメラ
@@ -119,26 +119,26 @@ class WebCameraMgr(object):
         try:
             imgF = self.getImage(self.captureF,imgF)
         except Exception as e:
-            print("error CameraF",e)
+            OutputController().msgPrint("error CameraF",e)
 
         try:
             imgC = self.getImage(self.captureC,imgC)
             imgC = cvpaste(imgC,np.zeros((self.w,self.w,3),dtype=np.uint8),0,0,90,1)
         except Exception as e:
-            print("error CameraC",e)
+            OutputController().msgPrint("error CameraC",e)
 
         try:
             imgB = self.getImage(self.captureB,imgB)
             imgB = cv2.rotate(imgB, cv2.ROTATE_180)
         except Exception as e:
-            print("error CameraB",e)
+            OutputController().msgPrint("error CameraB",e)
         
         img = imgF
         try:
             img = np.vstack((imgF,imgC))
             img = np.vstack((img,imgB))
         except Exception as e:
-            print("error Camera Stack",e)
+            OutputController().msgPrint("error Camera Stack",e)
 
         output = ImageTk.PhotoImage(Image.fromarray(img))
         self.il.configure(image=output)
@@ -149,5 +149,5 @@ class WebCameraMgr(object):
     def getImage(self,cap,img):
         ret, frame = cap.read()
         if(ret): img = cv2.cvtColor(cv2.resize(frame,(self.w,self.h)),cv2.COLOR_BGR2RGB)
-        else:print('cant read camera')
+        else:OutputController().msgPrint('cant read camera')
         return img

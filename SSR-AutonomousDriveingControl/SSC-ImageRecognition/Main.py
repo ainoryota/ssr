@@ -20,6 +20,7 @@ from PIL import Image,ImageTk #udo pip install pillow
 from ctypes import alignment, windll
 import os
 
+
 #root = tk.Tk()  
 #caps = []
 #il = ""
@@ -92,10 +93,10 @@ def startSystem(stepQueue):
     form = Form(robot)
 
 if __name__ == '__main__':
-    print("SelectStart") 
+    OutputController().msgPrint("SelectStart") 
 
     #(wf,wc,wb) = StartWindow()
-    #print("RobotStart") 
+    #OutputController().msgPrint("RobotStart") 
     with Manager() as manager:
         stepQueue = manager.Queue()
         p1 = Process(target=OutputDone, args=(stepQueue,))

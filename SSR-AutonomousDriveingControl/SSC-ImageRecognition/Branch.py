@@ -21,7 +21,7 @@ class Branch(object):
     """description of class"""
     def __init__(self,robot):
         self.robot=robot
-        print("Branch Start")
+        OutputController().msgPrint("Branch Start")
 
     def FileBranch(self,csvfile,runDirection,save):
         #分岐データの読み込み
@@ -90,7 +90,7 @@ class Branch(object):
   
         #if save == True:
         #    #ファイルに書き出し
-        #    #print("abc")
+        #    #OutputController().msgPrint("abc")
         #    with open('log_'+csvfile,'w') as f:
         #        writer = csv.writer(f,lineterminator='\n')
         #        writer.writerows(log)
@@ -115,7 +115,7 @@ class Branch(object):
         if tension == True:
             csv_name = value + '_' + str(mode) + '_T' + '.csv'
         
-        print(csv_name,"AngleMode")
+        OutputController().msgPrint(csv_name,"AngleMode")
         self.FileBranch(csv_name,runDirection,save)
 
 
@@ -143,5 +143,5 @@ class Branch(object):
         #    self.v5.set(reverse(self.v5.get()))
         #    self.v6.set(reverse(self.v6.get()))
         
-        #print(csv_name,"AngleMode")
+        #OutputController().msgPrint(csv_name,"AngleMode")
         #self.Branch(csv_name,self.v1.get(),self.v8.get())

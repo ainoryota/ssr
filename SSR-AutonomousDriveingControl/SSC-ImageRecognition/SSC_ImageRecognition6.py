@@ -20,7 +20,7 @@ def reg1dim(x, y):
         if n == 0:b = 0
         else:       b = (y.sum() - a * x.sum()) / n
     except:
-        print("reg1dim Error")
+        OutputController().msgPrint("reg1dim Error")
         a = 0
         b = 0
 
@@ -32,7 +32,7 @@ def getUnitValue(value,unit):
         if(value > 0):    return int((value + unit / 2) / unit) * unit
         else:    return int((value - unit / 2) / unit) * unit
     except:
-        print("getUnitValue Error")
+        OutputController().msgPrint("getUnitValue Error")
         return 0
 
 
@@ -318,8 +318,8 @@ def getRobotAngle(img,x,y,angle1,angle2,angle3,rotation):
     g = 9.8
     div = min(g,rotation.z) / g
     tieAngle = math.degrees(math.acos(div))
-    #print("仰角:",math.degrees(math.atan(a1)) , tieAngle,"/旋回角:",-math.degrees(math.atan(a2)),"/R角:",newAngles[1] - 90 - (newAngles[2] - 270),"/L角:", 90 - newAngles[0] + (newAngles[2] - 270))   
-    #print("new角",newAngles,"/a1,a2:",a1,a2)
+    #OutputController().msgPrint("仰角:",math.degrees(math.atan(a1)) , tieAngle,"/旋回角:",-math.degrees(math.atan(a2)),"/R角:",newAngles[1] - 90 - (newAngles[2] - 270),"/L角:", 90 - newAngles[0] + (newAngles[2] - 270))   
+    #OutputController().msgPrint("new角",newAngles,"/a1,a2:",a1,a2)
 
     GammalAngle = math.degrees(math.atan(a1)) + tieAngle
     TurnAngle = -math.degrees(math.atan(a2))
@@ -335,7 +335,7 @@ def getRobotAngle(img,x,y,angle1,angle2,angle3,rotation):
         Langle = getUnitValue(Langle,5)
         
     except:
-        print("errorAngle")
+        OutputController().msgPrint("errorAngle")
         GammalAngle = 0
         TurnAngle = 0
         Rangle = 0
@@ -355,7 +355,7 @@ def getRobotAngle(img,x,y,angle1,angle2,angle3,rotation):
 
 
     
-    #print("output",GammalAngle,TurnAngle,Rangle,Langle)
+    #OutputController().msgPrint("output",GammalAngle,TurnAngle,Rangle,Langle)
 
     return (GammalAngle,TurnAngle,Rangle,Langle)
 
@@ -412,7 +412,7 @@ def ImageReconition(original_img,rotation):
     Langle = getUnitValue(Langle,5)
 
     #描画など
-    print(x,y,GammalAngle,TurnAngle,Rangle,Langle,'{:.2f}'.format(fortunity))
+    OutputController().msgPrint(x,y,GammalAngle,TurnAngle,Rangle,Langle,'{:.2f}'.format(fortunity))
 
     thickness = 1
     try:
@@ -431,7 +431,7 @@ def ImageReconition(original_img,rotation):
             for theta in [angle1]:
                 img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(255,0,0,50),thickness=thickness)
     except:
-        print("error")
+        OutputController().msgPrint("error")
 
 
     img = np.hstack((original_img,img))

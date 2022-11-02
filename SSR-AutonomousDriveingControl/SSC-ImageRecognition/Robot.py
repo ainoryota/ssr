@@ -14,12 +14,12 @@ import math
 class Robot(ABC):
     """description of class"""
     def __init__(self):
-        print("robot set")
+        OutputController().msgPrint("robot set")
 
 class RealRobot(Robot):
     """description of class"""
     def __init__(self):
-        print("realrobot set")
+        OutputController().msgPrint("realrobot set")
        
         self.motors = []
         self.motors.append(Motor(0,MotorMode.Pos))

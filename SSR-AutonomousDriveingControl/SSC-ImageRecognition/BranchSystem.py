@@ -4,6 +4,7 @@ from Utilty import cvpaste,CreteViewImage,ScalarImage2RGB,reg1dim,getImageFromFi
 import numpy as np
 from PIL import Image,ImageTk
 import math
+from OutputController import OutputController
 
 class BranchSystem:
     def __init__(self):
@@ -82,7 +83,7 @@ class BranchSystem:
         self.IsBranch = False
         if(np.sum(self.ir_image1) < 0.1 or np.sum(self.color_image) < 0.1):#カメラがほぼ真っ暗
             self.Error = True
-            print("Camera is black")
+            OutputController().msgPrint("Camera is black")
             return
         result = IR(self.color_image,self.depth_image,self.ir_image1,self.depth_scale,self.ir_scale,accel,self.minDistance,self.maxDistance,self.overDistance,extMode)
         if(len(result) == 1):#不正ならFalseだけが返ってくる
@@ -93,7 +94,7 @@ class BranchSystem:
         self.tangle = math.degrees(-math.atan2(accel.y,accel.z))
 
         (rule1,rule2) = self.calcRule()
-        print("y=",self.y,"x=",self.x,"仰角Ele=",rounddown(self.tangle,1),"回転角Inc=",rounddown(self.InclinationAngle,1),"RightAngle=",rounddown(self.Rangle,0),"LAngle=",rounddown(self.Langle,0),"branchValue=",self.branchValue,"rule1=",rounddown(rule1,2),"rule2=",rounddown(rule2,2))
+        OutputController().msgPrint("y=",self.y,"x=",self.x,"仰角Ele=",rounddown(self.tangle,1),"回転角Inc=",rounddown(self.InclinationAngle,1),"RightAngle=",rounddown(self.Rangle,0),"LAngle=",rounddown(self.Langle,0),"branchValue=",self.branchValue,"rule1=",rounddown(rule1,2),"rule2=",rounddown(rule2,2))
         if(rule1 > 1 and rule2 > 1):
             self.IsBranch = True
 

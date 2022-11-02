@@ -19,7 +19,7 @@ from ctypes import windll
 
 from threading import Thread
 import threading
-
+from OutputController import OutputController
 
 class VideoStream(object):
         def __init__(self, serialNo,resolution=(640, 360), framerate=15):
@@ -93,7 +93,7 @@ class VideoStream(object):
                     if(self.stopOrder):break;
             except:
                 self.vid_pipe.stop()
-                print("Error in Vision", sys.exc_info())
+                OutputController().msgPrint("Error in Vision", sys.exc_info())
 
             finally:
                 self.vid_pipe.stop()
@@ -110,7 +110,7 @@ class VideoStream(object):
                     if(self.stopOrder):break;
             except:
                 self.imu_pipe.stop()
-                print("Error in Vision", sys.exc_info())
+                OutputController().msgPrint("Error in Vision", sys.exc_info())
 
             finally:
                 self.imu_pipe.stop()

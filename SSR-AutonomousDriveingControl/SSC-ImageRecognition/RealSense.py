@@ -17,7 +17,7 @@ from numba import jit
 from ctypes import alignment, windll
 from BranchSystem import BranchSystem 
 from Utilty import getLikeAngle
-
+from OutputController import OutputController
 
 
 class RealSense(object):
@@ -41,7 +41,7 @@ class RealSense(object):
         self.branchSystem = BranchSystem()
         self.stop_branch_time = 0
 
-        print("Open realsense",self.serialNo)
+        OutputController().msgPrint("Open realsense",self.serialNo)
        
     def start(self):
         self.StopFlag = False
@@ -86,13 +86,13 @@ class RealSense(object):
         Rangle = self.branchSystem.Rangle
         Langle = self.branchSystem.Langle
         
-        print("time:",self.stop_branch_time)
+        OutputController().msgPrint("time:",self.stop_branch_time)
         if(self.stop_branch_time > 0):
             self.stop_branch_time-=1
         elif(IsBranch):
-            print("■■■■■分岐",tangle,InclinationAngle,Rangle,Langle)
+            OutputController().msgPrint("■■■■■分岐",tangle,InclinationAngle,Rangle,Langle)
             (InclinationAngle,tangle,Rangle,Langle) = getLikeAngle(InclinationAngle,tangle,Rangle,Langle)
-            print("■■■■■■Like:",tangle,InclinationAngle,Rangle,Langle)
+            OutputController().msgPrint("■■■■■■Like:",tangle,InclinationAngle,Rangle,Langle)
 
             if(self.data["v_auto"].get()):
                 self.branchSystem.ResetLog()
@@ -105,7 +105,7 @@ class RealSense(object):
                 #RTurningAngle =int(min(80,RTurningAngle)//5*5)
                 #LTurningAngle =int(max(-80,LTurningAngle)//5*5)
                 #LTurningAngle =int(min(80,LTurningAngle)//5*5)
-                print("Branch Angle:",ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
+                OutputController().msgPrint("Branch Angle:",ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
                 self.br.branchAngle(ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
                 self.stop_branch_time = 70
 

@@ -52,7 +52,7 @@ class KMeans:
 #model =  KMeans(3)
 #model.fit(points)
 
-#print(model.labels_)
+#OutputController().msgPrint(model.labels_)
 
 #markers = ["+", "*", "o"]
 #color = ['r', 'b', 'g']

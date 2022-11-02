@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 
 from skimage.morphology import skeletonize
+from OutputController import OutputController
 
 # Zhang-Suenのアルゴリズムを用いて2値化画像を細線化します
 def Zhang_Suen_thinning(binary_image):
@@ -130,7 +131,7 @@ def disp(img1,img2):
 
 
 #lines = cv2.HoughLines(edges,1,np.pi/180,10)
-#print("line are",len(lines))
+#OutputController().msgPrint("line are",len(lines))
 #counter=0
 
 #for counter in range(20):
@@ -144,10 +145,10 @@ def disp(img1,img2):
 #    x2 = int(x0 - 1000*(-b))
 #    y2 = int(y0 - 1000*(a))
 #    cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
-#    print(rho,theta)
+#    OutputController().msgPrint(rho,theta)
 #    lines=lines[np.where((lines[:,0,0]>rho*1.2)|(lines[:,0,0]<rho*0.8)|(lines[:,0,1]>theta*1.2)|(lines[:,0,1]<theta*0.8))[0]]
 #    lines=lines[np.where((lines[:,0,0]<rho*1.2)|(lines[:,0,0]>rho*0.8)|(lines[:,0,1]>theta*1.2)|(lines[:,0,1]<theta*0.8))[0]]#rhoは負数を取りうる
-#    print(len(lines))
+#    OutputController().msgPrint(len(lines))
     
 
 ##disp(img,edges)
@@ -185,7 +186,7 @@ ske_rgb = cv2.cvtColor(ske_gray, cv2.COLOR_GRAY2RGB)
 
 edges = cv2.Canny(ske_rgb,0,100)
 lines = cv2.HoughLines(edges,1,np.pi/180,10)
-print("line are",len(lines))
+OutputController().msgPrint("line are",len(lines))
 counter=0
 draw_lines=np.zeros(colorimg.shape)
 
@@ -202,10 +203,10 @@ for counter in range(10):
     x2 = int(x0 - 1000*(-b))
     y2 = int(y0 - 1000*(a))
     cv2.line(draw_lines,(x1,y1),(x2,y2),(0,255,0),2)
-    print(rho,theta)
+    OutputController().msgPrint(rho,theta)
     lines=lines[np.where((lines[:,0,0]<rho-30)|(lines[:,0,0]>rho+30)|(lines[:,0,1]<theta-3.14/8)|(lines[:,0,1]>theta+3.14/8))[0]]
     #lines=lines[np.where((lines[:,0,0]<rho*1.2)|(lines[:,0,0]>rho*0.8)|(lines[:,0,1]>theta*1.2)|(lines[:,0,1]<theta*0.8))[0]]#rhoは負数を取りうる
-    print(len(lines))
+    OutputController().msgPrint(len(lines))
 
 
 kernel = np.ones((5,5),np.uint8)

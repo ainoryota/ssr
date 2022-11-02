@@ -87,7 +87,7 @@ def ImageReconition(depth_img,ir_img,rotation):
     #水平方向角度の取得
     (value,angle1,angle2,angle3,value1,value2,value3,y,x,doubel_max) = getTurnAngle(img)
 
-    print(angle1,angle2,angle3,value)
+    OutputController().msgPrint(angle1,angle2,angle3,value)
 
     #仰角の取得
     (topAngle1,topAngle2,topAngle3) = getTopAngle(img,y,x,angle1,angle2,angle3)
@@ -141,7 +141,7 @@ def ImageReconition(depth_img,ir_img,rotation):
             for theta in [angle1]:
                 img = cv2.line(img,(x,y),(x + int(360 * math.sin(math.radians(theta))),y + int(360 * math.cos(math.radians(theta)))),color=(255,0,0,50),thickness=thickness)
     except:
-        print("error")
+        OutputController().msgPrint("error")
 
 
     XLog.pop(0)
@@ -168,7 +168,7 @@ def getTurnAngle(img):
 
     #解を調べる
     (value,angle1,angle2,angle3,value1,value2,value3,x,y,doubel) = solveOptimizedScore(field,0,width,0,height,24,10)
-    print("aaaa",x,y,width,height)
+    OutputController().msgPrint("aaaa",x,y,width,height)
     (value,angle1,angle2,angle3,value1,value2,value3,x,y,doubel) = solveOptimizedScore(field,x-24,x+24,y-24,y+24,5,5)
 
     return (value,angle1,angle2,angle3,value1,value2,value3,int(x),int(y),doubel) 
@@ -189,7 +189,7 @@ def solveOptimizedScore(field,minX,maxX,minY,maxY,gridStep,angleStep):
     for x in range(int(minX),int(maxX),gridStep):
         for y in range(int(minY),int(maxY),gridStep):
             (value,angle1,angle2,angle3,value1,value2,value3,x,y,doubel)=CalcScore(field,x,y,angleStep)
-            #print(x,y,value,bestValue)
+            #OutputController().msgPrint(x,y,value,bestValue)
             if(bestValue<value):
                 bestValue=value
                 bestAngle1=angle1
@@ -253,7 +253,7 @@ def CalcScore(field,x,y,angleStep):
                 bestY=y
                 bestDoubel=doubel_max
                 break
-    print("■",bestValue,bestX,bestY,bestAngle1,bestAngle2,bestAngle3,bestValue1,bestValue2,bestValue3)
+    OutputController().msgPrint("■",bestValue,bestX,bestY,bestAngle1,bestAngle2,bestAngle3,bestValue1,bestValue2,bestValue3)
     return [bestValue,bestAngle1,bestAngle2,bestAngle3,bestValue1,bestValue2,bestValue3,bestX,bestY,bestDoubel]
 
 #ある(x,y)に対してすべての角度に対する評価値のlistを返す
@@ -305,20 +305,20 @@ def getAngleData(field,x,y,angleStep):
                     
                     counter+=(1 - abs(float(thick) / cable_size) ** 2)
                     #c=255-a
-                    #print(x,y,X1,Y1,c)
+                    #OutputController().msgPrint(x,y,X1,Y1,c)
                     #angleData[i,1]+=(1 - abs(float(thick) / cable_size) ** 2)
                     angleData[i,1]+=(1 - abs(float(thick) / cable_size) ** 2)*(255-c)
                     #if(x==24 and y==168 and (angleStep*i==30 or angleStep*i==330)):
-                        #print("AAAAAAA:",(1 - abs(float(thick) / cable_size) ** 2)*(255-c))
-                        #print("NOW!",angleStep,int(field[X1,Y1]),int(field[X2,Y2]),int(field[X1,Y1])-int(field[X2,Y2]),X1,Y1)
+                        #OutputController().msgPrint("AAAAAAA:",(1 - abs(float(thick) / cable_size) ** 2)*(255-c))
+                        #OutputController().msgPrint("NOW!",angleStep,int(field[X1,Y1]),int(field[X2,Y2]),int(field[X1,Y1])-int(field[X2,Y2]),X1,Y1)
 
-                    #print(angleData[i,0],(1 - abs(float(thick) / cable_size) ** 2)*(255-abs(field[X1,Y1]-field[X2,Y2])))
-                    #print((1 - abs(float(thick) / cable_size) ** 2)*(255-abs(field[X1,Y1]-field[X2,Y2])))
+                    #OutputController().msgPrint(angleData[i,0],(1 - abs(float(thick) / cable_size) ** 2)*(255-abs(field[X1,Y1]-field[X2,Y2])))
+                    #OutputController().msgPrint((1 - abs(float(thick) / cable_size) ** 2)*(255-abs(field[X1,Y1]-field[X2,Y2])))
         
         if(counter!=0):
             angleData[i,1]/=counter
 
-        print(x,y,angleStep * i,i,angleData[i,1])
+        OutputController().msgPrint(x,y,angleStep * i,i,angleData[i,1])
         
     return angleData
 
@@ -333,7 +333,7 @@ def reg1dim(x, y):
         if n == 0:b = 0
         else:       b = (y.sum() - a * x.sum()) / n
     except:
-        print("reg1dim Error")
+        OutputController().msgPrint("reg1dim Error")
         a = 0
         b = 0
 
@@ -346,7 +346,7 @@ def getUnitValue(value,unit):
         if(value > 0):    return int((value + unit / 2) / unit) * unit
         else:    return int((value - unit / 2) / unit) * unit
     except:
-        print("getUnitValue Error")
+        OutputController().msgPrint("getUnitValue Error")
         return 0
 
 
@@ -492,10 +492,10 @@ def getRobotAngle(img,x,y,angle1,angle2,angle3,rotation):
     #div = min(g,rotation.z) / g
     div = min(g,0) / g
     tieAngle = math.degrees(math.acos(div))
-    #print("仰角:",math.degrees(math.atan(a1)) ,
+    #OutputController().msgPrint("仰角:",math.degrees(math.atan(a1)) ,
     #tieAngle,"/旋回角:",-math.degrees(math.atan(a2)),"/R角:",newAngles[1] - 90 -
     #(newAngles[2] - 270),"/L角:", 90 - newAngles[0] + (newAngles[2] - 270))
-    #print("new角",newAngles,"/a1,a2:",a1,a2)
+    #OutputController().msgPrint("new角",newAngles,"/a1,a2:",a1,a2)
 
     GammalAngle = math.degrees(math.atan(a1)) + tieAngle
     TurnAngle = -math.degrees(math.atan(a2))
@@ -511,7 +511,7 @@ def getRobotAngle(img,x,y,angle1,angle2,angle3,rotation):
         Langle = getUnitValue(Langle,5)
         
     except:
-        print("errorAngle")
+        OutputController().msgPrint("errorAngle")
         GammalAngle = 0
         TurnAngle = 0
         Rangle = 0
@@ -531,7 +531,7 @@ def getRobotAngle(img,x,y,angle1,angle2,angle3,rotation):
 
 
     
-    #print("output",GammalAngle,TurnAngle,Rangle,Langle)
+    #OutputController().msgPrint("output",GammalAngle,TurnAngle,Rangle,Langle)
 
     return (GammalAngle,TurnAngle,Rangle,Langle)
 

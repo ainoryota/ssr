@@ -11,13 +11,15 @@ from skimage.draw import disk #pip install scikit-image
 from skimage import morphology #pip install scikit-image
 from PIL import Image
 import os
+from OutputController import OutputController
+
 
 def processing_time(func):
     @wraps(func)
     def wrapper(*args, **keywords):
         st = time.time()  # 開始前の時間を記録
         result = func(*args, **keywords)  # 関数を実行
-        print(f'time: {time.time() - st} s')  # 開始後の時間と開始前の時間の差を出力
+        OutputController().msgPrint(f'time: {time.time() - st} s')  # 開始後の時間と開始前の時間の差を出力
         return result
 
     return wrapper
@@ -57,8 +59,8 @@ def cvpaste(img, imgback, x, y, angle, scale):
     img2_fg = cv2.bitwise_and(imgrot,imgrot,mask = mask)
 
     # Paste the forward image on the background image
-    #print(img1_bg.shape)
-    #print(img2_fg.shape)
+    #OutputController().msgPrint(img1_bg.shape)
+    #OutputController().msgPrint(img2_fg.shape)
     imgpaste = cv2.add(img1_bg,img2_fg, dtype = cv2.CV_8U)
 
     return imgpaste
@@ -89,7 +91,7 @@ def reg1dim(x, y):
         if n == 0:b = 0
         else:       b = (y.sum() - a * x.sum()) / n
     except:
-        print("reg1dim Error",len(x),":",len(y))
+        OutputController().msgPrint("reg1dim Error",len(x),":",len(y))
         a = 0
         b = 0
 
@@ -111,7 +113,7 @@ def getUnitValue(value,unit):
         if(value > 0):    return int((value + unit / 2) / unit) * unit
         else:    return int((value - unit / 2) / unit) * unit
     except:
-        print("getUnitValue Error")
+        OutputController().msgPrint("getUnitValue Error")
         return 0
 
 #2つの角度の差を求める
@@ -269,5 +271,5 @@ def getLikeAngle(a1,b1,c1,d1):
     path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
     if(os.path.exists(path)):return (a,b,c,d)
 
-    print("out of range angle")
+    OutputController().msgPrint("out of range angle")
     return (a,b,c,d)

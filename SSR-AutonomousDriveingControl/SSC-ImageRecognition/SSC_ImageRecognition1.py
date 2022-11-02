@@ -47,7 +47,7 @@ def ImageReconition(original_img,count):
             B+=pixelValue[2]
 
         value=100*B/(B+G+R)
-        print(count,R,G,B,value)
+        OutputController().msgPrint(count,R,G,B,value)
         B/=loop_count
         G/=loop_count
         R/=loop_count
@@ -91,7 +91,7 @@ def ImageReconition(original_img,count):
             start_point=0
             black_counter=0
         
-    print(x,start_point);
+    OutputController().msgPrint(x,start_point);
     maxSmaxStartPoint=start_point-BLACK_RESETPOINT;
 
 

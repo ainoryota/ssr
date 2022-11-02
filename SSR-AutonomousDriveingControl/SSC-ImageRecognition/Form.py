@@ -9,12 +9,14 @@ from Order import ResetMotorOrder
 from Order import ResetEncoderOrder
 from OutputController import OutputController
 from OutputController import MotorMode
+from tkinter.scrolledtext import ScrolledText
 from Camera import Camera
 from Branch import Branch
 import numpy as np
 import math
 import time
 import tkinter.ttk as ttk
+
 
 class PushButton:
     button = []
@@ -121,6 +123,9 @@ class Form(object):
         self.data["v8"] = tk.BooleanVar()
         self.data["v_auto"] = tk.BooleanVar()
 
+
+        self.data["msg"] = ScrolledText(self.infArea,width = 50)
+
         self.data["v1"].set(True)
         self.data["v2"].set(False) 
         self.data["v3"].set(True) 
@@ -150,7 +155,10 @@ class Form(object):
         self.data["cb7"].grid(row = 6, column =33, padx = 5, pady = 5)
         self.data["cb8"].grid(row = 7, column =33, padx = 5, pady = 5)
         self.data["cb_auto"].grid(row = 8, column =33, padx = 5, pady = 5)
+        self.data["msg"].grid(row = 9, column =33,columnspan=2, padx = 5, pady = 5)
 
+        OutputController().setMsgbox(self.data["msg"])
+        
 
         #self.data["scale"] =
         #tk.Scale(leftArea,orient=tk.HORIZONTAL,from_=0,to=100)
@@ -205,6 +213,8 @@ class Form(object):
         self.data["branchEntry"] = tk.Entry(leftArea,width = 20)
         self.data["branchEntry"].grid(row = 12, column =0, padx = 5, pady = 5)
         
+
+
         self.data["entry1"].delete(0,'end')
         self.data["entry1"].insert(0,'30_10_70_70')#1
         self.data["entry2"].delete(0,'end')
@@ -276,7 +286,7 @@ class Form(object):
 
     
     def forward(self):   
-        print("○○○Forward○○○")
+        OutputController().msgPrint("○○○Forward○○○")
         self.data["v1"].set(True) 
         self.data["v2"].set(False)
         self.robot.motors[4].insertOrder(VelocityOrder(-212,0))
@@ -286,7 +296,7 @@ class Form(object):
         OutputController().pushStep()
     
     def back(self):            
-        print("○○○Back○○○")
+        OutputController().msgPrint("○○○Back○○○")
         self.data["v1"].set(False) 
         self.data["v2"].set(True)
         self.robot.motors[4].insertOrder(VelocityOrder(212,0))
@@ -296,7 +306,7 @@ class Form(object):
         OutputController().pushStep()
     
     def stop(self):            
-        print("○○○Stop○○○")
+        OutputController().msgPrint("○○○Stop○○○")
         self.robot.motors[4].insertOrder(VelocityOrder(0,0))
         self.robot.motors[5].insertOrder(VelocityOrder(0,0))
         self.robot.motors[9].insertOrder(VelocityOrder(0,0))
@@ -304,7 +314,7 @@ class Form(object):
         OutputController().pushStep()
     
     def free(self):       
-        print("○○○Free○○○")
+        OutputController().msgPrint("○○○Free○○○")
         
         self.robot.motors[0].insertOrder(MotorModeOrder(MotorMode.PosFree,0))
         self.robot.motors[1].insertOrder(MotorModeOrder(MotorMode.PosFree,0))
@@ -348,7 +358,7 @@ class Form(object):
         self.camMgr.startWebCam()
 
     def change(self):           
-        print("○○○Change○○○")
+        OutputController().msgPrint("○○○Change○○○")
         if self.data["v3"].get() == True:
             if (self.data["v5"].get() == False) and (self.data["v6"].get() == False):
                 self.br.FileBranch("normal_switching.csv",self.data["v3"].get(),self.data["v8"].get())
@@ -359,7 +369,7 @@ class Form(object):
                 self.data["v3"].set(False) 
                 self.data["v4"].set(True)
             else:
-                print("左右分岐モードの切り替えはできません")
+                OutputController().msgPrint("左右分岐モードの切り替えはできません")
             
         else:
             if (self.data["v5"].get() == False) and (self.data["v6"].get() == False):
@@ -371,7 +381,7 @@ class Form(object):
                 self.data["v3"].set(True) 
                 self.data["v4"].set(False)
             else:
-                print("左右分岐モードの切り替えはできません")
+                OutputController().msgPrint("左右分岐モードの切り替えはできません")
         
     def change_f(self):            
         if self.data["v3"].get() == True:                                     #通常どおりにプログラムを流すか(右分岐モードのとき)
@@ -465,7 +475,7 @@ class Form(object):
             self.data["v5"].set(self.reverse(self.data["v5"].get()))
             self.data["v6"].set(self.reverse(self.data["v6"].get()))
         
-        print(csv_name,num)
+        OutputController().msgPrint(csv_name,num)
         self.br.FileBranch(csv_name,self.data["v1"].get(),self.data["v8"].get())
 
  

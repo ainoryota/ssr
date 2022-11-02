@@ -89,7 +89,7 @@ def Calc(original_img):
                             maxValue1 = angleData[i,1]
                             maxValue2 = angleData[j,1]
                             maxValue3 = angleData[k,1]
-                            #print(maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue)
+                            #OutputController().msgPrint(maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue)
 
 
 
@@ -98,8 +98,8 @@ def Calc(original_img):
     
     
 
-    #print(maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue)
-    #print(maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,doubel_max)
+    #OutputController().msgPrint(maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue)
+    #OutputController().msgPrint(maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,doubel_max)
     return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,doubel_max]
 
 fortuneLog = [0,0,0,0,0]
@@ -203,7 +203,7 @@ def ImageReconition(original_img):
     topAngle1 = data2[0]
     topAngle2 = data2[1]
     topAngle3 = data2[2]
-    print(topAngle1,topAngle2,topAngle3)
+    OutputController().msgPrint(topAngle1,topAngle2,topAngle3)
 
     fortunity = min((value1,value2,value3)) / max(1,value1 + value2 + value3)
     fortunity = 1 - doubel_max / max(1,value1 + value2 + value3)
@@ -214,7 +214,7 @@ def ImageReconition(original_img):
         for i in range(5):
             fortuneLog[i] = 0
 
-    #print(data,fortunity)
+    #OutputController().msgPrint(data,fortunity)
     thickness=25
     thickness=1
     if(fortunity > 0.1*0):
