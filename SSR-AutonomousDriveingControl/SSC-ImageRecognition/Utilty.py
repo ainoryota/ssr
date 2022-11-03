@@ -221,6 +221,7 @@ def getLikeAngle(a1,b1,c1,d1):
 
     path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
     if(os.path.exists(path)):return (a,b,c,d)
+    else:OutputController().msgPrint(path,"is none");
 
     a = int(a1 / 10) * 10
     b = int(b1 / 10) * 10
@@ -230,7 +231,7 @@ def getLikeAngle(a1,b1,c1,d1):
 
     path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
     if(os.path.exists(path)):return (a,b,c,d)
-
+    else:OutputController().msgPrint(path,"is none");
 
     a = int(a1 / 10) * 10 + 10
     b = int(b1 / 10) * 10
@@ -240,7 +241,7 @@ def getLikeAngle(a1,b1,c1,d1):
 
     path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
     if(os.path.exists(path)):return (a,b,c,d)
-
+    else:OutputController().msgPrint(path,"is none");
 
     a = int(a1 / 10) * 10
     b = int(b1 / 10) * 10 + 10
@@ -250,7 +251,7 @@ def getLikeAngle(a1,b1,c1,d1):
 
     path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
     if(os.path.exists(path)):return (a,b,c,d)
-
+    else:OutputController().msgPrint(path,"is none");
 
     a = int(a1 / 10) * 10
     b = int(b1 / 10) * 10
@@ -260,7 +261,7 @@ def getLikeAngle(a1,b1,c1,d1):
 
     path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
     if(os.path.exists(path)):return (a,b,c,d)
-
+    else:OutputController().msgPrint(path,"is none");
 
     a = int(a1 / 10) * 10
     b = int(b1 / 10) * 10
@@ -270,6 +271,7 @@ def getLikeAngle(a1,b1,c1,d1):
 
     path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
     if(os.path.exists(path)):return (a,b,c,d)
+    else:OutputController().msgPrint(path,"is none");
 
     OutputController().msgPrint("out of range angle")
-    return (a,b,c,d)
+    return (0,0,0,0)

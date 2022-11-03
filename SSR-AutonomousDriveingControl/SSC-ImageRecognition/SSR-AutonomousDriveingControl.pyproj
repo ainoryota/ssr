@@ -65,6 +65,9 @@
     <Compile Include="Robot.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Scatter.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="SSC_ImageRecognition14.py">
       <SubType>Code</SubType>
     </Compile>

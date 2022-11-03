@@ -23,7 +23,6 @@ from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg, NavigationToolbar2Tk)
 import matplotlib.colors
 from mpl_toolkits.mplot3d import Axes3D # ３Dグラフ作成のため
-
 class FormSingleton(object):
 
     _instance = None
@@ -37,13 +36,13 @@ class FormSingleton(object):
         return cls._instance
 
     def setFormData(self,data):
-        self.data=data
+        self.data = data
     
     def getFormData(self):
         return self.data
 
     def setThreeGraph(self,root):
-        self.graphRoot=root
+        self.graphRoot = root
 
         plt.rcParams['font.size'] = 15
         plt.rcParams['font.family'] = 'Arial'
@@ -51,19 +50,27 @@ class FormSingleton(object):
         fig = plt.figure(figsize=(3, 3), dpi=100)
 
         self.ax = Axes3D(fig)
+
+
         self.ax.set_xlabel('x', labelpad=10)
         self.ax.set_ylabel('y', labelpad=10)
         self.ax.set_zlabel('z', labelpad=10)
 
-        self.graph = FigureCanvasTkAgg(fig, master=root)
 
-        self.updateThreeGraph([0,1,2],[0,2,5],[0,3,4])
+        self.graph = FigureCanvasTkAgg(fig, master=root)
+        self.updateThreeGraph([0,100,200],[0,200,500],[300,500,400])
 
         return self.graph
 
     def updateThreeGraph(self,x,y,z):
         self.ax.cla()
-        self.ax.scatter(x, y, z)
+        self.ax.scatter(x,y,z)
+        
+        self.ax.set_xlim(0,500)
+        self.ax.set_ylim(0,500)
+        
+
+        fit=[0,0,0]
 
         try:
             # do fit
@@ -90,9 +97,11 @@ class FormSingleton(object):
             self.ax.plot_wireframe(X,Y,Z, color='k')
         except:
             pass
-        
+
+        self.ax.set_zlim(200,500)
         
         self.graph.draw()
+        return fit
 
 
 
@@ -115,54 +124,58 @@ def OutputDone(stepQueue):
             timer = data.delay + data.sleepTime
 
             if(isinstance(data,InitOrder)):#初期化に関する司令を1つのみ処理
-                #OutputController().msgPrint("　Init",data)
+                #OutputController().msgPrint(" Init",data)
                 output.outputInit(data)
 
             elif(isinstance(data,PosOrder)):#位置に関する司令を複数個同時に処理
                 dataList = [data]
                 while(len(orderList) > 0 and isinstance(orderList[-1],PosOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
-                #OutputController().msgPrint("　Move Pos:",len(dataList),"motors")
+                #OutputController().msgPrint(" Move
+                #Pos:",len(dataList),"motors")
                 output.outputPos(dataList)
 
             elif(isinstance(data,VelocityOrder)):#速度に関する司令を複数個同時に処理
                 dataList = [data]
                 while(len(orderList) > 0 and isinstance(orderList[-1],VelocityOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
-                #OutputController().msgPrint("　Move Velocity:",len(dataList),"motors")
+                #OutputController().msgPrint(" Move
+                #Velocity:",len(dataList),"motors")
                 output.outputVelocity(dataList)
 
             elif(isinstance(data,MotorModeOrder)):#ノーマルモードへの変更に関する司令を複数個同時に処理
                 dataList = [data]
                 while(len(orderList) > 0 and isinstance(orderList[-1],MotorModeOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
-                #OutputController().msgPrint("　Set MotorMode:",len(dataList),"motors")
+                #OutputController().msgPrint(" Set
+                #MotorMode:",len(dataList),"motors")
                 output.setMotorMode(dataList)
 
             elif(isinstance(data,ResetMotorOrder)):#モータのリセット
                 dataList = [data]
                 while(len(orderList) > 0 and isinstance(orderList[-1],ResetMotorOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
-                #OutputController().msgPrint("　Reset Motor:",len(dataList),"motors")
+                #OutputController().msgPrint(" Reset
+                #Motor:",len(dataList),"motors")
                 output.resetMotor(dataList)
 
             elif(isinstance(data,ResetEncoderOrder)):#エンコーダのリセット
                 dataList = [data]
                 while(len(orderList) > 0 and isinstance(orderList[-1],ResetEncoderOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
-                #OutputController().msgPrint("　Reset Encoder:",len(dataList),"motors")
+                #OutputController().msgPrint(" Reset
+                #Encoder:",len(dataList),"motors")
                 output.resetEncoder(dataList)
         #OutputController().msgPrint("End Output")
-                                                
 class MotorMode(IntEnum):
-    PosNormal=0x00
-    PosHold=0x01
-    PosFree=0x02
-    VelocityNormal=0x04
-    VelocityFree=0x06
-    VelocityHold=0x07
-    Pos=100
-    Velocity=200
+    PosNormal = 0x00
+    PosHold = 0x01
+    PosFree = 0x02
+    VelocityNormal = 0x04
+    VelocityFree = 0x06
+    VelocityHold = 0x07
+    Pos = 100
+    Velocity = 200
     
 
         
@@ -187,7 +200,7 @@ class Serial(object):
         else:
             OutputController().msgPrint("statusの値が不正")
 
-        #OutputController().msgPrint("　　id:",order.id,"mode",order.mode)
+        #OutputController().msgPrint(" id:",order.id,"mode",order.mode)
 
                 #        Size CMD OP Data ADR CNT
         list1 = [0X08,0X04,0X00,order.id,data1,0X28,0X01]#制御モードの変更
@@ -211,7 +224,7 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
-            #OutputController().msgPrint("　　id:",data.id,"pos:",data.pos)
+            #OutputController().msgPrint(" id:",data.id,"pos:",data.pos)
             dataList+=[data.id,(0X10000 + int(data.pos * 100)) & 0XFF,((0X10000 + int(data.pos * 100)) // 256) & 0XFF]
             sleepTime = max(sleepTime,data.sleepTime)
    
@@ -227,7 +240,7 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
-            #OutputController().msgPrint("　　id:",data.id,"pos:",data.velocity)
+            #OutputController().msgPrint(" id:",data.id,"pos:",data.velocity)
             dataList+=[data.id,(0X10000 + int(data.velocity * 100)) & 0XFF, ((0X10000 + int(data.velocity * 100)) // 256) & 0XFF]
             sleepTime = max(sleepTime,data.sleepTime)
 
@@ -244,7 +257,8 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
-            #OutputController().msgPrint("　　id:",data.id,"motorMode:",data.motorMode)
+            #OutputController().msgPrint("
+            #id:",data.id,"motorMode:",data.motorMode)
             dataList+=[data.id,int(data.motorMode)]
             sleepTime = max(sleepTime,data.sleepTime)
 
@@ -261,7 +275,7 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
-            #OutputController().msgPrint("　　id:",data.id)
+            #OutputController().msgPrint(" id:",data.id)
             dataList+=[data.id,0x00,0x00,0x00,0x00]
             sleepTime = max(sleepTime,data.sleepTime)
 
@@ -280,7 +294,7 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
-            #OutputController().msgPrint("　　id:",data.id)
+            #OutputController().msgPrint(" id:",data.id)
             dataList+=[data.id]
             sleepTime = max(sleepTime,data.sleepTime)
 

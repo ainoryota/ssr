@@ -77,12 +77,12 @@ class RealSense(object):
 
         (IsBranch,SleepTime,InclinationAngle,ElevationAngle,RTurningAngle,LTurningAngle) = self.branchSystem.getBranch()
 
-        (h,w)=depth_image.shape
+        (h,w) = depth_image.shape
 
         OutputController().msgPrint("value")
-        hoge=np.where((depth_image<500) & (depth_image>200))
+        hoge = np.where((depth_image < 500) & (depth_image > 200))
         OutputController().msgPrint(hoge)
-        FormSingleton().updateThreeGraph(hoge[1],hoge[0],depth_image[hoge])
+        
 
 
         self.branchSystem.setImage(color_image,depth_image,ir_image1,ir_image2)
@@ -95,20 +95,31 @@ class RealSense(object):
         InclinationAngle = self.branchSystem.InclinationAngle
         Rangle = self.branchSystem.Rangle
         Langle = self.branchSystem.Langle
+
+
+        fit = FormSingleton().updateThreeGraph(hoge[1],hoge[0],depth_image[hoge])
         
+        OutputController().msgPrint(tangle,-fit[0],-fit[1],math.degrees(math.atan(-fit[0])),math.degrees(math.atan(-fit[1])))
+        tangle = tangle + math.degrees(math.atan(-fit[1]))
+        InclinationAngle = math.degrees(math.atan(-fit[0]))
+        
+
         OutputController().msgPrint("time:",self.stop_branch_time)
         if(self.stop_branch_time > 0):
             self.stop_branch_time-=1
         elif(IsBranch):
             OutputController().msgPrint("■■■■■分岐",tangle,InclinationAngle,Rangle,Langle)
-            (InclinationAngle,tangle,Rangle,Langle) = getLikeAngle(InclinationAngle,tangle,Rangle,Langle)
-            OutputController().msgPrint("■■■■■■Like:",tangle,InclinationAngle,Rangle,Langle)
+            (tangle,InclinationAngle,Rangle,Langle) = getLikeAngle(tangle,InclinationAngle,Rangle,Langle)
+            if((InclinationAngle,tangle,Rangle,Langle) != (0,0,0,0)):
+                OutputController().msgPrint("■■■■■■Like:",tangle,InclinationAngle,Rangle,Langle)
 
-            if(self.data["v_auto"].get()):
-                self.branchSystem.ResetLog()
-                time.sleep(SleepTime)
-                OutputController().msgPrint("Branch Angle:",ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
-                self.br.branchAngle(ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
-                self.stop_branch_time = 70
+                if(self.data["v_auto"].get()):
+                    self.branchSystem.ResetLog()
+                    time.sleep(SleepTime)
+                    OutputController().msgPrint("Branch Angle:",ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
+                    self.br.branchAngle(ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
+                    self.stop_branch_time = 70
+            else:
+                OutputController().msgPrint("No like data")
 
         self.imgArea.after(10,self.getRealsense)
