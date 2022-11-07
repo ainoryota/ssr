@@ -99,9 +99,9 @@ class BranchSystem:
         self.tangle = math.degrees(-math.atan2(accel.y,accel.z))
 
         (rule1,rule2) = self.calcRule()
-        OutputController().msgPrint("y=",self.y,"x=",self.x,"仰角Ele=",rounddown(self.tangle,1),"回転角Inc=",rounddown(self.InclinationAngle,1),"RightAngle=",rounddown(self.Rangle,0),"LAngle=",rounddown(self.Langle,0),"branchValue=",self.branchValue,"rule1=",rounddown(rule1,2),"rule2=",rounddown(rule2,2))
         if(rule1 > 1 and rule2 > 1):
             self.IsBranch = True
+        return rule1,rule2
 
     def get3DImages(self):
         # データを用意する

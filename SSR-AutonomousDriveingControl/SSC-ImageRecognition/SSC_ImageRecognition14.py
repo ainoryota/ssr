@@ -193,7 +193,7 @@ def IR(color_image,depth_iamge,ir_image,depth_scale,ir_scale,robot_rotation,minD
     if(angleA > angleB):(angleB,angleA) = (angleA,angleB)
     branchValue=maxValue1 + maxValue2 + maxValue3
 
-    return [maxY,maxX,branchValue,LRE,angleA,angleB,EffectiveDepthScale,DepthIRFlag]
+    return [maxY,maxX,branchValue,LRE,angleB,angleA,EffectiveDepthScale,DepthIRFlag]
 
 
 

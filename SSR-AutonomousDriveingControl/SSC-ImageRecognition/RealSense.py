@@ -16,7 +16,7 @@ import sys
 from numba import jit
 from ctypes import alignment, windll
 from BranchSystem import BranchSystem 
-from Utilty import getLikeAngle
+from Utilty import getLikeAngle,rounddown
 from OutputController import OutputController
 from FormSingleton import FormSingleton
 
@@ -86,7 +86,7 @@ class RealSense(object):
 
 
         self.branchSystem.setImage(color_image,depth_image,ir_image1,ir_image2)
-        self.branchSystem.calcCablewayInf(accel,True)
+        rule1,rule2=self.branchSystem.calcCablewayInf(accel,True)
         testImg = self.branchSystem.getOutputImage()
         self.il.configure(image=testImg)
         self.il.image = testImg
@@ -100,6 +100,14 @@ class RealSense(object):
         fit = FormSingleton().updateThreeGraph(hoge[1],hoge[0],depth_image[hoge])
         
         OutputController().msgPrint(tangle,-fit[0],-fit[1],math.degrees(math.atan(-fit[0])),math.degrees(math.atan(-fit[1])))
+        OutputController().msgPrint("仰角（ロボットのみ）=",tangle)
+        OutputController().msgPrint("仰角（ケーブルのみ）=",math.degrees(math.atan(-fit[1])))
+        OutputController().msgPrint("仰角（両方）=",tangle + math.degrees(math.atan(-fit[1])))
+        OutputController().msgPrint("回転角Inc=",rounddown(math.degrees(math.atan(-fit[0])),1))
+        OutputController().msgPrint("RightAngle=",rounddown(Rangle,0))
+        OutputController().msgPrint("LAngle=",rounddown(Langle,0))
+        OutputController().msgPrint("rule1=",rounddown(rule1,2))
+        OutputController().msgPrint("rule2=",rounddown(rule2,2))
         tangle = tangle + math.degrees(math.atan(-fit[1]))
         InclinationAngle = math.degrees(math.atan(-fit[0]))
         
