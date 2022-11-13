@@ -41,11 +41,11 @@ class RealSense(object):
         self.StopFlag = True
         self.branchSystem = BranchSystem()
         self.stop_branch_time = 0
-        self.web_image=np.zeros((480,640,3))
-        self.webcam=None
+        self.web_image = np.zeros((480,640,3))
+        self.webcam = None
 
         try:
-            okcamera=[]
+            okcamera = []
             OutputController().msgPrint("Camera List")
             for i in range(10):
                 try:
@@ -86,9 +86,8 @@ class RealSense(object):
         depth_image = self.vs.depth_image
         ir_image1 = self.vs.ir_image1
         ir_image2 = self.vs.ir_image2
-        if(self.webcam!=None):
+        if(self.webcam != None):
             ret, frame = self.webcam.read()
-            OutputController().msgPrint(frame.shape)
             if(ret): self.web_image = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
 
         self.AccelLabelX.configure(text="加速度X:{0:.2f}".format(accel.x))
@@ -99,13 +98,11 @@ class RealSense(object):
         self.GyroLabelZ.configure(text="ジャイロY:{0:.2f}".format(gyro.z))
         self.RobotTheta.configure(text="ロボットの角度(deg):{0:.2f} ".format(math.degrees(-math.atan2(accel.y,accel.z))))
 
-        (IsBranch,SleepTime,InclinationAngle,ElevationAngle,RTurningAngle,LTurningAngle) = self.branchSystem.getBranch()
-
         (h,w) = depth_image.shape
 
-        OutputController().msgPrint("value")
+        #OutputController().msgPrint("value")
         hoge = np.where((depth_image < 500) & (depth_image > 200))
-        OutputController().msgPrint(hoge)
+        #OutputController().msgPrint(hoge)
         
 
 
@@ -115,27 +112,30 @@ class RealSense(object):
         self.il.configure(image=testImg)
         self.il.image = testImg
         self.timerlabel.configure(text="処理時間:{0} ms".format(math.floor((time.time() - start) * 1000)))
-        FormSingleton().updateForm();
+        FormSingleton().updateForm()
         tangle = self.branchSystem.tangle
         InclinationAngle = self.branchSystem.InclinationAngle
         Rangle = self.branchSystem.Rangle
         Langle = self.branchSystem.Langle
+        IsBranch = self.branchSystem.IsBranch
 
+        (InclinationAngle,ElevationAngle,RTurningAngle,LTurningAngle,tangle) = self.branchSystem.getAverageData()
 
         fit = FormSingleton().updateThreeGraph(hoge[1],hoge[0],depth_image[hoge])
         
-        OutputController().msgPrint(tangle,-fit[0],-fit[1],math.degrees(math.atan(-fit[0])),math.degrees(math.atan(-fit[1])))
-        OutputController().msgPrint("仰角（ロボットのみ）=",tangle)
-        OutputController().msgPrint("仰角（ケーブルのみ）=",math.degrees(math.atan(-fit[1])))
-        OutputController().msgPrint("仰角（両方）=",tangle + math.degrees(math.atan(-fit[1])))
-        OutputController().msgPrint("回転角Inc=",rounddown(math.degrees(math.atan(-fit[0])),1))
-        OutputController().msgPrint("RightAngle=",rounddown(Rangle,0))
-        OutputController().msgPrint("LAngle=",rounddown(Langle,0))
-        OutputController().msgPrint("rule1=",rounddown(rule1,2))
-        OutputController().msgPrint("rule2=",rounddown(rule2,2))
+        #OutputController().msgPrint(tangle,-fit[0],-fit[1],math.degrees(math.atan(-fit[0])),math.degrees(math.atan(-fit[1])))
+        OutputController().msgPrint("---------")
+        OutputController().msgPrint("{:<10} {:<10} {:<10}".format('ロボット仰角','ケーブル仰角','仰角'))
+        OutputController().msgPrint("{:<16.2f} {:<16.2f} {:<12.2f}".format(tangle,math.degrees(math.atan(-fit[1])),tangle + math.degrees(math.atan(-fit[1]))))
+        
+        OutputController().msgPrint("{:<10} {:<10} {:<10}".format('回転角','RAngle','LAngle'))
+        OutputController().msgPrint("{:<13.2f} {:<10.2f} {:<10.2f}".format(math.degrees(math.atan(-fit[0])),Rangle,Langle))
+        
+        OutputController().msgPrint("{:<10} {:<10}".format('rule1','rule2'))
+        OutputController().msgPrint("{:<10.2f} {:<10.2f}".format(rule1,rule2))
+
         tangle = tangle + math.degrees(math.atan(-fit[1]))
         InclinationAngle = math.degrees(math.atan(-fit[0]))
-        
 
         OutputController().msgPrint("time:",self.stop_branch_time)
         if(self.stop_branch_time > 0):
@@ -148,7 +148,7 @@ class RealSense(object):
 
                 if(self.data["v_auto"].get()):
                     self.branchSystem.ResetLog()
-                    time.sleep(SleepTime)
+                    time.sleep(0)
                     OutputController().msgPrint("Branch Angle:",ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
                     self.br.branchAngle(ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
                     self.stop_branch_time = 70

@@ -35,6 +35,11 @@ class BranchSystem:
         self.LogNumber = 100
         self.valueLog = [0 for a in range(self.LogNumber)]
         self.YLog = [0 for a in range(self.LogNumber)]
+        self.LAngleLog = [0 for a in range(self.LogNumber)]
+        self.RAngleLog = [0 for a in range(self.LogNumber)]
+        self.InclinationAngleLog = [0 for a in range(self.LogNumber)]
+        self.tAngleLog = [0 for a in range(self.LogNumber)]
+        #self.YLog = [0 for a in range(self.LogNumber)]
 
 
         #索道などのパラメータ
@@ -84,20 +89,23 @@ class BranchSystem:
         self.ir_image1 = cvpaste(self.ir_image1, np.zeros((h,w,3)), 0, 0, angle, scale)#若干拡大する
         self.ir_image1 = np.delete(self.ir_image1,slice(w - maxX,w),1)
 
+
     def calcCablewayInf(self,accel,extMode):
         self.Error = False
         self.IsBranch = False
         if(np.sum(self.ir_image1) < 0.1 or np.sum(self.color_image) < 0.1):#カメラがほぼ真っ暗
             self.Error = True
             OutputController().msgPrint("Camera is black")
-            return
+            return 0,0
         result = IR(self.color_image,self.depth_image,self.ir_image1,self.depth_scale,self.ir_scale,accel,self.minDistance,self.maxDistance,self.overDistance,extMode)
         if(len(result) == 1):#不正ならFalseだけが返ってくる
             self.Error = True
-            return
+            OutputController().msgPrint("Invalid Camera error")
+            return 0,0
         (self.y,self.x,self.branchValue,self.InclinationAngle,self.Rangle,self.Langle,self.EffectiveDepthScale,self.DepthIRFlag) = result
-        self.appendLog()
         self.tangle = math.degrees(-math.atan2(accel.y,accel.z))
+        self.appendLog()
+
 
         (rule1,rule2) = self.calcRule()
         if(rule1 > 1 and rule2 > 1):
@@ -141,7 +149,6 @@ class BranchSystem:
         imageMap = np.zeros(InclinationImage.shape)
         depthIRImage = cv2.resize(self.getDepthIRMap(),(307,230))
         self.web_image = cv2.resize(self.web_image,(307,230))
-        OutputController().msgPrint("size:",depthIRImage.shape,self.web_image.shape)
 
         image = CreteViewImage(self.color_image,depth_view_image,self.ir_image1,cablewayImage,depthIRImage,self.web_image)
         return ImageTk.PhotoImage(Image.fromarray(image.astype(np.uint8)))
@@ -151,11 +158,31 @@ class BranchSystem:
         self.valueLog.pop(0)
         self.YLog.append(self.y)
         self.YLog.pop(0)
+        self.LAngleLog.append(self.Langle)
+        self.LAngleLog.pop(0)
+        self.RAngleLog.append(self.Rangle)
+        self.RAngleLog.pop(0)
+        self.InclinationAngleLog.append(self.InclinationAngle)
+        self.InclinationAngleLog.pop(0)
+        self.tAngleLog.append(self.tangle)
+        self.tAngleLog.pop(0)
+
+    def getAverageData(self):
+        hoge = np.where(np.array(self.valueLog) > 300)
+        if(len(hoge) > 1):
+            InclinationAngle = np.average(np.array((self.InclinationAngleLog)[hoge]))
+            ElevationAngle = np.average(np.array((self.ElevationAngleLog)[hoge]))
+            RAngle = np.average(np.array((self.RAngleLog)[hoge]))
+            LAngle = np.average(np.array((self.LAngleLog)[hoge]))
+            tAngle = np.average(np.array((self.tAngleLog)[hoge]))
+
+            return (InclinationAngle,ElevationAngle,Rangle,Langle,tangle)
+        else:     return (0,0,0,0,0)
 
     def calcRule(self):
         #1.直近N1ログ以内のvalueLog平均値が300以上
         #2.直近N1ログ以内のvalueLog平均値が300以上の結果から推定された5ログあとのYLogの線形近似解が高さhの1.2倍を超えた
-        N1 = 30
+        N1 = 15
         valueLogList = np.array(self.valueLog[len(self.valueLog) - N1:])
         rule1 = np.average(valueLogList) / 300
 
@@ -166,16 +193,15 @@ class BranchSystem:
         if(len(l1) < 2):rule2 = 0
         else:
             a,b = reg1dim(l1,l2) 
-            rule2 = (b + a * (N1 + 10)) / (self.h * 1.2)
+            rule2 = (l2[len(l2) - 1] + a * (N1 + 5)) / (self.h * 1.2)
+            #OutputController().msgPrint("calc rule
+            #valueLogList:",valueLogList[len(valueLogList) - 1],rule1,rule2)
+            #OutputController().msgPrint("calc rule a,b:",a,b)
+            #OutputController().msgPrint("calc rule YLog:",self.YLog)
+            #OutputController().msgPrint("calc rule l1:",l1)
+            #OutputController().msgPrint("calc rule l2:",l2)
         return (rule1,rule2)
 
-    def getBranch(self):#分岐すべきならそのタイミングや角度を返す
-        SleepTime = 0
-        InclinationAngle = 0
-        ElevationAngle = 0
-        RTurningAngle = 0
-        LTurningAngle = 0
-        return [self.IsBranch,SleepTime,InclinationAngle,ElevationAngle,RTurningAngle,LTurningAngle]
 
     def ResetLog(self):
         for data in self.valueLog:

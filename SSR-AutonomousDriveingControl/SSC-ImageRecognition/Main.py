@@ -110,8 +110,8 @@ if __name__ == '__main__':
         quit()
     else:
         stepQueue = queue.Queue()
-        #thread1 = threading.Thread(target=OutputDone, args=(stepQueue,))
-        #thread1.start()
+        thread1 = threading.Thread(target=OutputDone, args=(stepQueue,))
+        thread1.start()
         startSystem(stepQueue)
             
     cc = 0

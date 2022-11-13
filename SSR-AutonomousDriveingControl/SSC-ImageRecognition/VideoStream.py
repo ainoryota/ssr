@@ -64,8 +64,11 @@ class VideoStream(object):
             self.start_camera()
 
         def start_camera(self):
-            self.vid_pipe.start(self.config)
-            Thread(target=self.update_cam).start()       
+            try:
+                self.vid_pipe.start(self.config)
+                Thread(target=self.update_cam).start()       
+            except Exception as e:
+                self.vid_pipe.stop()
 
         def start_imu(self):
             self.imu_pipe.start(self.imu_config)
@@ -111,6 +114,3 @@ class VideoStream(object):
             except:
                 self.imu_pipe.stop()
                 OutputController().msgPrint("Error in Vision", sys.exc_info())
-
-            finally:
-                self.imu_pipe.stop()
