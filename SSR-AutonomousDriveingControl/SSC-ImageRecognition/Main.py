@@ -19,9 +19,9 @@ import platform
 from PIL import Image,ImageTk #udo pip install pillow
 from ctypes import alignment, windll
 import os
+import queue
 
-
-#root = tk.Tk()  
+#root = tk.Tk()
 #caps = []
 #il = ""
 #def StartWindow():
@@ -37,14 +37,15 @@ import os
 #    root.title('開始画面')
 #    root.geometry('1280x720+75+0')
 #    label = tk.Label(root,text = "webF,webC,webB")
-#    label.grid(row = 0, column =0, padx = 5, pady = 5)  
+#    label.grid(row = 0, column =0, padx = 5, pady = 5)
 
 #    caps = [(i,cv2.VideoCapture(i,cv2.CAP_DSHOW)) for i in range(12)]
 #    idxList = []
 #    for cap in caps:
 #        idxList.append(cap[0])
 
-#    img = Image.open(os.path.abspath('C:/Users/MSD/Documents/GitHub/SSR/SSR-AutonomousDriveingControl/SSC-ImageRecognition/test.png'))
+#    img =
+#    Image.open(os.path.abspath('C:/Users/MSD/Documents/GitHub/SSR/SSR-AutonomousDriveingControl/SSC-ImageRecognition/test.png'))
 #    testImg = ImageTk.PhotoImage(img)
 
 #    il = tk.Label(root,image=testImg)
@@ -85,7 +86,6 @@ import os
 #    il.image = allImg
 
 #    root.after(500,loop)
-
 def startSystem(stepQueue):
     OutputController().setStepQueue(stepQueue)
     system = System()
@@ -96,17 +96,23 @@ if __name__ == '__main__':
     OutputController().msgPrint("SelectStart") 
 
     #(wf,wc,wb) = StartWindow()
-    #OutputController().msgPrint("RobotStart") 
-    with Manager() as manager:
-        stepQueue = manager.Queue()
-        p1 = Process(target=OutputDone, args=(stepQueue,))
-        p2 = Process(target=startSystem,args=(stepQueue,))
-        p1.start()
-        p2.start()
+    #OutputController().msgPrint("RobotStart")
+    if False:
+        with Manager() as manager:
+            stepQueue = manager.Queue()
+            p1 = Process(target=OutputDone, args=(stepQueue,))
+            p2 = Process(target=startSystem,args=(stepQueue,))
+            p1.start()
+            p2.start()
 
-        p1.join()
-        p2.join()
-    quit()
+            p1.join()
+            p2.join()
+        quit()
+    else:
+        stepQueue = queue.Queue()
+        #thread1 = threading.Thread(target=OutputDone, args=(stepQueue,))
+        #thread1.start()
+        startSystem(stepQueue)
             
     cc = 0
     il = 0

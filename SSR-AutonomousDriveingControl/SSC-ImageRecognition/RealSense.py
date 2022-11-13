@@ -41,6 +41,26 @@ class RealSense(object):
         self.StopFlag = True
         self.branchSystem = BranchSystem()
         self.stop_branch_time = 0
+        self.web_image=np.zeros((480,640,3))
+        self.webcam=None
+
+        try:
+            okcamera=[]
+            OutputController().msgPrint("Camera List")
+            for i in range(10):
+                try:
+                    self.capture = cv2.VideoCapture(i,cv2.CAP_DSHOW)
+                    ret, frame = self.capture.read()
+                    self.capture.release()
+                    OutputController().msgPrint(i,ret,frame.shape)
+                    okcamera.append(i)
+                except:
+                    pass
+
+            self.webcam = cv2.VideoCapture(okcamera[1],cv2.CAP_DSHOW)
+            OutputController().msgPrint("Web camera start",okcamera[1])
+        except:
+            OutputController().msgPrint("Web camera open error")
 
         OutputController().msgPrint("Open realsense",self.serialNo)
        
@@ -66,6 +86,10 @@ class RealSense(object):
         depth_image = self.vs.depth_image
         ir_image1 = self.vs.ir_image1
         ir_image2 = self.vs.ir_image2
+        if(self.webcam!=None):
+            ret, frame = self.webcam.read()
+            OutputController().msgPrint(frame.shape)
+            if(ret): self.web_image = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
 
         self.AccelLabelX.configure(text="加速度X:{0:.2f}".format(accel.x))
         self.AccelLabelY.configure(text="加速度Y:{0:.2f}".format(accel.y))
@@ -85,12 +109,13 @@ class RealSense(object):
         
 
 
-        self.branchSystem.setImage(color_image,depth_image,ir_image1,ir_image2)
-        rule1,rule2=self.branchSystem.calcCablewayInf(accel,True)
+        self.branchSystem.setImage(color_image,depth_image,ir_image1,ir_image2,self.web_image)
+        rule1,rule2 = self.branchSystem.calcCablewayInf(accel,True)
         testImg = self.branchSystem.getOutputImage()
         self.il.configure(image=testImg)
         self.il.image = testImg
         self.timerlabel.configure(text="処理時間:{0} ms".format(math.floor((time.time() - start) * 1000)))
+        FormSingleton().updateForm();
         tangle = self.branchSystem.tangle
         InclinationAngle = self.branchSystem.InclinationAngle
         Rangle = self.branchSystem.Rangle
@@ -130,4 +155,4 @@ class RealSense(object):
             else:
                 OutputController().msgPrint("No like data")
 
-        self.imgArea.after(10,self.getRealsense)
+        self.imgArea.after(100,self.getRealsense)

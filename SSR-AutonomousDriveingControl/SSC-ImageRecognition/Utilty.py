@@ -67,12 +67,14 @@ def cvpaste(img, imgback, x, y, angle, scale):
 
 
 def CreteViewImage(img11,img12,img21,img22,img31,img32):
-    a = np.hstack((img11,img12))
-    b = np.hstack((img21,img22))
-    c = np.hstack((img31,img32))
-    result = np.vstack((a,b))
-    result = np.vstack((result,c))
-
+    try:
+        a = np.hstack((img11,img12))
+        b = np.hstack((img21,img22))
+        c = np.hstack((img31,img32))
+        result = np.vstack((a,b))
+        result = np.vstack((result,c))
+    except Exception as e:
+        OutputController().msgPrint("Image Integrate Error",img11.shape,img12.shape,img21.shape,img22.shape,img31.shape,img32.shape)
     return result
 
 

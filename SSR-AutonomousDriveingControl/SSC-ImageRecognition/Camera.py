@@ -37,7 +37,7 @@ class Camera(object):
         devices = rs.context().query_devices()
         max_n_device = 2
         serial_numbers = list(map(lambda device: device.get_info(rs.camera_info.serial_number), devices))[:max_n_device]
-        serial_numbers.sort()
+        #serial_numbers.sort()
 
         for rscam in serial_numbers:
             OutputController().msgPrint("realsenseList:",rscam)

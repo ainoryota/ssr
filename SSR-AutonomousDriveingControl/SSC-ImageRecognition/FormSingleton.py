@@ -35,6 +35,15 @@ class FormSingleton(object):
                 cls._instance = super().__new__(cls)
         return cls._instance
 
+    def updateForm(self):
+        self.root.update();
+
+    def setFormRoot(self,root):
+        self.root = root
+
+    def getFormRoot(self):
+        self.root = root
+
     def setFormData(self,data):
         self.data = data
     

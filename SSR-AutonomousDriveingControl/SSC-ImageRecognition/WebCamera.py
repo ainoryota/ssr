@@ -68,6 +68,7 @@ class WebCameraMgr(object):
         self.windowsize = (self.w,self.h)#最大1920*1080
         self.il = il
         self.StopFlag = True
+        okcamera=[];
 
         OutputController().msgPrint("Camera List")
         for i in range(10):
@@ -76,17 +77,19 @@ class WebCameraMgr(object):
                 ret, frame = self.capture.read()
                 self.capture.release()
                 OutputController().msgPrint(i,ret,frame.shape)
+                okcamera.append(i);
             except:
                 pass
 
-        self.captureF = cv2.VideoCapture(2,cv2.CAP_DSHOW)
+        OutputController.msgPrint(okcamera)
+        self.captureF = cv2.VideoCapture(okcamera[0],cv2.CAP_DSHOW)
         OutputController().msgPrint("Open camera front")
 
-        self.captureC = cv2.VideoCapture(2,cv2.CAP_DSHOW)
-        OutputController().msgPrint("Open camera center")
+        #self.captureC = cv2.VideoCapture(2,cv2.CAP_DSHOW)
+        #OutputController().msgPrint("Open camera center")
         
-        self.captureB = cv2.VideoCapture(3,cv2.CAP_DSHOW)
-        OutputController().msgPrint("Open camera back")
+        #self.captureB = cv2.VideoCapture(3,cv2.CAP_DSHOW)
+        #OutputController().msgPrint("Open camera back")
 
         #0 True (480, 640, 3)*front realsense
         #2 webカメラ
@@ -99,8 +102,8 @@ class WebCameraMgr(object):
        
     def __del__(self):
         self.captureF.release()
-        self.captureC.release()
-        self.captureB.release()
+        #self.captureC.release()
+        #self.captureB.release()
 
     def start(self):
         self.StopFlag = False
@@ -113,38 +116,20 @@ class WebCameraMgr(object):
     def getWebCamera(self):
         if(self.StopFlag == True):return
         imgF = np.zeros((self.h,self.w,3),dtype=np.uint8)
-        imgC = np.zeros((self.w,self.w,3),dtype=np.uint8)
-        imgB = np.zeros((self.h,self.w,3),dtype=np.uint8)
-
         try:
             imgF = self.getImage(self.captureF,imgF)
         except Exception as e:
             OutputController().msgPrint("error CameraF",e)
 
-        try:
-            imgC = self.getImage(self.captureC,imgC)
-            imgC = cvpaste(imgC,np.zeros((self.w,self.w,3),dtype=np.uint8),0,0,90,1)
-        except Exception as e:
-            OutputController().msgPrint("error CameraC",e)
-
-        try:
-            imgB = self.getImage(self.captureB,imgB)
-            imgB = cv2.rotate(imgB, cv2.ROTATE_180)
-        except Exception as e:
-            OutputController().msgPrint("error CameraB",e)
-        
         img = imgF
         try:
-            img = np.vstack((imgF,imgC))
-            img = np.vstack((img,imgB))
+            output = ImageTk.PhotoImage(Image.fromarray(img))
+            self.il.configure(image=output)
+            self.il.image = output
         except Exception as e:
-            OutputController().msgPrint("error Camera Stack",e)
+            OutputController().msgPrint("error Camera output",e)
 
-        output = ImageTk.PhotoImage(Image.fromarray(img))
-        self.il.configure(image=output)
-        self.il.image = output
-
-        self.imgArea.after(300,self.getWebCamera)
+        self.imgArea.after(100,self.getWebCamera)
 
     def getImage(self,cap,img):
         ret, frame = cap.read()

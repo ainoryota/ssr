@@ -42,7 +42,6 @@ class Form(object):
         self.root.title('GUIコントローラ')
         self.root.geometry('1280x720+75+0')
 
-
         pw_main = tk.PanedWindow(self.root, orient='horizontal')
         pw_main.pack(expand=False, fill = tk.BOTH, side="left")
 
@@ -173,13 +172,12 @@ class Form(object):
 
 
         self.camMgr = Camera(self.imgArea,leftArea,self.br,self.data)
+        FormSingleton().setFormRoot(self.root)
         FormSingleton().setFormData(self.data)
         FormSingleton().setThreeGraph(self.infArea).get_tk_widget().grid(row = 1, column =0,columnspan=1,rowspan=8, padx = 5, pady = 5)
         self.data["msg"].grid(row = 9, column =0,columnspan=1, padx = 5, pady = 5)
         OutputController().setMsgbox(self.data["msg"])
-        leftArea.mainloop()
-
-
+        self.root.mainloop();
 
     #ボタン関数の定義
     def init(self):

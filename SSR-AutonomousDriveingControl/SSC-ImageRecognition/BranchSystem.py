@@ -45,12 +45,13 @@ class BranchSystem:
         self.w = 0
         self.h = 0
 
-    def setImage(self,color_image,depth_image,ir_image1,ir_image2):
+    def setImage(self,color_image,depth_image,ir_image1,ir_image2,web_image):
         self.color_image = color_image
         self.ir_image1 = ir_image1
         self.ir_image2 = ir_image2
         self.depth_image = ScalarImage2RGB(depth_image,self.minDistance,self.overDistance)
         self.depth_scale = depth_image
+        self.web_image = web_image
         self.adjustView()
         self.ir_scale = cv2.cvtColor(self.ir_image1.copy(),cv2.COLOR_RGB2GRAY)
 
@@ -108,7 +109,7 @@ class BranchSystem:
         x = np.arange(-10, 10, 0.1) # x軸を作成
         y = np.arange(-10, 10, 0.1) # y軸を作成
         X, Y = np.meshgrid(x, y)    # グリッドデータの作成
-        Z=np.sqrt((np.square(X)+np.square(Y))) #Z軸を作成
+        Z = np.sqrt((np.square(X) + np.square(Y))) #Z軸を作成
 
         # フォントの種類とサイズを設定する。
         plt.rcParams['font.size'] = 15
@@ -124,7 +125,7 @@ class BranchSystem:
         ax1.set_zlabel('z', labelpad=10)
 
         # データプロットする。
-        ax=ax1.plot_surface(X, Y, Z, cmap='jet',label="z")
+        ax = ax1.plot_surface(X, Y, Z, cmap='jet',label="z")
 
         #カラーバーの設定
         cbar = fig.colorbar(ax, shrink = 0.6)
@@ -138,10 +139,11 @@ class BranchSystem:
         InclinationImage = self.getInclinationImage()
         cablewayImage = self.getCablewayImage()
         imageMap = np.zeros(InclinationImage.shape)
-        depthIRImage = cvpaste(self.getDepthIRMap(), np.zeros(InclinationImage.shape), 0, 0, 0,1)
+        depthIRImage = cv2.resize(self.getDepthIRMap(),(307,230))
+        self.web_image = cv2.resize(self.web_image,(307,230))
+        OutputController().msgPrint("size:",depthIRImage.shape,self.web_image.shape)
 
-
-        image = CreteViewImage(self.color_image,depth_view_image,self.ir_image1,cablewayImage,depthIRImage,InclinationImage)
+        image = CreteViewImage(self.color_image,depth_view_image,self.ir_image1,cablewayImage,depthIRImage,self.web_image)
         return ImageTk.PhotoImage(Image.fromarray(image.astype(np.uint8)))
 
     def appendLog(self):
@@ -164,7 +166,7 @@ class BranchSystem:
         if(len(l1) < 2):rule2 = 0
         else:
             a,b = reg1dim(l1,l2) 
-            rule2 = (b + a * (N1 + 10)) / (self.h*1.2)
+            rule2 = (b + a * (N1 + 10)) / (self.h * 1.2)
         return (rule1,rule2)
 
     def getBranch(self):#分岐すべきならそのタイミングや角度を返す
