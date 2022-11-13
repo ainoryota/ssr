@@ -21,7 +21,7 @@ def CalcScore(field,x,y,anglestep,thickness):
     W = math.floor(checkSize / 2)
 
 
-    ruleAngle = 100
+    ruleAngle = 80
     angle3 = 90
     angles = np.array(range(0,360,anglestep))
     angles = angles[np.where((CalcDiffAngleNP(angles,angle3) >= ruleAngle))]

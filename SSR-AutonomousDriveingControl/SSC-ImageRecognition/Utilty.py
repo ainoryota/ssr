@@ -221,6 +221,15 @@ def getLikeAngle(a1,b1,c1,d1):
     c = int(c1 / 5) * 5
     d = int(d1 / 5) * 5
 
+    sw=True
+    while(c+d<100):
+        if(sw):
+            c+=5
+            sw=False
+        else:
+            d+=5
+            sw=True
+
     path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
     if(os.path.exists(path)):return (a,b,c,d)
     else:OutputController().msgPrint(path,"is none");

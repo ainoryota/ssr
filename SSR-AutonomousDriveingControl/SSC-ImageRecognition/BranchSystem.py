@@ -193,8 +193,8 @@ class BranchSystem:
         if(len(l1) < 2):rule2 = 0
         else:
             a,b = reg1dim(l1,l2) 
-            rule2 = (l2[len(l2) - 1] + a * (N1 + 5)) / (self.h * 1.2)
-            #OutputController().msgPrint("calc rule
+            rule2 = (l2[len(l2) - 1] + a *5) / (self.h * 1.2)
+            OutputController().msgPrint("a,b,l2max",a,b,l2[len(l2) - 1] )
             #valueLogList:",valueLogList[len(valueLogList) - 1],rule1,rule2)
             #OutputController().msgPrint("calc rule a,b:",a,b)
             #OutputController().msgPrint("calc rule YLog:",self.YLog)
@@ -229,8 +229,8 @@ class BranchSystem:
         depthExtendImage[np.where(self.DepthIRFlag == 3)] = [255,255,255]#depthの大きさから索道と予想される部分
         maxX = self.x
         maxY = self.y
-        maxAngle1 = 270 + self.Rangle
-        maxAngle2 = 270 - self.Langle
+        maxAngle1 = 270 - self.Rangle
+        maxAngle2 = 270 + self.Langle
         maxAngle3 = 90
         thickness = 15
         h = self.h
@@ -239,7 +239,7 @@ class BranchSystem:
         cablewayImage = DrawAngleLine(np.zeros((h,w,3),dtype=np.uint8),maxX,maxY,maxAngle1,(255,100,100,50),thickness)
         cablewayImage = DrawAngleLine(cablewayImage,maxX,maxY,maxAngle2,(100,255,100,50),thickness)
         cablewayImage = DrawAngleLine(cablewayImage,maxX,maxY,maxAngle3,(100,100,255,50),thickness)
-        cablewayImage = cv2.putText(cablewayImage,str(int(self.Rangle)) + "/" + str(int(self.Langle)),(0,160),cv2.FONT_HERSHEY_PLAIN,2,(255,255,255))
+        #cablewayImage = cv2.putText(cablewayImage,str(int(self.Rangle)) + "/" + str(int(self.Langle)),(0,160),cv2.FONT_HERSHEY_PLAIN,2,(255,255,255))
         rr,cc = disk((maxY,maxX), 24, shape=(h,w))
         mask = np.logical_and.reduce((rr >= 0, rr < h ,cc >= 0, cc < w))
         cablewayImage[rr[mask],cc[mask]] = [255,255,0]

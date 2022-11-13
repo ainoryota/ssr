@@ -20,15 +20,15 @@ import time
 class Branch(object):
     """description of class"""
     def __init__(self,robot):
-        self.robot=robot
+        self.robot = robot
         OutputController().msgPrint("Branch Start")
 
     def FileBranch(self,csvfile,runDirection,save):
         #分岐データの読み込み
-        csvfile="Data/"+csvfile;
+        csvfile = "Data/" + csvfile
         data = np.loadtxt(csvfile,delimiter=",")
-        (n,m)=data.shape
-        log = [[0]*21for i in range(n)]#初期化
+        (n,m) = data.shape
+        log = [[0] * 21for i in range(n)]#初期化
         time_start = time.perf_counter()
     
         #前進後退でモータに流す入力を変えるため
@@ -39,30 +39,39 @@ class Branch(object):
             id = [0,6,7,8,9,10,1,2,3,4,5]
             direct = -1
 
-        t=0
-        for line in range(0,n-1):#行数-1
+        t = 0
+
+        for line in range(0,n - 1):#行数-1
             #if(t%4==1):continue;#早めに後輪を分岐する
-            #log[t][0] = time.perf_counter() - time_start
+                                               #log[t][0] = time.perf_counter() - time_start
 
 
-            self.robot.motors[id[1]].insertOrder(PosOrder(round(data[line,0]/math.pi*180,2),t))
-            self.robot.motors[id[2]].insertOrder(PosOrder(round(data[line,1]/math.pi*180,2),t))
-            self.robot.motors[id[3]].insertOrder(PosOrder(round(data[line,2]/math.pi*180,2),t))
-            self.robot.motors[id[6]].insertOrder(PosOrder(round(data[line,3]/math.pi*180,2),t))
-            self.robot.motors[id[7]].insertOrder(PosOrder(round(data[line,4]/math.pi*180,2),t))
-            self.robot.motors[id[8]].insertOrder(PosOrder(round(data[line,5]/math.pi*180,2),t))
+            self.robot.motors[id[1]].insertOrder(PosOrder(round(data[line,0] / math.pi * 180,2),t))
+            self.robot.motors[id[2]].insertOrder(PosOrder(round(data[line,1] / math.pi * 180,2),t))
+            self.robot.motors[id[3]].insertOrder(PosOrder(round(data[line,2] / math.pi * 180,2),t))
+            self.robot.motors[id[6]].insertOrder(PosOrder(round(data[line,3] / math.pi * 180,2),t))
+            self.robot.motors[id[7]].insertOrder(PosOrder(round(data[line,4] / math.pi * 180,2),t))
+            self.robot.motors[id[8]].insertOrder(PosOrder(round(data[line,5] / math.pi * 180,2),t))
 
-            self.robot.motors[id[4]].insertOrder(VelocityOrder(round(-direct*data[line,6]),t))
-            self.robot.motors[id[5]].insertOrder(VelocityOrder(round(direct*data[line,6]),t))
-            self.robot.motors[id[9]].insertOrder(VelocityOrder(round(-direct*data[line,7]),t))
-            self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct*data[line,7]),t))
+            #self.robot.motors[id[4]].insertOrder(VelocityOrder(round(-direct * data[line,6]),t))
+            #self.robot.motors[id[5]].insertOrder(VelocityOrder(round(direct * data[line,6]),t))
+            #self.robot.motors[id[9]].insertOrder(VelocityOrder(round(-direct * data[line,7]),t))
+            #self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct * data[line,7]),t))
             
+            self.robot.motors[id[4]].insertOrder(VelocityOrder(round(-direct * 2.12206591 * 100),t))
+            self.robot.motors[id[5]].insertOrder(VelocityOrder(round(direct * 2.12206591 * 100),t))
+            self.robot.motors[id[9]].insertOrder(VelocityOrder(round(-direct * 2.12206591 * 100),t))
+            self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct * 2.12206591 * 100),t))
+
+            #t+=0.024
             t+=0.024
 
         OutputController().pushStep()
 
 
-        #log[t][1] = data[t,0]/pi*180;log[t][2] = data[t,1]/pi*180;log[t][3] = data[t,2]/pi*180;log[t][4] = data[t,3]/pi*180;log[t][5] = data[t,4]/pi*180;log[t][6] = data[t,5]/pi*180
+        #log[t][1] = data[t,0]/pi*180;log[t][2] = data[t,1]/pi*180;log[t][3] =
+        #data[t,2]/pi*180;log[t][4] = data[t,3]/pi*180;log[t][5] =
+        #data[t,4]/pi*180;log[t][6] = data[t,5]/pi*180
         #log[t][7] = 0;log[t][8] = 0;log[t][9] = 0;log[t][10] = 0;
         #
         #ser.flushInput()#バッファのクリア
