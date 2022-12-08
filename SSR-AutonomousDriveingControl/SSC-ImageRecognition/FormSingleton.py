@@ -12,6 +12,7 @@ import copy
 import threading
 from enum import IntEnum
 import queue
+from Utilty import ConvertDepthCoordinate
 from multiprocessing import Process
 import platform
 import threading
@@ -36,7 +37,7 @@ class FormSingleton(object):
         return cls._instance
 
     def updateForm(self):
-        self.root.update();
+        self.root.update()
 
     def setFormRoot(self,root):
         self.root = root
@@ -71,44 +72,31 @@ class FormSingleton(object):
 
         return self.graph
 
+    
+
     def updateThreeGraph(self,x,y,z):
         self.ax.cla()
-        self.ax.scatter(x,y,z)
-        
-        self.ax.set_xlim(0,500)
-        self.ax.set_ylim(0,500)
-        
+        self.ax.set_xlim(0,640)
+        self.ax.set_ylim(0,360)
+        self.ax.view_init(elev=0, azim=90)
+        self.ax.set_zlim(0,700)
 
-        fit=[0,0,0]
-
-        try:
-            # do fit
-            tmp_A = []
-            tmp_b = []
-            for i in range(len(x)):
-                tmp_A.append([x[i], y[i], 1])
-                tmp_b.append(z[i])
-            b = np.matrix(tmp_b).T
-            A = np.matrix(tmp_A)
-            fit = (A.T * A).I * A.T * b
-            errors = b - A * fit
-            residual = np.linalg.norm(errors)
-
-
-            xlim = self.ax.get_xlim()
-            ylim = self.ax.get_ylim()
-            X,Y = np.meshgrid(np.arange(xlim[0], xlim[1],100),
+        xlim = self.ax.get_xlim()
+        ylim = self.ax.get_ylim()
+        X,Y = np.meshgrid(np.arange(xlim[0], xlim[1],100),
                               np.arange(ylim[0], ylim[1],100))
-            Z = np.zeros(X.shape)
-            for r in range(X.shape[0]):
-                for c in range(X.shape[1]):
-                    Z[r,c] = fit[0] * X[r,c] + fit[1] * Y[r,c] + fit[2]
-            self.ax.plot_wireframe(X,Y,Z, color='k')
-        except:
-            pass
+        Z = np.zeros(X.shape)
 
-        self.ax.set_zlim(200,500)
-        
+        (x2,y2,z2,fit) = ConvertDepthCoordinate(x,y,z)
+
+        for r in range(X.shape[0]):
+            for c in range(X.shape[1]):
+                Z[r,c] = fit[0] * X[r,c] + fit[1] * Y[r,c] + fit[2]
+        self.ax.plot_wireframe(X,Y,Z, color='k')
+
+        self.ax.scatter(x2.tolist(),y2.tolist(),z2.tolist())
+        self.ax.scatter(x,y,z)
+
         self.graph.draw()
         return fit
 

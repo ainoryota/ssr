@@ -134,6 +134,48 @@ def CalcDiffAngleNP(angle1,angle2):
     angle1 = np.where(angle1 > np.abs(angle1 - angle2 + 360),np.abs(angle1 - angle2 + 360),angle1)
     return angle1
 
+#depthの画像を回転させ、仰角や回転角が地面と水平になるようにする
+#@lru_cache(maxsize=10000)
+def ConvertDepthCoordinate(x,y,z):
+        fit = [0,0,0]
+
+        try:
+            # do fit
+            tmp_A = []
+            tmp_b = []
+            for i in range(len(x)):
+                tmp_A.append([x[i], y[i], 1])
+                tmp_b.append(z[i])
+            b = np.matrix(tmp_b).T
+            A = np.matrix(tmp_A)
+            fit = (A.T * A).I * A.T * b
+            #errors = b - A * fit
+            #residual = np.linalg.norm(errors)
+        except:
+            pass
+
+        a = fit[0,0]
+        b = fit[1,0]
+        c = -1
+        d = fit[2,0]
+        sigma = -1
+        alpha = 1 / math.sqrt(a * a + c * c)
+        beta = 1 / math.sqrt(a * a + b * b + c * c)
+
+        x = np.array(x)
+        y = np.array(y)
+        z = np.array(z)
+        x-=320
+        y-=180
+
+        x2 = x * c * alpha * sigma - z * a * alpha * sigma
+        y2 = x * alpha * beta * a * b + y * alpha * beta * (a * a + c * c) - z * alpha * beta * b * c
+        z2 = x * a * beta * sigma + y * b * beta * sigma + z * c * beta * sigma
+        x2+=320
+        y2+=180
+
+        return (x2,y2,z2,fit)
+
 #太さのある線の配列を返す
 @lru_cache(maxsize=10000)
 def getWeightedLineArray(theta,len,thickness,y,x,h,w):

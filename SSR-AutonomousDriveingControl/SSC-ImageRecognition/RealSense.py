@@ -44,23 +44,24 @@ class RealSense(object):
         self.web_image = np.zeros((480,640,3))
         self.webcam = None
 
-        try:
-            okcamera = []
-            OutputController().msgPrint("Camera List")
-            for i in range(10):
-                try:
-                    self.capture = cv2.VideoCapture(i,cv2.CAP_DSHOW)
-                    ret, frame = self.capture.read()
-                    self.capture.release()
-                    OutputController().msgPrint(i,ret,frame.shape)
-                    okcamera.append(i)
-                except:
-                    pass
+        if(False):
+            try:
+                okcamera = []
+                OutputController().msgPrint("Camera List")
+                for i in range(10):
+                    try:
+                        self.capture = cv2.VideoCapture(i,cv2.CAP_DSHOW)
+                        ret, frame = self.capture.read()
+                        self.capture.release()
+                        OutputController().msgPrint(i,ret,frame.shape)
+                        okcamera.append(i)
+                    except:
+                        pass
 
-            self.webcam = cv2.VideoCapture(okcamera[1],cv2.CAP_DSHOW)
-            OutputController().msgPrint("Web camera start",okcamera[1])
-        except:
-            OutputController().msgPrint("Web camera open error")
+                self.webcam = cv2.VideoCapture(okcamera[1],cv2.CAP_DSHOW)
+                OutputController().msgPrint("Web camera start",okcamera[1])
+            except:
+                OutputController().msgPrint("Web camera open error")
 
         OutputController().msgPrint("Open realsense",self.serialNo)
        
@@ -96,6 +97,8 @@ class RealSense(object):
         self.GyroLabelX.configure(text="ジャイロX:{0:.2f}".format(gyro.x))
         self.GyroLabelY.configure(text="ジャイロY:{0:.2f}".format(gyro.y))
         self.GyroLabelZ.configure(text="ジャイロY:{0:.2f}".format(gyro.z))
+
+        
         self.RobotTheta.configure(text="ロボットの角度(deg):{0:.2f} ".format(math.degrees(-math.atan2(accel.y,accel.z))))
 
         (h,w) = depth_image.shape
@@ -113,13 +116,18 @@ class RealSense(object):
         self.il.image = testImg
         self.timerlabel.configure(text="処理時間:{0} ms".format(math.floor((time.time() - start) * 1000)))
         FormSingleton().updateForm()
-        tangle = self.branchSystem.tangle
+        #tangle = self.branchSystem.tangle
+
+
+
         InclinationAngle = self.branchSystem.InclinationAngle
         Rangle = self.branchSystem.Rangle
         Langle = self.branchSystem.Langle
         IsBranch = self.branchSystem.IsBranch
 
         (InclinationAngle,ElevationAngle,RTurningAngle,LTurningAngle,tangle) = self.branchSystem.getAverageData()
+        tangle=math.degrees(-math.atan2(accel.y,accel.z));
+
 
         fit = FormSingleton().updateThreeGraph(hoge[1],hoge[0],depth_image[hoge])
         
