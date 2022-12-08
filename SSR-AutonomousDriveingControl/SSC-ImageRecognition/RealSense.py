@@ -16,7 +16,7 @@ import sys
 from numba import jit
 from ctypes import alignment, windll
 from BranchSystem import BranchSystem 
-from Utilty import getLikeAngle,rounddown
+from Utilty import getLikeAngle,rounddown,ConvertDepthCoordinate
 from OutputController import OutputController
 from FormSingleton import FormSingleton
 
@@ -84,7 +84,16 @@ class RealSense(object):
         accel = self.vs.acc
         gyro = self.vs.gyro
         color_image = self.vs.color_image
-        depth_image = self.vs.depth_image
+        depth_image = self.vs.depth_image.astype(np.int16)
+
+        hoge = np.where((depth_image < 600) & (depth_image > 0))
+        x,y,z,fit = FormSingleton().updateThreeGraph(hoge[1],hoge[0],depth_image[hoge])
+        
+        depth_image.fill(0)
+        mask = (x < 640) & (y < 360) & (x > 0) & (y > 0)
+
+        depth_image[y.astype(int)[mask],x.astype(int)[mask]] = z[mask]
+
         ir_image1 = self.vs.ir_image1
         ir_image2 = self.vs.ir_image2
         if(self.webcam != None):
@@ -104,7 +113,7 @@ class RealSense(object):
         (h,w) = depth_image.shape
 
         #OutputController().msgPrint("value")
-        hoge = np.where((depth_image < 500) & (depth_image > 200))
+        #hoge = np.where((depth_image < 500) & (depth_image > 200))
         #OutputController().msgPrint(hoge)
         
 
@@ -126,10 +135,10 @@ class RealSense(object):
         IsBranch = self.branchSystem.IsBranch
 
         (InclinationAngle,ElevationAngle,RTurningAngle,LTurningAngle,tangle) = self.branchSystem.getAverageData()
-        tangle=math.degrees(-math.atan2(accel.y,accel.z));
+        tangle = math.degrees(-math.atan2(accel.y,accel.z))
 
 
-        fit = FormSingleton().updateThreeGraph(hoge[1],hoge[0],depth_image[hoge])
+        
         
         #OutputController().msgPrint(tangle,-fit[0],-fit[1],math.degrees(math.atan(-fit[0])),math.degrees(math.atan(-fit[1])))
         OutputController().msgPrint("---------")

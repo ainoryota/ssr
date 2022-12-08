@@ -60,7 +60,7 @@ class FormSingleton(object):
         fig = plt.figure(figsize=(3, 3), dpi=100)
 
         self.ax = Axes3D(fig)
-
+        self.ax.view_init(elev=0, azim=90)
 
         self.ax.set_xlabel('x', labelpad=10)
         self.ax.set_ylabel('y', labelpad=10)
@@ -78,7 +78,6 @@ class FormSingleton(object):
         self.ax.cla()
         self.ax.set_xlim(0,640)
         self.ax.set_ylim(0,360)
-        self.ax.view_init(elev=0, azim=90)
         self.ax.set_zlim(0,700)
 
         xlim = self.ax.get_xlim()
@@ -98,7 +97,7 @@ class FormSingleton(object):
         self.ax.scatter(x,y,z)
 
         self.graph.draw()
-        return fit
+        return x2,y2,z2,fit
 
 
 

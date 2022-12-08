@@ -166,7 +166,7 @@ def WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scal
 
     return flag
 
-def IR(color_image,depth_iamge,ir_image,depth_scale,ir_scale,robot_rotation,minDistance,maxDistance,overDistance,extMode=True):
+def IR(color_image,depth_image,ir_image,depth_scale,ir_scale,robot_rotation,minDistance,maxDistance,overDistance,extMode=True):
     #戻り値
     GammalAngle = 0
     TurnAngle = 0
@@ -178,6 +178,7 @@ def IR(color_image,depth_iamge,ir_image,depth_scale,ir_scale,robot_rotation,minD
 
     #赤外線画像とdepth画像から2値画像を生成する
     DepthIRFlag = WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale)
+    #DepthIRFlag =depth_scale
     binaryScale = np.where(DepthIRFlag == 3,255,0).astype(np.uint8)
     binaryScale = cv2.medianBlur(binaryScale,3)
 

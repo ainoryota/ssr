@@ -43,7 +43,7 @@ class BranchSystem:
 
 
         #索道などのパラメータ
-        self.minDistance = 200
+        self.minDistance = 0
         self.maxDistance = 500
         self.overDistance = 2000
 
@@ -147,7 +147,7 @@ class BranchSystem:
         InclinationImage = self.getInclinationImage()
         cablewayImage = self.getCablewayImage()
         imageMap = np.zeros(InclinationImage.shape)
-        depthIRImage = cv2.resize(self.getDepthIRMap(),(307,230))
+        depthIRImage = cv2.resize(self.getDepthIRMap(depth_view_image),(307,230))
         self.web_image = cv2.resize(self.web_image,(307,230))
 
         image = CreteViewImage(self.color_image,depth_view_image,self.ir_image1,cablewayImage,depthIRImage,self.web_image)
@@ -215,8 +215,10 @@ class BranchSystem:
             InclinationImage[self.maxDistance - self.EffectiveDepthScale[idx] - 1,idx[1]] = [255,255,255]
         return InclinationImage
 
-    def getDepthIRMap(self):
-        DepthIRMap = self.ir_image1.copy()
+    def getDepthIRMap(self,depth_view_image):
+        #DepthIRMap = self.depth_image.copy()
+        #DepthIRMap =depth_view_image.copy()
+        DepthIRMap = np.stack((self.depth_scale, self.depth_scale, self.depth_scale), axis=2)
         DepthIRMap[np.where(self.DepthIRFlag == 3)] = [0,0,255]#depthの大きさから索道と予想される部分
         DepthIRMap[np.where(self.DepthIRFlag == 4)] = [0,255,255]#depth要素が遠い部分
         DepthIRMap[np.where(self.DepthIRFlag == 1)] = [255,0,0]#データが不正の位置
