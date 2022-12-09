@@ -88,15 +88,15 @@ class FormSingleton(object):
 
         (x2,y2,z2,fit) = ConvertDepthCoordinate(x,y,z)
 
-        for r in range(X.shape[0]):
-            for c in range(X.shape[1]):
-                Z[r,c] = fit[0] * X[r,c] + fit[1] * Y[r,c] + fit[2]
-        self.ax.plot_wireframe(X,Y,Z, color='k')
+        #for r in range(X.shape[0]):
+        #    for c in range(X.shape[1]):
+        #        Z[r,c] = fit[0] * X[r,c] + fit[1] * Y[r,c] + fit[2]
+        #self.ax.plot_wireframe(X,Y,Z, color='k')
 
-        self.ax.scatter(x2.tolist(),y2.tolist(),z2.tolist())
-        self.ax.scatter(x,y,z)
+        #self.ax.scatter(x2.tolist(),y2.tolist(),z2.tolist())
+        #self.ax.scatter(x,y,z)
 
-        self.graph.draw()
+        #self.graph.draw()
         return x2,y2,z2,fit
 
 

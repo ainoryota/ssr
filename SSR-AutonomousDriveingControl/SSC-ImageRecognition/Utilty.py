@@ -79,6 +79,7 @@ def CreteViewImage(img11,img12,img21,img22,img31,img32):
 
 
 def DebugImage(img,No=0,depthMode=False):
+    return
     if depthMode:
         image = cv2.applyColorMap(cv2.convertScaleAbs(img, alpha=0.08), cv2.COLORMAP_JET)
     image = cv2.resize(image, (640, 360))
@@ -274,14 +275,15 @@ def getLikeAngle(a1,b1,c1,d1):
     c = int(c1 / 5) * 5
     d = int(d1 / 5) * 5
 
-    sw = True
-    while(c + d < 100):
-        if(sw):
-            c+=5
-            sw = False
-        else:
-            d+=5
-            sw = True
+    #sw = True
+    #while(c + d < 100):
+    #    if(sw):
+    #        c+=5
+    #        sw = False
+    #    else:
+    #        d+=5
+    #        sw = True
+    if(c + d < 100):d = 100 - c
 
     path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
     if(os.path.exists(path)):return (a,b,c,d)

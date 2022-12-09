@@ -84,14 +84,11 @@ class RealSense(object):
         accel = self.vs.acc
         gyro = self.vs.gyro
         color_image = self.vs.color_image
-        depth_image = self.vs.depth_image
-        depth_image_new = np.zeros((360,640),dtype=np.int16)
-        for x in range(640):
-            for y in range(360):
-                depth_image_new[y][x] = depth_image[y * 2][x * 2]
-
-        depth_image=depth_image_new;
+        depth_image = self.vs.depth_image.astype(np.int16)
         original_depth = depth_image.copy()
+
+        depth_image=depth_image[::2,::2]
+        
         hoge = np.where((depth_image < 600) & (depth_image > 0))
         x,y,z,fit = FormSingleton().updateThreeGraph(hoge[1],hoge[0],depth_image[hoge])
         
