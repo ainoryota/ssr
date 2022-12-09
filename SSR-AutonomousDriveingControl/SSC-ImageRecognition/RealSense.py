@@ -85,9 +85,9 @@ class RealSense(object):
         gyro = self.vs.gyro
         color_image = self.vs.color_image
         depth_image = self.vs.depth_image.astype(np.int16)
-        original_depth = depth_image.copy()
+        DebugImage(depth_image,0,True)
 
-        depth_image=depth_image[::2,::2]
+        depth_image = depth_image[::2,::2]
         hoge = np.where((depth_image < 600) & (depth_image > 0))
 
         try:
@@ -95,16 +95,15 @@ class RealSense(object):
         except Exception as e:
             print("Graph Error")
             self.imgArea.after(100,self.getRealsense)
-            return;
-        
+            return
         
         depth_image.fill(0)
         mask = (x < 640) & (y < 360) & (x > 0) & (y > 0)
 
         depth_image[y.astype(int)[mask],x.astype(int)[mask]] = z[mask]
 
-        DebugImage(depth_image,0,True)
-        DebugImage(original_depth,1,True)
+        DebugImage(depth_image,1,True)
+        
         
         ir_image1 = self.vs.ir_image1
         ir_image2 = self.vs.ir_image2
@@ -112,61 +111,43 @@ class RealSense(object):
             ret, frame = self.webcam.read()
             if(ret): self.web_image = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
 
+
+        self.branchSystem.setImage(color_image,depth_image,ir_image1,ir_image2,self.web_image)
+        rule1,rule2 = self.branchSystem.calcCablewayInf(accel,True)
+
+        testImg = self.branchSystem.getOutputImage()
+        self.il.configure(image=testImg)
+        self.il.image = testImg
+
+        Rangle = self.branchSystem.Rangle
+        Langle = self.branchSystem.Langle
+        IsBranch = self.branchSystem.IsBranch
+
+        robot_tangle = math.degrees(-math.atan2(accel.y,accel.z))
+        cable_angle = math.degrees(math.atan(-fit[1]))
+        tangle = robot_tangle + cable_angle
+        InclinationAngle = math.degrees(math.atan(-fit[0]))
+
+        self.timerlabel.configure(text="処理時間:{0} ms".format(math.floor((time.time() - start) * 1000)))
         self.AccelLabelX.configure(text="加速度X:{0:.2f}".format(accel.x))
         self.AccelLabelY.configure(text="加速度Y:{0:.2f}".format(accel.y))
         self.AccelLabelZ.configure(text="加速度Z:{0:.2f}".format(accel.z))
         self.GyroLabelX.configure(text="ジャイロX:{0:.2f}".format(gyro.x))
         self.GyroLabelY.configure(text="ジャイロY:{0:.2f}".format(gyro.y))
         self.GyroLabelZ.configure(text="ジャイロZ:{0:.2f}".format(gyro.z))
-
+        self.RobotTheta.configure(text="ロボットの角度(deg):{0:.2f} ".format(robot_tangle))
         
-        self.RobotTheta.configure(text="ロボットの角度(deg):{0:.2f} ".format(math.degrees(-math.atan2(accel.y,accel.z))))
-
-        (h,w) = depth_image.shape
-
-        #OutputController().msgPrint("value")
-        #hoge = np.where((depth_image < 500) & (depth_image > 200))
-        #OutputController().msgPrint(hoge)
-        
-
-
-        self.branchSystem.setImage(color_image,depth_image,ir_image1,ir_image2,self.web_image)
-        rule1,rule2 = self.branchSystem.calcCablewayInf(accel,True)
-        testImg = self.branchSystem.getOutputImage()
-        self.il.configure(image=testImg)
-        self.il.image = testImg
-        self.timerlabel.configure(text="処理時間:{0} ms".format(math.floor((time.time() - start) * 1000)))
-        FormSingleton().updateForm()
-        #tangle = self.branchSystem.tangle
-
-
-
-        InclinationAngle = self.branchSystem.InclinationAngle
-        Rangle = self.branchSystem.Rangle
-        Langle = self.branchSystem.Langle
-        IsBranch = self.branchSystem.IsBranch
-
-        (InclinationAngle,ElevationAngle,RTurningAngle,LTurningAngle,tangle) = self.branchSystem.getAverageData()
-        tangle = math.degrees(-math.atan2(accel.y,accel.z))
-
-
-        
-        
-        #OutputController().msgPrint(tangle,-fit[0],-fit[1],math.degrees(math.atan(-fit[0])),math.degrees(math.atan(-fit[1])))
         OutputController().msgPrint("---------")
         OutputController().msgPrint("{:<10} {:<10} {:<10}".format('ロボット仰角','ケーブル仰角','仰角'))
-        OutputController().msgPrint("{:<16.2f} {:<16.2f} {:<12.2f}".format(tangle,math.degrees(math.atan(-fit[1])),tangle + math.degrees(math.atan(-fit[1]))))
-        
+        OutputController().msgPrint("{:<16.2f} {:<16.2f} {:<12.2f}".format(robot_tangle,cable_angle,tangle))
         OutputController().msgPrint("{:<10} {:<10} {:<10}".format('回転角','RAngle','LAngle'))
-        OutputController().msgPrint("{:<13.2f} {:<10.2f} {:<10.2f}".format(math.degrees(math.atan(-fit[0])),Rangle,Langle))
-        
+        OutputController().msgPrint("{:<13.2f} {:<10.2f} {:<10.2f}".format(InclinationAngle,Rangle,Langle))
         OutputController().msgPrint("{:<10} {:<10}".format('rule1','rule2'))
         OutputController().msgPrint("{:<10.2f} {:<10.2f}".format(rule1,rule2))
-
-        tangle = tangle + math.degrees(math.atan(-fit[1]))
-        InclinationAngle = math.degrees(math.atan(-fit[0]))
-
         OutputController().msgPrint("time:",self.stop_branch_time)
+        FormSingleton().updateForm()
+
+
         if(self.stop_branch_time > 0):
             self.stop_branch_time-=1
         elif(IsBranch):

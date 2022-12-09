@@ -12,7 +12,7 @@ def getAngleList(anglestep,targetAngle,ruleAngle):
     angles = angles[CalcDiffAngleNP(angles,targetAngle,ruleAngle)]    
     return angles
 
-#分岐点位置を与えたときにその位置を評価する。boaderscoreを超えられないことがわかれば即座にリターン
+#分岐点位置を与えたときにその位置を評価する。boaderscoreを超えられないことがわかればリターン
 def CalcScore(field,x,y,anglestep,thickness,boaderscore):
     h, w = field.shape
     maxValue = 0
@@ -35,12 +35,20 @@ def CalcScore(field,x,y,anglestep,thickness,boaderscore):
     idx = np.argsort(scores)[::-1]
     angles = angles[idx]
     scores = scores[idx]
+    countsize = len(angles) - 1
 
-    for i in range(0,len(angles) - 1):
+    for i in range(countsize):
+        if(scores[i] + scores[countsize] < maxValue):
+            for j in range(i + 1,countsize):
+                if(scores[i] + scores[j] < maxValue):
+                    countsize = j
+                    break
+
+
         if(scores[i] + scores[i + 1] < maxValue):break
         if(scores[i] + scores[i + 1] + score3 < boaderscore):continue
         idx = -1
-        for j,angle in enumerate(angles[i:]):
+        for j,angle in enumerate(angles[i:countsize]):
             if(CalcDiffAngle(angle, angles[i]) >= ruleAngle):
                 idx = j
                 break
@@ -54,7 +62,7 @@ def CalcScore(field,x,y,anglestep,thickness,boaderscore):
         maxAngle2 = angles[i:][idx]
         maxValue1 = score1
         maxValue2 = score2
-
+        if(idx == i + 1):break
 
 
     return [maxAngle1,maxAngle2,angle3,maxValue + score3,maxValue1,maxValue2,score3]
@@ -99,44 +107,6 @@ def CalcTurningAngle(binryScale,step,branchsize,thickness):
                 maxY = y
 
     return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3]
-
-def CalcInclinationAngle(depthScale,y,x,angle1,angle2,angle3,minDistance,maxDistance,branchsize,thickness,h,w,branchX,branchY):
-    InclinationAngle = 0
-    
-    #索道の触れうる部分のidxをすべて持ってくる
-    #分岐点周りのデータ+索道3本のデータ
-    rr1,cc1 = getDiskArray(y,x,branchsize,h,w)
-    rr2,cc2 = getWeightedLineArray(angle1,300,thickness,y,x,h,w)
-    rr3,cc3 = getWeightedLineArray(angle2,300,thickness,y,x,h,w)
-    rr4,cc4 = getWeightedLineArray(angle3,300,thickness,y,x,h,w)
-
-    #ケーブルが通る部分のdepth情報
-    IsCableway = np.zeros((h,w),dtype=np.uint8)
-    IsCableway[rr1,cc1] = 1
-    IsCableway[rr2,cc2] = 1
-    IsCableway[rr3,cc3] = 1
-    IsCableway[rr4,cc4] = 1
-    EffectiveDepthScale = np.where((depthScale >= minDistance) & (depthScale < maxDistance),depthScale,0) * IsCableway
-
-    #最小二乗法で平面の傾きを考える
-    idx = np.nonzero(EffectiveDepthScale > 0)
-    ydata = idx[0]
-    Ymask = np.nonzero(ydata < branchY)
-        
-    data1_x = idx[1][Ymask]
-    data1_depth = EffectiveDepthScale[idx][Ymask]
-    maskL = np.nonzero((data1_x > branchX * 1.2))#リアル空間で左分岐=画像上で右分岐
-    maskR = np.nonzero((data1_x < branchX * 0.7))
-
-    if(len(data1_x[maskL]) < 2):(aL1,bL1) = (0,0)
-    else:aL1,bL1 = L_abs_minimize(data1_x[maskL],data1_depth[maskL])
-    if(len(data1_x[maskR]) < 2):(aR1,bR1) = (0,0)
-    else:aR1,bR1 = L_abs_minimize(data1_x[maskR],data1_depth[maskR])
-    leftY = bR1
-    rightY = w * aR1 + bR1
-    InclinationAngle = math.degrees(math.atan((rightY - leftY) / w))
-    return InclinationAngle,EffectiveDepthScale
-
 
 
 
@@ -186,14 +156,13 @@ def IR(color_image,depth_image,ir_image,depth_scale,ir_scale,robot_rotation,minD
     thickness = 5
     (maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3) = CalcTurningAngle(binaryScale,step,branchsize,thickness)
 
-    LRE,EffectiveDepthScale = CalcInclinationAngle(depth_scale,maxY,maxX,maxAngle1,maxAngle2,maxAngle3,minDistance,maxDistance,branchsize,thickness,h,w,maxX,maxY)
+    #y軸を起点としたとき、角度が小さい方が左分岐角
+    
     angle1L = maxAngle1 - 90
-    if(angle1L < 0):angle1L = maxAngle1
-    
     angle2L = maxAngle2 - 90
+    if(angle1L < 0):angle1L = maxAngle1
     if(angle2L < 0):angle2L = maxAngle2
-    
-    #小さい方が左分岐角
+
     if(angle1L < angle2L):
         angleA = abs(maxAngle1 - 270)
         angleB = abs(maxAngle2 - 270)
@@ -204,7 +173,7 @@ def IR(color_image,depth_image,ir_image,depth_scale,ir_scale,robot_rotation,minD
 
     branchValue = maxValue1 + maxValue2 + maxValue3
 
-    return [maxY,maxX,branchValue,LRE,angleA,angleB,EffectiveDepthScale,DepthIRFlag]
+    return [maxY,maxX,branchValue,angleA,angleB,DepthIRFlag]
 
 
 
