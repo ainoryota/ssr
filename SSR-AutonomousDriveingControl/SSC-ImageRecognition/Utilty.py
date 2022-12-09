@@ -12,7 +12,7 @@ from skimage import morphology #pip install scikit-image
 from PIL import Image
 import os
 from OutputController import OutputController
-
+import sys
 
 def processing_time(func):
     @wraps(func)
@@ -77,6 +77,13 @@ def CreteViewImage(img11,img12,img21,img22,img31,img32):
         OutputController().msgPrint("Image Integrate Error",img11.shape,img12.shape,img21.shape,img22.shape,img31.shape,img32.shape)
     return result
 
+
+def DebugImage(img,No=0,depthMode=False):
+    if depthMode:
+        image = cv2.applyColorMap(cv2.convertScaleAbs(img, alpha=0.08), cv2.COLORMAP_JET)
+    image = cv2.resize(image, (640, 360))
+    cv2.namedWindow('RealSense' + str(No), cv2.WINDOW_AUTOSIZE)
+    cv2.imshow('RealSense' + str(No), image)
 
 def ScalarImage2RGB(img,ClipMinDistance,ClipMaxDistance):
     rate = 255.0 / (ClipMaxDistance - ClipMinDistance)
@@ -151,7 +158,9 @@ def ConvertDepthCoordinate(x,y,z):
             fit = (A.T * A).I * A.T * b
             #errors = b - A * fit
             #residual = np.linalg.norm(errors)
-        except:
+        except Exception as e:
+            print("Error",e)
+            os.execv(sys.executable, ['python'] + sys.argv)
             pass
 
         a = fit[0,0]

@@ -8,11 +8,10 @@ from functools import partial
 import sys
 import tkinter as tk
 from PIL import Image,ImageTk #udo pip install pillow
-
 import math
 import pyrealsense2 as rs
 import numpy as np
-
+import cv2
 import sys
 from numba import jit
 from ctypes import windll
@@ -23,9 +22,9 @@ from OutputController import OutputController
 
 class VideoStream(object):
         def __init__(self, serialNo,resolution=(640, 360), framerate=15):
-            self.serialNo=serialNo
-            self.stopOrder=False;
-            self.USE_IMU=True
+            self.serialNo = serialNo
+            self.stopOrder = False
+            self.USE_IMU = True
 
             self.debugMode = False
             self.color_image = np.zeros((resolution[0], resolution[1]))
@@ -48,17 +47,20 @@ class VideoStream(object):
             self.vid_pipe = rs.pipeline()
             self.config = rs.config()
             self.config.enable_device(self.serialNo)
-            self.config.enable_stream(rs.stream.depth, resolution[0], resolution[1], rs.format.z16, framerate)
-            self.config.enable_stream(rs.stream.color, resolution[0], resolution[1], rs.format.bgr8, framerate)
-            self.config.enable_stream(rs.stream.infrared, 1, resolution[0], resolution[1], rs.format.y8, framerate)
-            self.config.enable_stream(rs.stream.infrared, 2, resolution[0], resolution[1], rs.format.y8, framerate)
-            self.align=rs.align(rs.stream.color)
+            #1280*720で取得しないと結果が著しく悪化する
+            self.config.enable_stream(rs.stream.depth,1280, 720, rs.format.z16, framerate)
+            self.config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, framerate)
+            self.config.enable_stream(rs.stream.infrared, 1,1280, 720, rs.format.y8, framerate)
+            self.config.enable_stream(rs.stream.infrared, 2,1280, 720, rs.format.y8, framerate)
+            self.align = rs.align(rs.stream.color)
+
+
         
         def stop(self):
-            self.stopOrder=True;
+            self.stopOrder = True
 
         def start(self):
-            self.stopOrder=False;
+            self.stopOrder = False
             if(self.USE_IMU):
                 self.start_imu()
             self.start_camera()
@@ -79,7 +81,7 @@ class VideoStream(object):
                 while True:
                     # Wait for a coherent pair of frames: depth and color
                     vid_frames = self.vid_pipe.wait_for_frames()
-                    aligned_frames=self.align.process(vid_frames)
+                    aligned_frames = self.align.process(vid_frames)
                     depth_frame = aligned_frames.get_depth_frame()
                     color_frame = aligned_frames.get_color_frame()
                     ir_frame1 = aligned_frames.get_infrared_frame(1)
@@ -90,11 +92,12 @@ class VideoStream(object):
                     # Convert images to numpy arrays
                     self.depth_image = np.asanyarray(depth_frame.get_data())
                     self.color_image = np.asanyarray(color_frame.get_data())
-                    self.ir_image1 = np.asanyarray(ir_frame1.get_data())
+                    self.ir_image1 =np.asanyarray(ir_frame1.get_data())
                     self.ir_image2 = np.asanyarray(ir_frame2.get_data())
                     if(self.debugMode):break
-                    if(self.stopOrder):break;
-            except:
+                    if(self.stopOrder):break
+            except Exception as e:
+                print("Error",e)
                 self.vid_pipe.stop()
                 OutputController().msgPrint("Error in Vision", sys.exc_info())
 
@@ -110,7 +113,7 @@ class VideoStream(object):
                     self.acc = mot_frames[0].as_motion_frame().get_motion_data()
                     self.gyro = mot_frames[1].as_motion_frame().get_motion_data()
                     if(self.debugMode):break
-                    if(self.stopOrder):break;
+                    if(self.stopOrder):break
             except:
                 self.imu_pipe.stop()
                 OutputController().msgPrint("Error in Vision", sys.exc_info())

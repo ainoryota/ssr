@@ -73,6 +73,7 @@ class Camera(object):
 
         try:
             self.rs1 = RealSense(serial_numbers[0],self.imgArea,self.infArea,self.br,self.data,self.il,self.timerlabel,self.AccelLabelX,self.AccelLabelY,self.AccelLabelZ,self.GyroLabelX,self.GyroLabelY,self.GyroLabelZ,self.RobotTheta)
+
         except Exception as e:
             OutputController().msgPrint("Realsense1 Start Error",e)
             self.rs1=None

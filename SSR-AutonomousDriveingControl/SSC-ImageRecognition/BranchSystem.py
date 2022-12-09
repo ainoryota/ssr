@@ -1,6 +1,6 @@
 from SSC_ImageRecognition14 import IR
 import cv2
-from Utilty import cvpaste,CreteViewImage,ScalarImage2RGB,reg1dim,getImageFromFile,rounddown,disk,DrawAngleLine,getLikeAngle
+from Utilty import cvpaste,CreteViewImage,ScalarImage2RGB,reg1dim,getImageFromFile,rounddown,disk,DrawAngleLine,getLikeAngle,DebugImage
 import numpy as np
 from PIL import Image,ImageTk
 import math
@@ -51,14 +51,19 @@ class BranchSystem:
         self.h = 0
 
     def setImage(self,color_image,depth_image,ir_image1,ir_image2,web_image):
-        self.color_image = color_image
+        self.color_image = cv2.cvtColor(color_image,cv2.COLOR_BGR2RGB)
         self.ir_image1 = ir_image1
         self.ir_image2 = ir_image2
         self.depth_image = ScalarImage2RGB(depth_image,self.minDistance,self.overDistance)
         self.depth_scale = depth_image
         self.web_image = web_image
-        self.adjustView()
-        self.ir_scale = cv2.cvtColor(self.ir_image1.copy(),cv2.COLOR_RGB2GRAY)
+        try:
+            self.adjustView()
+            self.ir_scale = cv2.cvtColor(self.ir_image1.copy(),cv2.COLOR_RGB2GRAY)
+        except Exception as e:
+            print("Error",e)
+            pass
+        
 
     def adjustView(self):
         #画像の標準サイズ
@@ -86,8 +91,12 @@ class BranchSystem:
         self.color_image = np.delete(self.color_image,slice(0,maxX),1)
         self.depth_image = np.delete(self.depth_image,slice(0,maxX),1)
         self.depth_scale = np.delete(self.depth_scale,slice(0,maxX),1)
-        self.ir_image1 = cvpaste(self.ir_image1, np.zeros((h,w,3)), 0, 0, angle, scale)#若干拡大する
-        self.ir_image1 = np.delete(self.ir_image1,slice(w - maxX,w),1)
+        try:
+            self.ir_image1 = cvpaste(self.ir_image1, np.zeros((h,w,3)), 0, 0, angle, scale)#若干拡大する
+            self.ir_image1 = np.delete(self.ir_image1,slice(w - maxX,w),1)
+        except Exception as e:
+            print("Error",e)
+        
 
 
     def calcCablewayInf(self,accel,extMode):
@@ -193,8 +202,8 @@ class BranchSystem:
         if(len(l1) < 2):rule2 = 0
         else:
             a,b = reg1dim(l1,l2) 
-            rule2 = (l2[len(l2) - 1] + a *5) / (self.h * 1.2)
-            OutputController().msgPrint("a,b,l2max",a,b,l2[len(l2) - 1] )
+            rule2 = (l2[len(l2) - 1] + a * 5) / (self.h * 1.2)
+            OutputController().msgPrint("a,b,l2max",a,b,l2[len(l2) - 1])
             #valueLogList:",valueLogList[len(valueLogList) - 1],rule1,rule2)
             #OutputController().msgPrint("calc rule a,b:",a,b)
             #OutputController().msgPrint("calc rule YLog:",self.YLog)
@@ -241,7 +250,9 @@ class BranchSystem:
         cablewayImage = DrawAngleLine(np.zeros((h,w,3),dtype=np.uint8),maxX,maxY,maxAngle1,(255,100,100,50),thickness)
         cablewayImage = DrawAngleLine(cablewayImage,maxX,maxY,maxAngle2,(100,255,100,50),thickness)
         cablewayImage = DrawAngleLine(cablewayImage,maxX,maxY,maxAngle3,(100,100,255,50),thickness)
-        #cablewayImage = cv2.putText(cablewayImage,str(int(self.Rangle)) + "/" + str(int(self.Langle)),(0,160),cv2.FONT_HERSHEY_PLAIN,2,(255,255,255))
+        #cablewayImage = cv2.putText(cablewayImage,str(int(self.Rangle)) + "/"
+        #+
+        #str(int(self.Langle)),(0,160),cv2.FONT_HERSHEY_PLAIN,2,(255,255,255))
         rr,cc = disk((maxY,maxX), 24, shape=(h,w))
         mask = np.logical_and.reduce((rr >= 0, rr < h ,cc >= 0, cc < w))
         cablewayImage[rr[mask],cc[mask]] = [255,255,0]

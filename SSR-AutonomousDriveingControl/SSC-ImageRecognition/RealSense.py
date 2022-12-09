@@ -16,7 +16,7 @@ import sys
 from numba import jit
 from ctypes import alignment, windll
 from BranchSystem import BranchSystem 
-from Utilty import getLikeAngle,rounddown,ConvertDepthCoordinate
+from Utilty import getLikeAngle,rounddown,ConvertDepthCoordinate,DebugImage
 from OutputController import OutputController
 from FormSingleton import FormSingleton
 
@@ -84,8 +84,14 @@ class RealSense(object):
         accel = self.vs.acc
         gyro = self.vs.gyro
         color_image = self.vs.color_image
-        depth_image = self.vs.depth_image.astype(np.int16)
+        depth_image = self.vs.depth_image
+        depth_image_new = np.zeros((360,640),dtype=np.int16)
+        for x in range(640):
+            for y in range(360):
+                depth_image_new[y][x] = depth_image[y * 2][x * 2]
 
+        depth_image=depth_image_new;
+        original_depth = depth_image.copy()
         hoge = np.where((depth_image < 600) & (depth_image > 0))
         x,y,z,fit = FormSingleton().updateThreeGraph(hoge[1],hoge[0],depth_image[hoge])
         
@@ -94,6 +100,9 @@ class RealSense(object):
 
         depth_image[y.astype(int)[mask],x.astype(int)[mask]] = z[mask]
 
+        DebugImage(depth_image,0,True)
+        DebugImage(original_depth,1,True)
+        
         ir_image1 = self.vs.ir_image1
         ir_image2 = self.vs.ir_image2
         if(self.webcam != None):
