@@ -2,33 +2,31 @@ import cv2 #pip install opencv-python
 import numpy as np #pip install numpy
 import math
 import time
-from Utilty import L_abs_minimize,reg1dim,getUnitValue,CalcDiffAngle,CalcDiffAngleNP,getWeightedLineArray,getDiskArray,cvpaste,CreteViewImage,ScalarImage2RGB
+from Utilty import L_abs_minimize,reg1dim,getUnitValue,CalcDiffAngle,CalcDiffAngleNP,getWeightedLineArray,getDiskArray,cvpaste,CreteViewImage,ScalarImage2RGB,CalcDiffAngle
+from functools import lru_cache
 
-#分岐点位置を与えたときにその位置を評価する
-def CalcScore(field,x,y,anglestep,thickness):
+@lru_cache()
+def getAngleList(anglestep,targetAngle,ruleAngle):
+    angles = np.array(range(0,360,anglestep))
+    angles = angles[np.where(((190 < angles) & (angles < 260)) | ((280 < angles) & (angles < 350)))]
+    angles = angles[CalcDiffAngleNP(angles,targetAngle,ruleAngle)]    
+    return angles
+
+#分岐点位置を与えたときにその位置を評価する。boaderscoreを超えられないことがわかれば即座にリターン
+def CalcScore(field,x,y,anglestep,thickness,boaderscore):
     h, w = field.shape
     maxValue = 0
     maxValue1 = 0
     maxValue2 = 0
     maxValue3 = 0
-    maxX = -1
-    maxY = -1
     maxAngle1 = -1
     maxAngle2 = -1
-    maxAngle3 = -1
-    step = 12
-    cable_size = 12
-    checkSize = 100
-    W = math.floor(checkSize / 2)
-
-
     ruleAngle = 80
     angle3 = 90
-    angles = np.array(range(0,360,anglestep))
-    angles = angles[np.where(((190 < angles) & (angles < 260)) | ((280 < angles) & (angles < 350)))]
-    angles = angles[CalcDiffAngleNP(angles,angle3,ruleAngle)]    
+
+    angles = getAngleList(anglestep,angle3,ruleAngle)
     scores = np.array([np.sum(field[(getWeightedLineArray(angle,300,thickness,y,x,h,w))]) for angle in angles])
-    maxValue3 = np.sum(field[(getWeightedLineArray(90,300,thickness,y,x,h,w))])
+    score3 = np.sum(field[(getWeightedLineArray(90,300,thickness,y,x,h,w))])
 
     idx = np.where((scores > 0))
     angles = angles[idx]
@@ -38,26 +36,28 @@ def CalcScore(field,x,y,anglestep,thickness):
     angles = angles[idx]
     scores = scores[idx]
 
+    for i in range(0,len(angles) - 1):
+        if(scores[i] + scores[i + 1] < maxValue):break
+        if(scores[i] + scores[i + 1] + score3 < boaderscore):continue
+        idx = -1
+        for j,angle in enumerate(angles[i:]):
+            if(CalcDiffAngle(angle, angles[i]) >= ruleAngle):
+                idx = j
+                break
+        if(idx == -1):continue
 
-    for i in range(len(angles)):
-        angle1 = angles[i]
         score1 = scores[i]
-        idx = CalcDiffAngleNP(angles[i:],angle1, ruleAngle)
-        if(len(idx[0]) == 0):continue
-
-        angle2 = angles[i:][idx][0]
-        score2 = scores[i:][idx][0]
-        if(maxValue > score1 + score2 + maxValue3):continue
-        maxValue = score1 + score2 + maxValue3
-        maxAngle1 = angle1
-        maxAngle2 = angle2
-        maxAngle3 = angle3
+        score2 = scores[i:][idx]
+        if(maxValue > score1 + score2):continue
+        maxValue = score1 + score2
+        maxAngle1 = angles[i]
+        maxAngle2 = angles[i:][idx]
         maxValue1 = score1
         maxValue2 = score2
 
 
 
-    return [maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3]
+    return [maxAngle1,maxAngle2,angle3,maxValue + score3,maxValue1,maxValue2,score3]
 
 
 
@@ -75,22 +75,18 @@ def CalcTurningAngle(binryScale,step,branchsize,thickness):
     maxValue1 = -1
     maxValue2 = -1
     maxValue3 = -1
-    maxDoubel = -1
     anglestep = 3
 
-    PointList = np.zeros((int(h / step + 2),int(w / step + 2)))
 
     #解を調べる
     for x in range(int(w * 0.4),int(w * 0.6),step):
-        maxDoubel = max(maxDoubel,np.sum(field[(getWeightedLineArray(90,300,thickness,0,x,h,w))]))
         for y in range(0,h,step):
             field = np.where(binryScale > 0,1,0)
             rr,cc = getDiskArray(y,x,branchsize,h,w)
             score = np.sum(field[rr,cc])
             field[rr,cc] = 0
-            (angle1,angle2,angle3,value,value1,value2,value3) = CalcScore(field,x,y,anglestep,thickness)
+            (angle1,angle2,angle3,value,value1,value2,value3) = CalcScore(field,x,y,anglestep,thickness,maxValue - score)
             value+=score
-            PointList[int(y / step)][int(x / step)] = value
             if(maxValue < value):
                 maxValue = value
                 maxAngle1 = angle1
@@ -102,8 +98,7 @@ def CalcTurningAngle(binryScale,step,branchsize,thickness):
                 maxX = x
                 maxY = y
 
-    PointList = (PointList * 255 / maxValue).astype(np.uint8)
-    return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList]
+    return [maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3]
 
 def CalcInclinationAngle(depthScale,y,x,angle1,angle2,angle3,minDistance,maxDistance,branchsize,thickness,h,w,branchX,branchY):
     InclinationAngle = 0
@@ -189,7 +184,7 @@ def IR(color_image,depth_image,ir_image,depth_scale,ir_scale,robot_rotation,minD
     step = 12
     branchsize = 24
     thickness = 5
-    (maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList) = CalcTurningAngle(binaryScale,step,branchsize,thickness)
+    (maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3) = CalcTurningAngle(binaryScale,step,branchsize,thickness)
 
     LRE,EffectiveDepthScale = CalcInclinationAngle(depth_scale,maxY,maxX,maxAngle1,maxAngle2,maxAngle3,minDistance,maxDistance,branchsize,thickness,h,w,maxX,maxY)
     angle1L = maxAngle1 - 90
