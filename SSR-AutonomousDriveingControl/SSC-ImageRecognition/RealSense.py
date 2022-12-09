@@ -88,9 +88,15 @@ class RealSense(object):
         original_depth = depth_image.copy()
 
         depth_image=depth_image[::2,::2]
-        
         hoge = np.where((depth_image < 600) & (depth_image > 0))
-        x,y,z,fit = FormSingleton().updateThreeGraph(hoge[1],hoge[0],depth_image[hoge])
+
+        try:
+            x,y,z,fit = FormSingleton().updateThreeGraph(hoge[1],hoge[0],depth_image[hoge])
+        except Exception as e:
+            print("Graph Error")
+            self.imgArea.after(100,self.getRealsense)
+            return;
+        
         
         depth_image.fill(0)
         mask = (x < 640) & (y < 360) & (x > 0) & (y > 0)
@@ -111,7 +117,7 @@ class RealSense(object):
         self.AccelLabelZ.configure(text="加速度Z:{0:.2f}".format(accel.z))
         self.GyroLabelX.configure(text="ジャイロX:{0:.2f}".format(gyro.x))
         self.GyroLabelY.configure(text="ジャイロY:{0:.2f}".format(gyro.y))
-        self.GyroLabelZ.configure(text="ジャイロY:{0:.2f}".format(gyro.z))
+        self.GyroLabelZ.configure(text="ジャイロZ:{0:.2f}".format(gyro.z))
 
         
         self.RobotTheta.configure(text="ロボットの角度(deg):{0:.2f} ".format(math.degrees(-math.atan2(accel.y,accel.z))))

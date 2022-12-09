@@ -5,3 +5,4 @@ SSR-CreateRute/*.csv
 SSR-AutonomousDriveingControl/SSC-ImageRecognition/Data/*.csv
 *.csv
 *.csv
+SSR-GUIControl.zip

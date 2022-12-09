@@ -1,6 +1,7 @@
 import cv2 #pip install opencv-python
 import numpy as np #pip install numpy
 import math
+import time
 from Utilty import L_abs_minimize,reg1dim,getUnitValue,CalcDiffAngle,CalcDiffAngleNP,getWeightedLineArray,getDiskArray,cvpaste,CreteViewImage,ScalarImage2RGB
 
 #分岐点位置を与えたときにその位置を評価する
@@ -24,8 +25,8 @@ def CalcScore(field,x,y,anglestep,thickness):
     ruleAngle = 80
     angle3 = 90
     angles = np.array(range(0,360,anglestep))
-    angles = angles[np.where((CalcDiffAngleNP(angles,angle3) >= ruleAngle))]
-    angles = angles[np.where(((190<angles)&(angles<260))|((280<angles)&(angles<350)))]
+    angles = angles[np.where(((190 < angles) & (angles < 260)) | ((280 < angles) & (angles < 350)))]
+    angles = angles[CalcDiffAngleNP(angles,angle3,ruleAngle)]    
     scores = np.array([np.sum(field[(getWeightedLineArray(angle,300,thickness,y,x,h,w))]) for angle in angles])
     maxValue3 = np.sum(field[(getWeightedLineArray(90,300,thickness,y,x,h,w))])
 
@@ -41,12 +42,12 @@ def CalcScore(field,x,y,anglestep,thickness):
     for i in range(len(angles)):
         angle1 = angles[i]
         score1 = scores[i]
-        idx = np.where(CalcDiffAngleNP(angles[i:],angle1) >= ruleAngle)
+        idx = CalcDiffAngleNP(angles[i:],angle1, ruleAngle)
         if(len(idx[0]) == 0):continue
 
         angle2 = angles[i:][idx][0]
         score2 = scores[i:][idx][0]
-        if(maxValue > score1 + score2 + maxValue3):continue;
+        if(maxValue > score1 + score2 + maxValue3):continue
         maxValue = score1 + score2 + maxValue3
         maxAngle1 = angle1
         maxAngle2 = angle2
@@ -54,13 +55,15 @@ def CalcScore(field,x,y,anglestep,thickness):
         maxValue1 = score1
         maxValue2 = score2
 
+
+
     return [maxAngle1,maxAngle2,maxAngle3,maxValue,maxValue1,maxValue2,maxValue3]
 
 
 
 def CalcTurningAngle(binryScale,step,branchsize,thickness):
     h, w = binryScale.shape
-    plotMode=True
+    plotMode = True
     maxValue = 0
     field = np.where(binryScale > 0,1,0)
 
@@ -127,22 +130,22 @@ def CalcInclinationAngle(depthScale,y,x,angle1,angle2,angle3,minDistance,maxDist
         
     data1_x = idx[1][Ymask]
     data1_depth = EffectiveDepthScale[idx][Ymask]
-    maskL = np.nonzero((data1_x > branchX*1.2))#リアル空間で左分岐=画像上で右分岐
-    maskR = np.nonzero((data1_x < branchX*0.7))
+    maskL = np.nonzero((data1_x > branchX * 1.2))#リアル空間で左分岐=画像上で右分岐
+    maskR = np.nonzero((data1_x < branchX * 0.7))
 
     if(len(data1_x[maskL]) < 2):(aL1,bL1) = (0,0)
     else:aL1,bL1 = L_abs_minimize(data1_x[maskL],data1_depth[maskL])
     if(len(data1_x[maskR]) < 2):(aR1,bR1) = (0,0)
     else:aR1,bR1 = L_abs_minimize(data1_x[maskR],data1_depth[maskR])
-    leftY= bR1
-    rightY=w * aR1 + bR1
-    InclinationAngle = math.degrees(math.atan((rightY-leftY)/w))
+    leftY = bR1
+    rightY = w * aR1 + bR1
+    InclinationAngle = math.degrees(math.atan((rightY - leftY) / w))
     return InclinationAngle,EffectiveDepthScale
 
 
 
 
-counter=0
+counter = 0
 #赤外線画像とdepth画像を合成した二値画像を生成する
 def WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale):
     global counter
@@ -158,7 +161,7 @@ def WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scal
     flag = np.where((depth_scale > overDistance),4,flag)
 
     #データが不正の位置にフラグ1（赤）をつける（グレーな部分）
-    flag = np.where((depth_scale==0) ,1,flag)
+    flag = np.where((depth_scale == 0) ,1,flag)
 
     #depth要素のある部分にフラグ3（青）を付ける
     flag = np.where((1 <= depth_scale) & (depth_scale < maxDistance),3,flag)
@@ -174,7 +177,7 @@ def IR(color_image,depth_image,ir_image,depth_scale,ir_scale,robot_rotation,minD
     Langle = 0
 
     #画角の結果に合わせた画像サイズ修正
-    (h,w,d) =color_image.shape
+    (h,w,d) = color_image.shape
 
     #赤外線画像とdepth画像から2値画像を生成する
     DepthIRFlag = WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scale)
@@ -189,12 +192,24 @@ def IR(color_image,depth_image,ir_image,depth_scale,ir_scale,robot_rotation,minD
     (maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3,maxDoubel,PointList) = CalcTurningAngle(binaryScale,step,branchsize,thickness)
 
     LRE,EffectiveDepthScale = CalcInclinationAngle(depth_scale,maxY,maxX,maxAngle1,maxAngle2,maxAngle3,minDistance,maxDistance,branchsize,thickness,h,w,maxX,maxY)
-    angleA = abs(maxAngle1 - 270)
-    angleB = abs(maxAngle2 - 270)
-    if(angleA > angleB):(angleB,angleA) = (angleA,angleB)
-    branchValue=maxValue1 + maxValue2 + maxValue3
+    angle1L = maxAngle1 - 90
+    if(angle1L < 0):angle1L = maxAngle1
+    
+    angle2L = maxAngle2 - 90
+    if(angle2L < 0):angle2L = maxAngle2
+    
+    #小さい方が左分岐角
+    if(angle1L < angle2L):
+        angleA = abs(maxAngle1 - 270)
+        angleB = abs(maxAngle2 - 270)
+    else:
+        angleA = abs(maxAngle2 - 270)
+        angleB = abs(maxAngle1 - 270)
+    
 
-    return [maxY,maxX,branchValue,LRE,angleB,angleA,EffectiveDepthScale,DepthIRFlag]
+    branchValue = maxValue1 + maxValue2 + maxValue3
+
+    return [maxY,maxX,branchValue,LRE,angleA,angleB,EffectiveDepthScale,DepthIRFlag]
 
 
 

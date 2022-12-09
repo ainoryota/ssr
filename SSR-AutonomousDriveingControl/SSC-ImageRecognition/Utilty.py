@@ -134,8 +134,32 @@ def CalcDiffAngle(angle1,angle2):
     ret = min(ret,abs(angle1 - angle2 + 360))
     return ret
 
-#2つの角度の配列を与えると角度の差の配列を返す
-def CalcDiffAngleNP(angle1,angle2):
+
+
+#角度の配列を与えると角度の差がruleAngle以上であるようなインデックスを返す
+def CalcDiffAngleNP(angle1,angle2,ruleAngle):
+
+    A = angle1 - angle2
+    #D=np.where(not((np.abs(A)<ruleAngle)|(np.abs(A-360)<ruleAngle)|(np.abs(A+360)<ruleAngle)))
+
+    #A = angle1 - angle2
+    B = np.minimum.reduce([np.abs(A),
+        np.abs(A - 360),
+        np.abs(A + 360)])
+    #B=np.array([CalcDiffAngle(angle,angle2) for angle in angle1])
+    #angle1 = np.where(angle1 > 360,angle1 - 360,angle1)
+    #angle1 = np.where(angle1 > np.abs(angle1 - angle2),np.abs(angle1 -
+    #angle2),angle1)
+    #angle1 = np.where(angle1 > np.abs(angle1 - angle2 - 360),np.abs(angle1 -
+    #angle2 - 360),angle1)
+    #angle1 = np.where(angle1 > np.abs(angle1 - angle2 + 360),np.abs(angle1 -
+    #angle2 + 360),angle1)
+    #C = angle1
+    E = np.where(B >= ruleAngle)
+
+    return E
+
+def CalcDiffAngleNPOld(angle1,angle2):
     angle1 = np.where(angle1 > 360,angle1 - 360,angle1)
     angle1 = np.where(angle1 > np.abs(angle1 - angle2),np.abs(angle1 - angle2),angle1)
     angle1 = np.where(angle1 > np.abs(angle1 - angle2 - 360),np.abs(angle1 - angle2 - 360),angle1)
@@ -147,22 +171,18 @@ def CalcDiffAngleNP(angle1,angle2):
 def ConvertDepthCoordinate(x,y,z):
         fit = [0,0,0]
 
-        try:
-            # do fit
-            tmp_A = []
-            tmp_b = []
-            for i in range(len(x)):
-                tmp_A.append([x[i], y[i], 1])
-                tmp_b.append(z[i])
-            b = np.matrix(tmp_b).T
-            A = np.matrix(tmp_A)
-            fit = (A.T * A).I * A.T * b
-            #errors = b - A * fit
-            #residual = np.linalg.norm(errors)
-        except Exception as e:
-            print("Error",e)
-            os.execv(sys.executable, ['python'] + sys.argv)
-            pass
+        # do fit
+        tmp_A = []
+        tmp_b = []
+        for i in range(len(x)):
+            tmp_A.append([x[i], y[i], 1])
+            tmp_b.append(z[i])
+        b = np.matrix(tmp_b).T
+        A = np.matrix(tmp_A)
+        fit = (A.T * A).I * A.T * b
+        #errors = b - A * fit
+        #residual = np.linalg.norm(errors)
+
 
         a = fit[0,0]
         b = fit[1,0]
