@@ -48,10 +48,10 @@ class VideoStream(object):
             self.config = rs.config()
             self.config.enable_device(self.serialNo)
             #1280*720で取得しないと結果が著しく悪化する
-            self.config.enable_stream(rs.stream.depth,1280, 720, rs.format.z16, framerate)
-            self.config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, framerate)
-            self.config.enable_stream(rs.stream.infrared, 1,1280, 720, rs.format.y8, framerate)
-            self.config.enable_stream(rs.stream.infrared, 2,1280, 720, rs.format.y8, framerate)
+            self.config.enable_stream(rs.stream.depth,848, 480, rs.format.z16, framerate)
+            self.config.enable_stream(rs.stream.color, 848, 480, rs.format.bgr8, framerate)
+            self.config.enable_stream(rs.stream.infrared, 1,848, 480, rs.format.y8, framerate)
+            self.config.enable_stream(rs.stream.infrared, 2,848, 480, rs.format.y8, framerate)
             self.align = rs.align(rs.stream.color)
 
 

@@ -119,7 +119,7 @@ class BranchSystem:
 
 
         (rule1,rule2) = self.calcRule()
-        if(rule1 > 1 and rule2 > 1):
+        if(rule1 > 3 and rule2 > 0.85):
             self.IsBranch = True
         return rule1,rule2
 

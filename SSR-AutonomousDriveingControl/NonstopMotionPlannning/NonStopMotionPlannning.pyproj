@@ -5,7 +5,7 @@
     <ProjectGuid>da52d607-3c0f-4a8e-b7e7-dc71ac0209d4</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>NonstopMotionPlannning.py</StartupFile>
+    <StartupFile>NonStopMotionPlannning.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -25,7 +25,7 @@
     <Compile Include="Utility.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="NonstopMotionPlannning.py" />
+    <Compile Include="NonStopMotionPlannning.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

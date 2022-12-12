@@ -84,10 +84,14 @@ class RealSense(object):
         accel = self.vs.acc
         gyro = self.vs.gyro
         color_image = self.vs.color_image
-        depth_image = self.vs.depth_image.astype(np.int16)
-        DebugImage(depth_image,0,True)
+        depth_image_original = self.vs.depth_image.astype(np.int16)
+        DebugImage(depth_image_original,0,True)
+        depth_image = np.zeros((360,640),dtype=np.int16)
+        for x in range(640):
+            for y in range(360):
+                depth_image[y][x] = depth_image_original[int(y *1.333 )][int(x * 1.325)]
 
-        depth_image = depth_image[::2,::2]
+        #depth_image = depth_image_original[::2,::2]
         hoge = np.where((depth_image < 600) & (depth_image > 0))
 
         try:
@@ -142,8 +146,8 @@ class RealSense(object):
         OutputController().msgPrint("{:<16.2f} {:<16.2f} {:<12.2f}".format(robot_tangle,cable_angle,tangle))
         OutputController().msgPrint("{:<10} {:<10} {:<10}".format('回転角','RAngle','LAngle'))
         OutputController().msgPrint("{:<13.2f} {:<10.2f} {:<10.2f}".format(InclinationAngle,Rangle,Langle))
-        OutputController().msgPrint("{:<10} {:<10}".format('rule1','rule2'))
-        OutputController().msgPrint("{:<10.2f} {:<10.2f}".format(rule1,rule2))
+        OutputController().msgPrint("{:<10} {:<10}".format('rule1','rule2',"IsBranch"))
+        OutputController().msgPrint("{:<10.2f} {:<10.2f}".format(rule1,rule2,IsBranch))
         OutputController().msgPrint("time:",self.stop_branch_time)
         FormSingleton().updateForm()
 
@@ -159,8 +163,9 @@ class RealSense(object):
                 if(self.data["v_auto"].get()):
                     self.branchSystem.ResetLog()
                     time.sleep(1)
-                    OutputController().msgPrint("Branch Angle:",ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
-                    self.br.branchAngle(ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
+                    #OutputController().msgPrint("Branch
+                    #Angle:",ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
+                    self.br.branchAngle(tangle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
                     self.stop_branch_time = 70
             else:
                 OutputController().msgPrint("No like data")

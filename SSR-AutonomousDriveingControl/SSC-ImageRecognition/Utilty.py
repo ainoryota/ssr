@@ -303,7 +303,7 @@ def getLikeAngle(a1,b1,c1,d1):
     #    else:
     #        d+=5
     #        sw = True
-    if(c + d < 100):d = 100 - c
+    if(c + d < 90):d = 90 - c
 
     path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
     if(os.path.exists(path)):return (a,b,c,d)
