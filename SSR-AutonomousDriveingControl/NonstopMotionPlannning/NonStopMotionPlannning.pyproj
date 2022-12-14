@@ -22,6 +22,8 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Annealing.py" />
+    <Compile Include="SolveDistance.py" />
     <Compile Include="Utility.py">
       <SubType>Code</SubType>
     </Compile>
