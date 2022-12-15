@@ -64,7 +64,7 @@ class Branch(object):
             #self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct * 2.12206591 * 100),t))
 
             #t+=0.024
-            t+=0.024
+            t+=0.016
 
         OutputController().pushStep()
 

@@ -4,6 +4,7 @@ import math
 import time
 from Utilty import L_abs_minimize,reg1dim,getUnitValue,CalcDiffAngle,CalcDiffAngleNP,getWeightedLineArray,getDiskArray,cvpaste,CreteViewImage,ScalarImage2RGB,CalcDiffAngle
 from functools import lru_cache
+from OutputController import OutputController
 
 @lru_cache()
 def getAngleList(anglestep,targetAngle,ruleAngle):
@@ -28,7 +29,7 @@ def CalcScore(field,x,y,anglestep,thickness,boaderscore):
     angles = getAngleList(anglestep,90,ruleAngle)
     scores = np.array([np.sum(field[(getWeightedLineArray(angle,300,thickness,y,x,h,w))]) for angle in angles])
 
-    for theta in range(70,110,anglestep):
+    for theta in range(90,91,anglestep):
         score = np.sum(field[(getWeightedLineArray(theta,300,thickness,y,x,h,w))])
         if(score > score3):
             maxAngle3 = theta
@@ -180,7 +181,9 @@ def IR(color_image,depth_image,ir_image,depth_scale,ir_scale,robot_rotation,minD
     if(maxAngle1 == -1 or maxAngle2 == -1 or maxAngle3 == -1):
         branchValue = 0
 
-    return [maxY,maxX,branchValue,angleRight,angleLeft,maxAngle3,DepthIRFlag]
+    
+    OutputController().msgPrint("Angles:",round(branchValue),round(angleLeft),round(angleRight),maxValue1,maxValue2,maxValue3)
+    return [maxY,maxX,branchValue,angleRight,angleLeft,maxAngle3,DepthIRFlag,maxValue1,maxValue2,maxValue3]
 
 
 

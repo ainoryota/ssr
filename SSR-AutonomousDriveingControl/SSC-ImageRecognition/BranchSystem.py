@@ -32,7 +32,7 @@ class BranchSystem:
         self.tangle = 0
         self.Rangle = 0
         self.Langle = 0
-        self.ProceedAngle=0
+        self.ProceedAngle = 0
         self.branchValue = 0
 
         self.LogNumber = 100
@@ -44,6 +44,9 @@ class BranchSystem:
         self.tAngleLog = [0 for a in range(self.LogNumber)]
         #self.YLog = [0 for a in range(self.LogNumber)]
 
+        self.maxValue1 = 0
+        self.maxValue2 = 0
+        self.maxValue3 = 0
 
         #索道などのパラメータ
         self.minDistance = 0
@@ -104,7 +107,6 @@ class BranchSystem:
 
     def calcCablewayInf(self,accel,extMode):
         self.Error = False
-        self.IsBranch = False
         if(np.sum(self.ir_image1) < 0.1 or np.sum(self.color_image) < 0.1):#カメラがほぼ真っ暗
             self.Error = True
             OutputController().msgPrint("Camera is black")
@@ -114,14 +116,12 @@ class BranchSystem:
             self.Error = True
             OutputController().msgPrint("Invalid Camera error")
             return 0,0
-        (self.y,self.x,self.branchValue,self.Rangle,self.Langle,self.ProceedAngle,self.DepthIRFlag) = result
+        (self.y,self.x,self.branchValue,self.Rangle,self.Langle,self.ProceedAngle,self.DepthIRFlag,self.maxValue1,self.maxValue2,self.maxValue3) = result
         self.tangle = math.degrees(-math.atan2(accel.y,accel.z))
         self.appendLog()
-
+        
 
         (rule1,rule2) = self.calcRule()
-        if(rule1 > 1 and rule2 > 0.85):
-            self.IsBranch = True
         return self.branchValue,rule1,rule2
 
     def get3DImages(self):
@@ -186,6 +186,11 @@ class BranchSystem:
         #1.直近N1ログ以内のvalueLog平均値がA以上
         #2.直近N1ログ以内のvalueLog平均値がA以上の結果から推定された5ログあとのYLogの線形近似解が高さhの1.2倍を超えた
         N1 = 15
+
+        YLogList = np.array(self.YLog[len(self.YLog) - N1:])
+        rule0 = np.average(YLogList) / 750
+
+
         valueLogList = np.array(self.valueLog[len(self.valueLog) - N1:])
         rule1 = np.average(valueLogList) / 750
 

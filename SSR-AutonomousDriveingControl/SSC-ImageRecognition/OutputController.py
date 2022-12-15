@@ -43,21 +43,25 @@ class OutputController(object):
         self.orderList.clear()
 
     def setMsgbox(self,box):
-        self.box=box
+        self.box = box
 
     def setData(self,data):
-        self.data=data
+        self.data = data
 
     
     def getData(self):
         return self.data
 
     def msgPrint(self,*msg):
-        print(",".join([str(_) for _ in msg]))
+        
         try:
-            self.box.insert('end',",".join([str(_) for _ in msg])+"\n")
+            msg_text = ",".join([str(_) for _ in msg])
+            msg_text=msg_text.replace(":,",":")
+            print(msg_text)
+            self.box.insert('end',msg_text + "\n")
             self.box.see(tk.END)
         except:
+            print(",".join([str(_) for _ in msg]))
             print("Print Exception")
 
 
@@ -80,54 +84,59 @@ def OutputDone(stepQueue):
             timer = data.delay + data.sleepTime
 
             if(isinstance(data,InitOrder)):#初期化に関する司令を1つのみ処理
-                #OutputController().msgPrint("　Init",data)
+                #OutputController().msgPrint(" Init",data)
                 output.outputInit(data)
 
             elif(isinstance(data,PosOrder)):#位置に関する司令を複数個同時に処理
                 dataList = [data]
                 while(len(orderList) > 0 and isinstance(orderList[-1],PosOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
-                #OutputController().msgPrint("　Move Pos:",len(dataList),"motors")
+                #OutputController().msgPrint(" Move
+                #Pos:",len(dataList),"motors")
                 output.outputPos(dataList)
 
             elif(isinstance(data,VelocityOrder)):#速度に関する司令を複数個同時に処理
                 dataList = [data]
                 while(len(orderList) > 0 and isinstance(orderList[-1],VelocityOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
-                #OutputController().msgPrint("　Move Velocity:",len(dataList),"motors")
+                #OutputController().msgPrint(" Move
+                #Velocity:",len(dataList),"motors")
                 output.outputVelocity(dataList)
 
             elif(isinstance(data,MotorModeOrder)):#ノーマルモードへの変更に関する司令を複数個同時に処理
                 dataList = [data]
                 while(len(orderList) > 0 and isinstance(orderList[-1],MotorModeOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
-                #OutputController().msgPrint("　Set MotorMode:",len(dataList),"motors")
+                #OutputController().msgPrint(" Set
+                #MotorMode:",len(dataList),"motors")
                 output.setMotorMode(dataList)
 
             elif(isinstance(data,ResetMotorOrder)):#モータのリセット
                 dataList = [data]
                 while(len(orderList) > 0 and isinstance(orderList[-1],ResetMotorOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
-                #OutputController().msgPrint("　Reset Motor:",len(dataList),"motors")
+                #OutputController().msgPrint(" Reset
+                #Motor:",len(dataList),"motors")
                 output.resetMotor(dataList)
 
             elif(isinstance(data,ResetEncoderOrder)):#エンコーダのリセット
                 dataList = [data]
                 while(len(orderList) > 0 and isinstance(orderList[-1],ResetEncoderOrder) and orderList[-1].delay == data.delay):
                     dataList.append(orderList.pop())
-                #OutputController().msgPrint("　Reset Encoder:",len(dataList),"motors")
+                #OutputController().msgPrint(" Reset
+                #Encoder:",len(dataList),"motors")
                 output.resetEncoder(dataList)
         #OutputController().msgPrint("End Output")
-                                                
+
 class MotorMode(IntEnum):
-    PosNormal=0x00
-    PosHold=0x01
-    PosFree=0x02
-    VelocityNormal=0x04
-    VelocityFree=0x06
-    VelocityHold=0x07
-    Pos=100
-    Velocity=200
+    PosNormal = 0x00
+    PosHold = 0x01
+    PosFree = 0x02
+    VelocityNormal = 0x04
+    VelocityFree = 0x06
+    VelocityHold = 0x07
+    Pos = 100
+    Velocity = 200
     
 
         
@@ -152,7 +161,7 @@ class Serial(object):
         else:
             OutputController().msgPrint("statusの値が不正")
 
-        #OutputController().msgPrint("　　id:",order.id,"mode",order.mode)
+        #OutputController().msgPrint(" id:",order.id,"mode",order.mode)
 
                 #        Size CMD OP Data ADR CNT
         list1 = [0X08,0X04,0X00,order.id,data1,0X28,0X01]#制御モードの変更
@@ -176,7 +185,7 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
-            #OutputController().msgPrint("　　id:",data.id,"pos:",data.pos)
+            #OutputController().msgPrint(" id:",data.id,"pos:",data.pos)
             dataList+=[data.id,(0X10000 + int(data.pos * 100)) & 0XFF,((0X10000 + int(data.pos * 100)) // 256) & 0XFF]
             sleepTime = max(sleepTime,data.sleepTime)
    
@@ -192,7 +201,7 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
-            #OutputController().msgPrint("　　id:",data.id,"pos:",data.velocity)
+            #OutputController().msgPrint(" id:",data.id,"pos:",data.velocity)
             dataList+=[data.id,(0X10000 + int(data.velocity * 100)) & 0XFF, ((0X10000 + int(data.velocity * 100)) // 256) & 0XFF]
             sleepTime = max(sleepTime,data.sleepTime)
 
@@ -209,7 +218,8 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
-            #OutputController().msgPrint("　　id:",data.id,"motorMode:",data.motorMode)
+            #OutputController().msgPrint("
+            #id:",data.id,"motorMode:",data.motorMode)
             dataList+=[data.id,int(data.motorMode)]
             sleepTime = max(sleepTime,data.sleepTime)
 
@@ -226,7 +236,7 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
-            #OutputController().msgPrint("　　id:",data.id)
+            #OutputController().msgPrint(" id:",data.id)
             dataList+=[data.id,0x00,0x00,0x00,0x00]
             sleepTime = max(sleepTime,data.sleepTime)
 
@@ -245,7 +255,7 @@ class Serial(object):
         sleepTime = 0
         while(len(orderList) > 0):
             data = orderList.pop()
-            #OutputController().msgPrint("　　id:",data.id)
+            #OutputController().msgPrint(" id:",data.id)
             dataList+=[data.id]
             sleepTime = max(sleepTime,data.sleepTime)
 

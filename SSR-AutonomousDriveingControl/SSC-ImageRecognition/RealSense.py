@@ -47,6 +47,9 @@ class RealSense(object):
         self.InclinationLog = [0 for n in range(10)]
         self.RAngleLog = [0 for n in range(10)]
         self.LAngleLog = [0 for n in range(10)]
+        self.MaxValue1Log = [0 for n in range(10)]
+        self.MaxValue2Log = [0 for n in range(10)]
+        self.MaxValue3Log = [0 for n in range(10)]
         self.valueLog = [0 for n in range(10)]
 
         if(False):
@@ -89,10 +92,16 @@ class RealSense(object):
     def getAverageLog(self):
         hoge = np.where(np.array(self.valueLog) > 750)
         if(len(hoge[0]) > 1):
-            InclinationAngle = np.average(np.array(self.InclinationLog)[hoge])
-            Rangle = np.average(np.array(self.RAngleLog)[hoge])
-            Langle = np.average(np.array(self.LAngleLog)[hoge])
-            tangle = np.average(np.array(self.tangleLog)[hoge])
+            InclinationAngle=0
+            Rangle=0
+            Langle=0
+            tangle=0
+            for i in range(len(hoge[0])):
+                gain=i/55
+                InclinationAngle +=np.array(self.InclinationLog)[hoge][i]*gain
+                Rangle = np.array(self.RANgleLog)[hoge][i]*gain
+                Langle = np.array(self.LAngleLog)[hoge][i]*gain
+                tangle = np.array(self.tangleLog)[hoge][i]*gain
 
             return (round(tangle),round(InclinationAngle),round(Rangle),round(Langle))
         else:     return (0,0,0,0)
@@ -139,14 +148,26 @@ class RealSense(object):
 
         self.branchSystem.setImage(color_image,depth_image,ir_image1,ir_image2,self.web_image)
         value,rule1,rule2 = self.branchSystem.calcCablewayInf(accel,True)
+        rule3_L = np.var(self.LAngleLog)
+        rule3_R = np.var(self.RAngleLog)
+        nonzero1 = np.where(np.array(self.MaxValue1Log) != 0)
+        if(len(nonzero1[0]) == 0):
+            rule4 = 0
+        else:
+            nonzero2 = np.where(np.array(self.MaxValue2Log)[nonzero1] != 0)
+            if(len(nonzero2[0]) == 0):
+                rule4 = 0
+            else:
+                rule4 = np.var(np.array(self.MaxValue1Log)[nonzero1][nonzero2] / np.array(self.MaxValue2Log)[nonzero1][nonzero2]) * 1000
+
+        
 
         testImg = self.branchSystem.getOutputImage()
         self.il.configure(image=testImg)
         self.il.image = testImg
 
-        Rangle = self.branchSystem.Rangle-(90-self.branchSystem.ProceedAngle)
-        Langle = self.branchSystem.Langle+(90-self.branchSystem.ProceedAngle)
-        IsBranch = self.branchSystem.IsBranch
+        Rangle = self.branchSystem.Rangle - (90 - self.branchSystem.ProceedAngle)
+        Langle = self.branchSystem.Langle + (90 - self.branchSystem.ProceedAngle)
 
         robot_tangle = math.degrees(-math.atan2(accel.y,accel.z))
         cable_angle = math.degrees(math.atan(-fit[1]))
@@ -163,7 +184,12 @@ class RealSense(object):
         self.RAngleLog.append(Rangle)
         self.LAngleLog.pop(0)
         self.LAngleLog.append(Langle)
-
+        self.MaxValue1Log.pop(0)
+        self.MaxValue1Log.append(self.branchSystem.maxValue1)
+        self.MaxValue2Log.pop(0)
+        self.MaxValue2Log.append(self.branchSystem.maxValue2)
+        self.MaxValue3Log.pop(0)
+        self.MaxValue3Log.append(self.branchSystem.maxValue3)
 
 
         self.timerlabel.configure(text="処理時間:{0} ms".format(math.floor((time.time() - start) * 1000)))
@@ -194,11 +220,11 @@ class RealSense(object):
         OutputController().msgPrint("■CurrentBranch",round(tangle,2),round(InclinationAngle,2),round(Rangle,2),round(Langle,2))
         (tangle,InclinationAngle,Rangle,Langle) = self.getAverageLog()
         OutputController().msgPrint("■AverageBranch",tangle,InclinationAngle,Rangle,Langle)
-        OutputController().msgPrint("○rule",round(value,2),round(rule1,2),round(rule2,2))
+        OutputController().msgPrint("○rule",round(value),"1:",round(rule1,2),"2:",round(rule2),"3:",round(rule3_L),round(rule3_R),"4:",round(rule4))
 
         if(self.stop_branch_time > 0):
             self.stop_branch_time-=1
-        elif(IsBranch):
+        elif(rule1 > 1 and rule2 > 0.85 and rule3_L < 10000 and rule3_R < 10000):
             OutputController().msgPrint("■■■■■分岐",tangle,InclinationAngle,Rangle,Langle)
             (tangle,InclinationAngle,Rangle,Langle) = getLikeAngle(tangle,InclinationAngle,Rangle,Langle)
             if((InclinationAngle,tangle,Rangle,Langle) != (0,0,0,0)):
@@ -211,7 +237,7 @@ class RealSense(object):
                     #OutputController().msgPrint("Branch
                     #Angle:",ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
                     self.br.branchAngle(tangle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
-                    self.stop_branch_time = 70
+                    self.stop_branch_time = 15
             else:
                 OutputController().msgPrint("No like data")
 
