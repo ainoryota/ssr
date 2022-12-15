@@ -144,8 +144,8 @@ class RealSense(object):
         self.il.configure(image=testImg)
         self.il.image = testImg
 
-        Rangle = self.branchSystem.Rangle
-        Langle = self.branchSystem.Langle
+        Rangle = self.branchSystem.Rangle-(90-self.branchSystem.ProceedAngle)
+        Langle = self.branchSystem.Langle+(90-self.branchSystem.ProceedAngle)
         IsBranch = self.branchSystem.IsBranch
 
         robot_tangle = math.degrees(-math.atan2(accel.y,accel.z))

@@ -278,7 +278,7 @@ def getWeightedLineArray(theta, len, thickness, y, x, h, w):
 
         # Now instead of 2 values for y, we have 2*np.ceil(w/2).
         # All values are 1 except the upmost and bottommost.
-        thickness = np.ceil(w / 2)
+        #thickness = np.ceil(w / 2)
         yy = np.floor(y).reshape(-1, 1) + np.arange(
             -thickness - 1, thickness + 2
         ).reshape(1, -1)

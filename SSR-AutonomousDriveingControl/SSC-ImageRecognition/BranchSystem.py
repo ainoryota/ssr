@@ -32,6 +32,7 @@ class BranchSystem:
         self.tangle = 0
         self.Rangle = 0
         self.Langle = 0
+        self.ProceedAngle=0
         self.branchValue = 0
 
         self.LogNumber = 100
@@ -113,7 +114,7 @@ class BranchSystem:
             self.Error = True
             OutputController().msgPrint("Invalid Camera error")
             return 0,0
-        (self.y,self.x,self.branchValue,self.Rangle,self.Langle,self.DepthIRFlag) = result
+        (self.y,self.x,self.branchValue,self.Rangle,self.Langle,self.ProceedAngle,self.DepthIRFlag) = result
         self.tangle = math.degrees(-math.atan2(accel.y,accel.z))
         self.appendLog()
 
@@ -235,8 +236,8 @@ class BranchSystem:
         maxY = self.y
         maxAngle1 = 270 - self.Rangle
         maxAngle2 = 270 + self.Langle
-        maxAngle3 = 90
-        thickness = 15
+        maxAngle3 = self.ProceedAngle
+        thickness = 10
         h = self.h
         w = self.w
 

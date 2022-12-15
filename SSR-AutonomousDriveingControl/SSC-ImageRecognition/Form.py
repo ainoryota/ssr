@@ -35,7 +35,7 @@ class Form(object):
     def __init__(self,robot):
         self.robot = robot
         self.br = Branch(self.robot)
-        self.frontCam_started=False
+        self.frontCam_started = False
         
         #ウィンドウの生成
         self.root = tk.Tk()  
@@ -177,7 +177,7 @@ class Form(object):
         FormSingleton().setThreeGraph(self.infArea).get_tk_widget().grid(row = 1, column =0,columnspan=1,rowspan=8, padx = 5, pady = 5)
         self.data["msg"].grid(row = 9, column =0,columnspan=1, padx = 5, pady = 5)
         OutputController().setMsgbox(self.data["msg"])
-        self.root.mainloop();
+        self.root.mainloop()
 
     #ボタン関数の定義
     def init(self):
@@ -213,6 +213,7 @@ class Form(object):
     
     def forward(self):   
         OutputController().msgPrint("○○○Forward○○○")
+        self.data["v_auto"].set(True)
         self.data["v1"].set(True) 
         self.data["v2"].set(False)
         self.robot.motors[4].insertOrder(VelocityOrder(-212,0))
@@ -225,6 +226,7 @@ class Form(object):
         OutputController().msgPrint("○○○Back○○○")
         self.data["v1"].set(False) 
         self.data["v2"].set(True)
+        self.data["v_auto"].set(False)
         self.robot.motors[4].insertOrder(VelocityOrder(212,0))
         self.robot.motors[5].insertOrder(VelocityOrder(-212,0))
         self.robot.motors[9].insertOrder(VelocityOrder(212,0))
@@ -233,6 +235,7 @@ class Form(object):
     
     def stop(self):            
         OutputController().msgPrint("○○○Stop○○○")
+        self.data["v_auto"].set(False)
         self.robot.motors[4].insertOrder(VelocityOrder(0,0))
         self.robot.motors[5].insertOrder(VelocityOrder(0,0))
         self.robot.motors[9].insertOrder(VelocityOrder(0,0))
@@ -275,11 +278,11 @@ class Form(object):
         OutputController().pushStep()
     
     def frontCam(self):
-        if(self.frontCam_started==False):
-            self.frontCam_started=True
+        if(self.frontCam_started == False):
+            self.frontCam_started = True
             self.camMgr.startRealsense1()
         else:
-            OutputController().msgPrint("Camera is started")
+            OutputController().msgPrint("Camera is already started")
 
     def backCam(self):
         self.camMgr.startRealsense2()

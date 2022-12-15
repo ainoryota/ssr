@@ -18,15 +18,21 @@ def CalcScore(field,x,y,anglestep,thickness,boaderscore):
     maxValue = 0
     maxValue1 = 0
     maxValue2 = 0
-    maxValue3 = 0
     maxAngle1 = -1
     maxAngle2 = -1
-    ruleAngle = 80
-    angle3 = 90
+    maxAngle3 = -1
+    score3 = -1
 
-    angles = getAngleList(anglestep,angle3,ruleAngle)
+    ruleAngle = 80
+
+    angles = getAngleList(anglestep,90,ruleAngle)
     scores = np.array([np.sum(field[(getWeightedLineArray(angle,300,thickness,y,x,h,w))]) for angle in angles])
-    score3 = np.sum(field[(getWeightedLineArray(90,300,thickness,y,x,h,w))])
+
+    for theta in range(70,110,anglestep):
+        score = np.sum(field[(getWeightedLineArray(theta,300,thickness,y,x,h,w))])
+        if(score > score3):
+            maxAngle3 = theta
+            score3 = score
 
     idx = np.where((scores > 0))
     angles = angles[idx]
@@ -65,7 +71,7 @@ def CalcScore(field,x,y,anglestep,thickness,boaderscore):
         if(idx == i + 1):break
 
 
-    return [maxAngle1,maxAngle2,angle3,maxValue + score3,maxValue1,maxValue2,score3]
+    return [maxAngle1,maxAngle2,maxAngle3,maxValue + score3,maxValue1,maxValue2,score3]
 
 
 
@@ -153,7 +159,7 @@ def IR(color_image,depth_image,ir_image,depth_scale,ir_scale,robot_rotation,minD
     #得られた二値画像から旋回角を求める
     step = 12
     branchsize = 24
-    thickness = 5
+    thickness = 10
     (maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3) = CalcTurningAngle(binaryScale,step,branchsize,thickness)
 
     #y軸を起点としたとき、角度が小さい方が左分岐角
@@ -164,18 +170,17 @@ def IR(color_image,depth_image,ir_image,depth_scale,ir_scale,robot_rotation,minD
     if(angle2L < 0):angle2L = maxAngle2
 
     if(angle1L < angle2L):
-        angleA = abs(maxAngle1 - maxAngle3)
-        angleB = abs(maxAngle2 - maxAngle3)
+        angleRight = abs(maxAngle1 - 270)
+        angleLeft = abs(maxAngle2 - 270)
     else:
-        angleA = abs(maxAngle2 - maxAngle3)
-        angleB = abs(maxAngle1 - maxAngle3)
+        angleRight = abs(maxAngle2 - 270)
+        angleLeft = abs(maxAngle1 - 270)
     
-
     branchValue = maxValue1 + maxValue2 + maxValue3
     if(maxAngle1 == -1 or maxAngle2 == -1 or maxAngle3 == -1):
         branchValue = 0
 
-    return [maxY,maxX,branchValue,angleA,angleB,DepthIRFlag]
+    return [maxY,maxX,branchValue,angleRight,angleLeft,maxAngle3,DepthIRFlag]
 
 
 
