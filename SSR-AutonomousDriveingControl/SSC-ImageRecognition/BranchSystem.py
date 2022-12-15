@@ -119,9 +119,9 @@ class BranchSystem:
 
 
         (rule1,rule2) = self.calcRule()
-        if(rule1 > 3 and rule2 > 0.85):
+        if(rule1 > 1 and rule2 > 0.85):
             self.IsBranch = True
-        return rule1,rule2
+        return self.branchValue,rule1,rule2
 
     def get3DImages(self):
         # データを用意する
@@ -178,34 +178,25 @@ class BranchSystem:
         self.tAngleLog.append(self.tangle)
         self.tAngleLog.pop(0)
 
-    def getAverageData(self):
-        hoge = np.where(np.array(self.valueLog) > 300)
-        if(len(hoge) > 1):
-            InclinationAngle = np.average(np.array((self.InclinationAngleLog)[hoge]))
-            ElevationAngle = np.average(np.array((self.ElevationAngleLog)[hoge]))
-            RAngle = np.average(np.array((self.RAngleLog)[hoge]))
-            LAngle = np.average(np.array((self.LAngleLog)[hoge]))
-            tAngle = np.average(np.array((self.tAngleLog)[hoge]))
 
-            return (InclinationAngle,ElevationAngle,Rangle,Langle,tangle)
-        else:     return (0,0,0,0,0)
 
     def calcRule(self):
-        #1.直近N1ログ以内のvalueLog平均値が300以上
-        #2.直近N1ログ以内のvalueLog平均値が300以上の結果から推定された5ログあとのYLogの線形近似解が高さhの1.2倍を超えた
+        #A→屋外実験により720以上必要であると確認。屋内実験で880以下でなければならないと確認済み
+        #1.直近N1ログ以内のvalueLog平均値がA以上
+        #2.直近N1ログ以内のvalueLog平均値がA以上の結果から推定された5ログあとのYLogの線形近似解が高さhの1.2倍を超えた
         N1 = 15
         valueLogList = np.array(self.valueLog[len(self.valueLog) - N1:])
-        rule1 = np.average(valueLogList) / 300
+        rule1 = np.average(valueLogList) / 750
 
         hoge2 = np.array(self.YLog[len(self.YLog) - N1:])
-        l1 = np.array([n for n in range(N1)])[np.nonzero(valueLogList > 300)]
-        l2 = hoge2[np.nonzero(valueLogList > 300)]
+        l1 = np.array([n for n in range(N1)])[np.nonzero(valueLogList > 750)]
+        l2 = hoge2[np.nonzero(valueLogList > 750)]
     
         if(len(l1) < 2):rule2 = 0
         else:
             a,b = reg1dim(l1,l2) 
             rule2 = (l2[len(l2) - 1] + a * 5) / (self.h * 1.2)
-            OutputController().msgPrint("a,b,l2max",a,b,l2[len(l2) - 1])
+            #OutputController().msgPrint("a,b,l2max",a,b,l2[len(l2) - 1])
             #valueLogList:",valueLogList[len(valueLogList) - 1],rule1,rule2)
             #OutputController().msgPrint("calc rule a,b:",a,b)
             #OutputController().msgPrint("calc rule YLog:",self.YLog)

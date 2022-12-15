@@ -80,9 +80,9 @@ def CalcTurningAngle(binryScale,step,branchsize,thickness):
     maxAngle1 = -1
     maxAngle2 = -1
     maxAngle3 = -1
-    maxValue1 = -1
-    maxValue2 = -1
-    maxValue3 = -1
+    maxValue1 = 0
+    maxValue2 = 0
+    maxValue3 = 0
     anglestep = 3
 
 
@@ -164,14 +164,16 @@ def IR(color_image,depth_image,ir_image,depth_scale,ir_scale,robot_rotation,minD
     if(angle2L < 0):angle2L = maxAngle2
 
     if(angle1L < angle2L):
-        angleA = abs(maxAngle1 - 270)
-        angleB = abs(maxAngle2 - 270)
+        angleA = abs(maxAngle1 - maxAngle3)
+        angleB = abs(maxAngle2 - maxAngle3)
     else:
-        angleA = abs(maxAngle2 - 270)
-        angleB = abs(maxAngle1 - 270)
+        angleA = abs(maxAngle2 - maxAngle3)
+        angleB = abs(maxAngle1 - maxAngle3)
     
 
     branchValue = maxValue1 + maxValue2 + maxValue3
+    if(maxAngle1 == -1 or maxAngle2 == -1 or maxAngle3 == -1):
+        branchValue = 0
 
     return [maxY,maxX,branchValue,angleA,angleB,DepthIRFlag]
 

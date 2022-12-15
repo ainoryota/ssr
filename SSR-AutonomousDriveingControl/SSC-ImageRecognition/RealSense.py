@@ -43,6 +43,11 @@ class RealSense(object):
         self.stop_branch_time = 0
         self.web_image = np.zeros((480,640,3))
         self.webcam = None
+        self.tangleLog = [0 for n in range(10)]
+        self.InclinationLog = [0 for n in range(10)]
+        self.RAngleLog = [0 for n in range(10)]
+        self.LAngleLog = [0 for n in range(10)]
+        self.valueLog = [0 for n in range(10)]
 
         if(False):
             try:
@@ -65,6 +70,11 @@ class RealSense(object):
 
         OutputController().msgPrint("Open realsense",self.serialNo)
        
+    def ResetLog(self):
+        for data in self.valueLog:
+            data = 0
+        return 0
+
     def start(self):
         self.StopFlag = False
         time.sleep(1)
@@ -76,11 +86,22 @@ class RealSense(object):
         self.StopFlag = True
         self.vs.stop()
 
+    def getAverageLog(self):
+        hoge = np.where(np.array(self.valueLog) > 750)
+        if(len(hoge[0]) > 1):
+            InclinationAngle = np.average(np.array(self.InclinationLog)[hoge])
+            Rangle = np.average(np.array(self.RAngleLog)[hoge])
+            Langle = np.average(np.array(self.LAngleLog)[hoge])
+            tangle = np.average(np.array(self.tangleLog)[hoge])
+
+            return (round(tangle),round(InclinationAngle),round(Rangle),round(Langle))
+        else:     return (0,0,0,0)
+
+
     #@jit("f8[:,:]()")
     def getRealsense(self):
         if(self.StopFlag == True):return
         start = time.time()
-    
         accel = self.vs.acc
         gyro = self.vs.gyro
         color_image = self.vs.color_image
@@ -89,7 +110,7 @@ class RealSense(object):
         depth_image = np.zeros((360,640),dtype=np.int16)
         for x in range(640):
             for y in range(360):
-                depth_image[y][x] = depth_image_original[int(y *1.333 )][int(x * 1.325)]
+                depth_image[y][x] = depth_image_original[int(y * 1.333)][int(x * 1.325)]
 
         #depth_image = depth_image_original[::2,::2]
         hoge = np.where((depth_image < 600) & (depth_image > 0))
@@ -117,7 +138,7 @@ class RealSense(object):
 
 
         self.branchSystem.setImage(color_image,depth_image,ir_image1,ir_image2,self.web_image)
-        rule1,rule2 = self.branchSystem.calcCablewayInf(accel,True)
+        value,rule1,rule2 = self.branchSystem.calcCablewayInf(accel,True)
 
         testImg = self.branchSystem.getOutputImage()
         self.il.configure(image=testImg)
@@ -132,6 +153,19 @@ class RealSense(object):
         tangle = robot_tangle + cable_angle
         InclinationAngle = math.degrees(math.atan(-fit[0]))
 
+        self.valueLog.pop(0)
+        self.valueLog.append(value)
+        self.tangleLog.pop(0)
+        self.tangleLog.append(tangle)
+        self.InclinationLog.pop(0)
+        self.InclinationLog.append(InclinationAngle)
+        self.RAngleLog.pop(0)
+        self.RAngleLog.append(Rangle)
+        self.LAngleLog.pop(0)
+        self.LAngleLog.append(Langle)
+
+
+
         self.timerlabel.configure(text="処理時間:{0} ms".format(math.floor((time.time() - start) * 1000)))
         self.AccelLabelX.configure(text="加速度X:{0:.2f}".format(accel.x))
         self.AccelLabelY.configure(text="加速度Y:{0:.2f}".format(accel.y))
@@ -141,16 +175,26 @@ class RealSense(object):
         self.GyroLabelZ.configure(text="ジャイロZ:{0:.2f}".format(gyro.z))
         self.RobotTheta.configure(text="ロボットの角度(deg):{0:.2f} ".format(robot_tangle))
         
-        OutputController().msgPrint("---------")
-        OutputController().msgPrint("{:<10} {:<10} {:<10}".format('ロボット仰角','ケーブル仰角','仰角'))
-        OutputController().msgPrint("{:<16.2f} {:<16.2f} {:<12.2f}".format(robot_tangle,cable_angle,tangle))
-        OutputController().msgPrint("{:<10} {:<10} {:<10}".format('回転角','RAngle','LAngle'))
-        OutputController().msgPrint("{:<13.2f} {:<10.2f} {:<10.2f}".format(InclinationAngle,Rangle,Langle))
-        OutputController().msgPrint("{:<10} {:<10}".format('rule1','rule2',"IsBranch"))
-        OutputController().msgPrint("{:<10.2f} {:<10.2f}".format(rule1,rule2,IsBranch))
-        OutputController().msgPrint("time:",self.stop_branch_time)
+        #OutputController().msgPrint("---------")
+        #OutputController().msgPrint("{:<10} {:<10}
+        #{:<10}".format('ロボット仰角','ケーブル仰角','仰角'))
+        #OutputController().msgPrint("{:<16.2f} {:<16.2f}
+        #{:<12.2f}".format(robot_tangle,cable_angle,tangle))
+        #OutputController().msgPrint("{:<10} {:<10}
+        #{:<10}".format('回転角','RAngle','LAngle'))
+        #OutputController().msgPrint("{:<13.2f} {:<10.2f}
+        #{:<10.2f}".format(InclinationAngle,Rangle,Langle))
+        #OutputController().msgPrint("{:<10}
+        #{:<10}".format('rule1','rule2',"IsBranch"))
+        #OutputController().msgPrint("{:<10.2f}
+        #{:<10.2f}".format(rule1,rule2,IsBranch))
+        #OutputController().msgPrint("time:",self.stop_branch_time)
         FormSingleton().updateForm()
 
+        OutputController().msgPrint("■CurrentBranch",round(tangle,2),round(InclinationAngle,2),round(Rangle,2),round(Langle,2))
+        (tangle,InclinationAngle,Rangle,Langle) = self.getAverageLog()
+        OutputController().msgPrint("■AverageBranch",tangle,InclinationAngle,Rangle,Langle)
+        OutputController().msgPrint("○rule",round(value,2),round(rule1,2),round(rule2,2))
 
         if(self.stop_branch_time > 0):
             self.stop_branch_time-=1
@@ -162,6 +206,7 @@ class RealSense(object):
 
                 if(self.data["v_auto"].get()):
                     self.branchSystem.ResetLog()
+                    self.ResetLog()
                     time.sleep(1)
                     #OutputController().msgPrint("Branch
                     #Angle:",ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())

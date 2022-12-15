@@ -53,15 +53,15 @@ class Branch(object):
             self.robot.motors[id[7]].insertOrder(PosOrder(round(data[line,4] / math.pi * 180,2),t))
             self.robot.motors[id[8]].insertOrder(PosOrder(round(data[line,5] / math.pi * 180,2),t))
 
-            #self.robot.motors[id[4]].insertOrder(VelocityOrder(round(-direct * data[line,6]),t))
-            #self.robot.motors[id[5]].insertOrder(VelocityOrder(round(direct * data[line,6]),t))
-            #self.robot.motors[id[9]].insertOrder(VelocityOrder(round(-direct * data[line,7]),t))
-            #self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct * data[line,7]),t))
+            self.robot.motors[id[4]].insertOrder(VelocityOrder(round(-direct * data[line,6]),t))
+            self.robot.motors[id[5]].insertOrder(VelocityOrder(round(direct * data[line,6]),t))
+            self.robot.motors[id[9]].insertOrder(VelocityOrder(round(-direct * data[line,7]),t))
+            self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct * data[line,7]),t))
             
-            self.robot.motors[id[4]].insertOrder(VelocityOrder(round(-direct * 2.12206591 * 100),t))
-            self.robot.motors[id[5]].insertOrder(VelocityOrder(round(direct * 2.12206591 * 100),t))
-            self.robot.motors[id[9]].insertOrder(VelocityOrder(round(-direct * 2.12206591 * 100),t))
-            self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct * 2.12206591 * 100),t))
+            #self.robot.motors[id[4]].insertOrder(VelocityOrder(round(-direct * 2.12206591 * 100),t))
+            #self.robot.motors[id[5]].insertOrder(VelocityOrder(round(direct * 2.12206591 * 100),t))
+            #self.robot.motors[id[9]].insertOrder(VelocityOrder(round(-direct * 2.12206591 * 100),t))
+            #self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct * 2.12206591 * 100),t))
 
             #t+=0.024
             t+=0.024
@@ -115,9 +115,9 @@ class Branch(object):
                 mode = 2
             else:
                 mode = 1
-        while Langle + Rangle < 100:
-            if Langle < 80:Langle = Langle + 5
-            if Rangle < 80:Rangle = Rangle + 5
+        #while Langle + Rangle < 100:
+        #    if Langle < 80:Langle = Langle + 5
+        #    if Rangle < 80:Rangle = Rangle + 5
     
         value = str(GammalAngle) + "_" + str(TurnAngle) + "_" + str(Langle) + "_" + str(Rangle)
         csv_name = value + '_' + str(mode) + '.csv'    

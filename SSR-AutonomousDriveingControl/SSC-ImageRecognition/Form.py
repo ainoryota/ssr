@@ -35,7 +35,7 @@ class Form(object):
     def __init__(self,robot):
         self.robot = robot
         self.br = Branch(self.robot)
-
+        self.frontCam_started=False
         
         #ウィンドウの生成
         self.root = tk.Tk()  
@@ -275,7 +275,11 @@ class Form(object):
         OutputController().pushStep()
     
     def frontCam(self):
-        self.camMgr.startRealsense1()
+        if(self.frontCam_started==False):
+            self.frontCam_started=True
+            self.camMgr.startRealsense1()
+        else:
+            OutputController().msgPrint("Camera is started")
 
     def backCam(self):
         self.camMgr.startRealsense2()

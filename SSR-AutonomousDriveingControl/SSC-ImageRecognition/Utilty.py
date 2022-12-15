@@ -213,6 +213,8 @@ def ConvertDepthCoordinate(x, y, z):
         tmp_b.append(z[i])
     b = np.matrix(tmp_b).T
     A = np.matrix(tmp_A)
+    if(A.shape==(1,0)):
+        raise ValueError("GGrafic matrix error!")
     fit = (A.T * A).I * A.T * b
     # errors = b - A * fit
     # residual = np.linalg.norm(errors)

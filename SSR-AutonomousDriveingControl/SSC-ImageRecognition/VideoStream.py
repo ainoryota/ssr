@@ -27,7 +27,7 @@ class VideoStream(object):
             self.USE_IMU = True
 
             self.debugMode = False
-            self.color_image = np.zeros((resolution[0], resolution[1]))
+            self.color_image = np.zeros((480, 848))
             self.depth_image = self.color_image
             self.ir_image1 = self.color_image
             self.ir_image2 = self.color_image
