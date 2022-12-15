@@ -51,6 +51,8 @@ class RealSense(object):
         self.MaxValue2Log = [0 for n in range(10)]
         self.MaxValue3Log = [0 for n in range(10)]
         self.valueLog = [0 for n in range(10)]
+        self.timerLog = [0 for n in range(100)]
+        self.startTime = time.time()
 
         if(False):
             try:
@@ -92,16 +94,17 @@ class RealSense(object):
     def getAverageLog(self):
         hoge = np.where(np.array(self.valueLog) > 750)
         if(len(hoge[0]) > 1):
-            InclinationAngle=0
-            Rangle=0
-            Langle=0
-            tangle=0
+            InclinationAngle = 0
+            Rangle = 0
+            Langle = 0
+            tangle = 0
             for i in range(len(hoge[0])):
-                gain=i/55
-                InclinationAngle +=np.array(self.InclinationLog)[hoge][i]*gain
-                Rangle = np.array(self.RANgleLog)[hoge][i]*gain
-                Langle = np.array(self.LAngleLog)[hoge][i]*gain
-                tangle = np.array(self.tangleLog)[hoge][i]*gain
+                n = len(hoge[0])
+                gain = float(i + 1) ** 2 / ((n * (n + 1) * (2 * n + 1)) / 6)
+                InclinationAngle +=np.array(self.InclinationLog)[hoge][i] * gain
+                Rangle += np.array(self.RAngleLog)[hoge][i] * gain
+                Langle += np.array(self.LAngleLog)[hoge][i] * gain
+                tangle += np.array(self.tangleLog)[hoge][i] * gain
 
             return (round(tangle),round(InclinationAngle),round(Rangle),round(Langle))
         else:     return (0,0,0,0)
@@ -111,10 +114,16 @@ class RealSense(object):
     def getRealsense(self):
         if(self.StopFlag == True):return
         start = time.time()
+
+
         accel = self.vs.acc
         gyro = self.vs.gyro
         color_image = self.vs.color_image
         depth_image_original = self.vs.depth_image.astype(np.int16)
+
+        self.timerLog.pop(0)
+        self.timerLog.append(time.time() - self.startTime)
+
         DebugImage(depth_image_original,0,True)
         depth_image = np.zeros((360,640),dtype=np.int16)
         for x in range(640):
@@ -138,6 +147,7 @@ class RealSense(object):
 
         DebugImage(depth_image,1,True)
         
+
         
         ir_image1 = self.vs.ir_image1
         ir_image2 = self.vs.ir_image2
@@ -147,7 +157,7 @@ class RealSense(object):
 
 
         self.branchSystem.setImage(color_image,depth_image,ir_image1,ir_image2,self.web_image)
-        value,rule1,rule2 = self.branchSystem.calcCablewayInf(accel,True)
+        value,rule0,rule1,rule2 = self.branchSystem.calcCablewayInf(accel,self.timerLog,True)
         rule3_L = np.var(self.LAngleLog)
         rule3_R = np.var(self.RAngleLog)
         nonzero1 = np.where(np.array(self.MaxValue1Log) != 0)
@@ -168,6 +178,7 @@ class RealSense(object):
 
         Rangle = self.branchSystem.Rangle - (90 - self.branchSystem.ProceedAngle)
         Langle = self.branchSystem.Langle + (90 - self.branchSystem.ProceedAngle)
+        
 
         robot_tangle = math.degrees(-math.atan2(accel.y,accel.z))
         cable_angle = math.degrees(math.atan(-fit[1]))
@@ -190,7 +201,7 @@ class RealSense(object):
         self.MaxValue2Log.append(self.branchSystem.maxValue2)
         self.MaxValue3Log.pop(0)
         self.MaxValue3Log.append(self.branchSystem.maxValue3)
-
+        
 
         self.timerlabel.configure(text="処理時間:{0} ms".format(math.floor((time.time() - start) * 1000)))
         self.AccelLabelX.configure(text="加速度X:{0:.2f}".format(accel.x))
@@ -220,11 +231,11 @@ class RealSense(object):
         OutputController().msgPrint("■CurrentBranch",round(tangle,2),round(InclinationAngle,2),round(Rangle,2),round(Langle,2))
         (tangle,InclinationAngle,Rangle,Langle) = self.getAverageLog()
         OutputController().msgPrint("■AverageBranch",tangle,InclinationAngle,Rangle,Langle)
-        OutputController().msgPrint("○rule",round(value),"1:",round(rule1,2),"2:",round(rule2),"3:",round(rule3_L),round(rule3_R),"4:",round(rule4))
+        OutputController().msgPrint("○rule",round(value),"0:",round(rule0,2),"1:",round(rule1,2),"2:",round(rule2,2),"3:",round(rule3_L),round(rule3_R),"4:",round(rule4),self.stop_branch_time)
 
         if(self.stop_branch_time > 0):
             self.stop_branch_time-=1
-        elif(rule1 > 1 and rule2 > 0.85 and rule3_L < 10000 and rule3_R < 10000):
+        elif(rule0 > 0.9 and rule1 > 1 and rule2 > 0.85 and rule3_L < 10000 and rule3_R < 10000):
             OutputController().msgPrint("■■■■■分岐",tangle,InclinationAngle,Rangle,Langle)
             (tangle,InclinationAngle,Rangle,Langle) = getLikeAngle(tangle,InclinationAngle,Rangle,Langle)
             if((InclinationAngle,tangle,Rangle,Langle) != (0,0,0,0)):
