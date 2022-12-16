@@ -126,25 +126,18 @@ class RealSense(object):
         
         DebugImage(depth_image_original,0,True)
         depth_image = np.zeros((360,640),dtype=np.int16)
-
-        print("B",time.time() - start)
-
         Y_all, X_all = np.mgrid[:360, :640]
         Y_all = Y_all * 1.333
         X_all = X_all * 1.325
-        Y_all=Y_all.flatten().astype(int)
-        X_all=X_all.flatten().astype(int)
+        Y_all = Y_all.flatten().astype(int)
+        X_all = X_all.flatten().astype(int)
 
         depth_image = depth_image_original[(Y_all,X_all)]
         depth_image = np.reshape(depth_image,((360,640)))
 
-        
-        print("C",time.time() - start)
-
         hoge = np.where((depth_image < 600) & (depth_image > 0))
 
-
-        print("D",time.time() - start)
+        print("A",time.time() - start)
         try:
             x,y,z,fit = FormSingleton().updateThreeGraph(hoge[1],hoge[0],depth_image[hoge])
         except Exception as e:
@@ -152,7 +145,7 @@ class RealSense(object):
             self.imgArea.after(100,self.getRealsense)
             return
         
-        print("E",time.time() - start)
+        print("L",time.time() - start)
         depth_image.fill(0)
         mask = (x < 640) & (y < 360) & (x > 0) & (y > 0)
 
@@ -261,7 +254,7 @@ class RealSense(object):
                 if(self.data["v_auto"].get()):
                     self.branchSystem.ResetLog()
                     self.ResetLog()
-                    time.sleep(0)
+                    time.sleep(1)
                     #OutputController().msgPrint("Branch
                     #Angle:",ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
                     self.br.branchAngle(a,tangle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())

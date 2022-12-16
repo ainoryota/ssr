@@ -75,16 +75,16 @@ class FormSingleton(object):
     
 
     def updateThreeGraph(self,x,y,z):
-        self.ax.cla()
-        self.ax.set_xlim(0,640)
-        self.ax.set_ylim(0,360)
-        self.ax.set_zlim(0,700)
+        #self.ax.cla()
+        #self.ax.set_xlim(0,640)
+        #self.ax.set_ylim(0,360)
+        #self.ax.set_zlim(0,700)
 
-        xlim = self.ax.get_xlim()
-        ylim = self.ax.get_ylim()
-        X,Y = np.meshgrid(np.arange(xlim[0], xlim[1],100),
-                              np.arange(ylim[0], ylim[1],100))
-        Z = np.zeros(X.shape)
+        #xlim = self.ax.get_xlim()
+        #ylim = self.ax.get_ylim()
+        #X,Y = np.meshgrid(np.arange(xlim[0], xlim[1],100),
+        #                      np.arange(ylim[0], ylim[1],100))
+        #Z = np.zeros(X.shape)
 
         (x2,y2,z2,fit) = ConvertDepthCoordinate(x,y,z)
 
