@@ -56,7 +56,8 @@ class OutputController(object):
         
         try:
             msg_text = ",".join([str(_) for _ in msg])
-            msg_text=msg_text.replace(":,",":")
+            msg_text = msg_text.replace(":,",":")
+            msg_text = msg_text.replace("=,","=")
             print(msg_text)
             self.box.insert('end',msg_text + "\n")
             self.box.see(tk.END)
@@ -127,7 +128,6 @@ def OutputDone(stepQueue):
                 #Encoder:",len(dataList),"motors")
                 output.resetEncoder(dataList)
         #OutputController().msgPrint("End Output")
-
 class MotorMode(IntEnum):
     PosNormal = 0x00
     PosHold = 0x01

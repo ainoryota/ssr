@@ -23,9 +23,12 @@ class Branch(object):
         self.robot = robot
         OutputController().msgPrint("Branch Start")
 
-    def FileBranch(self,csvfile,runDirection,save):
+    def FileBranch(self,csvfile,runDirection,save,a=24):
         #分岐データの読み込み
         csvfile = "Data/" + csvfile
+        OutputController().msgPrint("Branch",csvfile,"a=",round(a,2))
+        
+        
         data = np.loadtxt(csvfile,delimiter=",")
         (n,m) = data.shape
         log = [[0] * 21for i in range(n)]#初期化
@@ -43,28 +46,35 @@ class Branch(object):
 
         for line in range(0,n - 1):#行数-1
             #if(t%4==1):continue;#早めに後輪を分岐する
-                                               #log[t][0] = time.perf_counter() - time_start
+                                               #log[t][0] = time.perf_counter()
+                                                                                  #-
+                                                                                                                     #time_start
 
 
-            self.robot.motors[id[1]].insertOrder(PosOrder(round(data[line,0] / math.pi * 180,2),t))
-            self.robot.motors[id[2]].insertOrder(PosOrder(round(data[line,1] / math.pi * 180,2),t))
-            self.robot.motors[id[3]].insertOrder(PosOrder(round(data[line,2] / math.pi * 180,2),t))
-            self.robot.motors[id[6]].insertOrder(PosOrder(round(data[line,3] / math.pi * 180,2),t))
-            self.robot.motors[id[7]].insertOrder(PosOrder(round(data[line,4] / math.pi * 180,2),t))
-            self.robot.motors[id[8]].insertOrder(PosOrder(round(data[line,5] / math.pi * 180,2),t))
+            self.robot.motors[id[1]].insertOrder(PosOrder(round(data[line,0] / math.pi * 180,2),t))#前のアームの根本 時計回りが正
+            self.robot.motors[id[2]].insertOrder(PosOrder(round(data[line,1] / math.pi * 180,2),t))#前のアームの2番目
+            self.robot.motors[id[3]].insertOrder(PosOrder(round(data[line,2] / math.pi * 180,2),t))#前のアームの3番目
+
+            self.robot.motors[id[6]].insertOrder(PosOrder(round(data[line,3] / math.pi * 180,2),t))#後ろのアームの根本
+            self.robot.motors[id[7]].insertOrder(PosOrder(round(data[line,4] / math.pi * 180,2),t))#後ろのアームの2番目
+            self.robot.motors[id[8]].insertOrder(PosOrder(round(data[line,5] / math.pi * 180,2),t))#後ろのアームの3番目
 
             self.robot.motors[id[4]].insertOrder(VelocityOrder(round(-direct * data[line,6]),t))
             self.robot.motors[id[5]].insertOrder(VelocityOrder(round(direct * data[line,6]),t))
             self.robot.motors[id[9]].insertOrder(VelocityOrder(round(-direct * data[line,7]),t))
             self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct * data[line,7]),t))
             
-            #self.robot.motors[id[4]].insertOrder(VelocityOrder(round(-direct * 2.12206591 * 100),t))
-            #self.robot.motors[id[5]].insertOrder(VelocityOrder(round(direct * 2.12206591 * 100),t))
-            #self.robot.motors[id[9]].insertOrder(VelocityOrder(round(-direct * 2.12206591 * 100),t))
-            #self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct * 2.12206591 * 100),t))
+            #self.robot.motors[id[4]].insertOrder(VelocityOrder(round(-direct *
+            #2.12206591 * 100),t))
+            #self.robot.motors[id[5]].insertOrder(VelocityOrder(round(direct *
+            #2.12206591 * 100),t))
+            #self.robot.motors[id[9]].insertOrder(VelocityOrder(round(-direct *
+            #2.12206591 * 100),t))
+            #self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct *
+            #2.12206591 * 100),t))
 
             #t+=0.024
-            t+=0.016
+            t+=(0.024 * 35) / a #aが大きいほど小さな値にする。
 
         OutputController().pushStep()
 
@@ -104,7 +114,7 @@ class Branch(object):
         #        writer = csv.writer(f,lineterminator='\n')
         #        writer.writerows(log)
 
-    def branchAngle(self,GammalAngle,TurnAngle,Langle,Rangle,runDirection,turnDirection,tension,save):
+    def branchAngle(self,a,GammalAngle,TurnAngle,Langle,Rangle,runDirection,turnDirection,tension,save):
         if turnDirection == True:         #右分岐かどうか
             if runDirection == True:       #前進中かどうか
                 mode = 1
@@ -125,7 +135,7 @@ class Branch(object):
             csv_name = value + '_' + str(mode) + '_T' + '.csv'
         
         OutputController().msgPrint(csv_name,"AngleMode")
-        self.FileBranch(csv_name,runDirection,save)
+        self.FileBranch(csv_name,runDirection,save,a)
 
 
 

@@ -110,19 +110,19 @@ class BranchSystem:
         if(np.sum(self.ir_image1) < 0.1 or np.sum(self.color_image) < 0.1):#カメラがほぼ真っ暗
             self.Error = True
             OutputController().msgPrint("Camera is black")
-            return 0,0,0,0
+            return 0,0,0,0,0
         result = IR(self.color_image,self.depth_image,self.ir_image1,self.depth_scale,self.ir_scale,accel,self.minDistance,self.maxDistance,self.overDistance,extMode)
         if(len(result) == 1):#不正ならFalseだけが返ってくる
             self.Error = True
             OutputController().msgPrint("Invalid Camera error")
-            return 0,0,0,0
+            return 0,0,0,0,0
         (self.y,self.x,self.branchValue,self.Rangle,self.Langle,self.ProceedAngle,self.DepthIRFlag,self.maxValue1,self.maxValue2,self.maxValue3) = result
         self.tangle = math.degrees(-math.atan2(accel.y,accel.z))
         self.appendLog()
         
 
-        (rule0,rule1,rule2) = self.calcRule(timerLog)
-        return self.branchValue,rule0,rule1,rule2
+        (rule0,rule1,rule2,a) = self.calcRule(timerLog)
+        return self.branchValue,rule0,rule1,rule2,a
 
     def get3DImages(self):
         # データを用意する
@@ -185,11 +185,11 @@ class BranchSystem:
         #A→屋外実験により720以上必要であると確認。屋内実験で880以下でなければならないと確認済み
         #1.直近N1ログ以内のvalueLog平均値がA以上
         #2.直近N1ログ以内のvalueLog平均値がA以上の結果から推定された5ログあとのYLogの線形近似解が高さhの1.2倍を超えた
-        N1 = 10 #処理時間が500msなら10、300msなら15
+        N1 = 8 #処理時間が500msなら10、300msなら15
 
         #YLogList = np.array(self.YLog[len(self.YLog) - N1:])
         #rule0 = np.average(YLogList)
-
+        start_time = timerLog[len(timerLog) - N1]
 
         valueLogList = np.array(self.valueLog[len(self.valueLog) - N1:])
         timerLogList = np.array(timerLog[len(timerLog) - N1:])
@@ -198,6 +198,7 @@ class BranchSystem:
         hoge2 = np.array(self.YLog[len(self.YLog) - N1:])
 
         one_time,_ = reg1dim(np.array([n for n in range(len(timerLogList))]),timerLogList)
+        
 
         l1 = timerLogList[np.nonzero(valueLogList > 750)]
         l2 = hoge2[np.nonzero(valueLogList > 750)]
@@ -209,6 +210,15 @@ class BranchSystem:
             l2 = l2[foo]
 
         if(len(l1) < N1 / 2):
+            if(len(l1) > 0):
+                a,b = reg1dim(l1,l2)   
+                rule2 = (b + a * (start_time + one_time * (5 + N1))) / (self.h * 1.2)
+            else:
+                a=0
+                b=0
+                rule2 = 0
+
+            OutputController().msgPrint("▲:","len=",len(l1),a,b,rule2)
             rule2 = 0
             rule0 = 0
         else:
@@ -218,16 +228,19 @@ class BranchSystem:
 
             a,b = reg1dim(l1,l2)
             #a,b = L_abs_minimize(l1,l2)
-            OutputController().msgPrint("l2:",rule0,a,b,l2)
             
-            rule2 = (b + a * (one_time * (5 + N1))) / (self.h * 1.2)
+            
+            rule2 = (b + a * (start_time + one_time * (5 + N1))) / (self.h * 1.2)
+
+            OutputController().msgPrint("l2:","a=",a,"b=",b,"one_time=",one_time,"place=",(b + a * (one_time * (5 + N1))),"l2=",l2)
+
             #OutputController().msgPrint("a,b,l2max",a,b,l2[len(l2) - 1])
             #valueLogList:",valueLogList[len(valueLogList) - 1],rule1,rule2)
             #OutputController().msgPrint("calc rule a,b:",a,b)
             #OutputController().msgPrint("calc rule YLog:",self.YLog)
             #OutputController().msgPrint("calc rule l1:",l1)
             #OutputController().msgPrint("calc rule l2:",l2)
-        return (rule0,rule1,rule2)
+        return (rule0,rule1,rule2,a)
 
 
     def ResetLog(self):

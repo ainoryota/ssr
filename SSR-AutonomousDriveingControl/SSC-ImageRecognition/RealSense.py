@@ -157,7 +157,7 @@ class RealSense(object):
 
 
         self.branchSystem.setImage(color_image,depth_image,ir_image1,ir_image2,self.web_image)
-        value,rule0,rule1,rule2 = self.branchSystem.calcCablewayInf(accel,self.timerLog,True)
+        value,rule0,rule1,rule2,a = self.branchSystem.calcCablewayInf(accel,self.timerLog,True)
         rule3_L = np.var(self.LAngleLog)
         rule3_R = np.var(self.RAngleLog)
         nonzero1 = np.where(np.array(self.MaxValue1Log) != 0)
@@ -231,11 +231,11 @@ class RealSense(object):
         OutputController().msgPrint("■CurrentBranch",round(tangle,2),round(InclinationAngle,2),round(Rangle,2),round(Langle,2))
         (tangle,InclinationAngle,Rangle,Langle) = self.getAverageLog()
         OutputController().msgPrint("■AverageBranch",tangle,InclinationAngle,Rangle,Langle)
-        OutputController().msgPrint("○rule",round(value),"0:",round(rule0,2),"1:",round(rule1,2),"2:",round(rule2,2),"3:",round(rule3_L),round(rule3_R),"4:",round(rule4),self.stop_branch_time)
+        OutputController().msgPrint("○rule","value=",round(value),"rule0=",round(rule0,2),"rule1=",round(rule1,2),"rule2=",round(rule2,2),"rule3L=",round(rule3_L),"rule3R=",round(rule3_R),"rule4=",round(rule4),"a=",round(a,2),"stop_time=",self.stop_branch_time)
 
         if(self.stop_branch_time > 0):
             self.stop_branch_time-=1
-        elif(rule0 > 0.9 and rule1 > 1 and rule2 > 0.85 and rule3_L < 10000 and rule3_R < 10000):
+        elif(rule0 > 0.9 and rule1 > 1 and rule2 > 1):#and rule3_L < 10000 and rule3_R < 10000
             OutputController().msgPrint("■■■■■分岐",tangle,InclinationAngle,Rangle,Langle)
             (tangle,InclinationAngle,Rangle,Langle) = getLikeAngle(tangle,InclinationAngle,Rangle,Langle)
             if((InclinationAngle,tangle,Rangle,Langle) != (0,0,0,0)):
@@ -244,10 +244,10 @@ class RealSense(object):
                 if(self.data["v_auto"].get()):
                     self.branchSystem.ResetLog()
                     self.ResetLog()
-                    time.sleep(1)
+                    time.sleep(0)
                     #OutputController().msgPrint("Branch
                     #Angle:",ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
-                    self.br.branchAngle(tangle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
+                    self.br.branchAngle(a,tangle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
                     self.stop_branch_time = 15
             else:
                 OutputController().msgPrint("No like data")

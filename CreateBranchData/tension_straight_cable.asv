@@ -1,22 +1,18 @@
-%% turn_right_comp8‚É‘Î‚µ‚Ä‚ÌƒIƒvƒVƒ‡ƒ“
+%% turn_right_comp8ã«å¯¾ã—ã¦ã®ã‚ªãƒ—ã‚·ãƒ§ãƒ³
 
 
-%% ‰Šúİ’è
-%ƒP[ƒuƒ‹ğŒ
+%% åˆæœŸè¨­å®š
+%ã‚±ãƒ¼ãƒ–ãƒ«æ¡ä»¶
 
 idx=0;
 count=0
-a=15;
-b=-5;
-right=35;
-left=45;
-start_count=23000;
-
 for loop=1:2
             for mode=1:2
 %Main(a,b,c,right,mode)
 %disp(["clac",a,b,c,right,mode]);
 %continue;
+start_count=1000
+
 for a=-45:5:45
 for b=-90:5:90
     for left=0:5:90
@@ -47,57 +43,57 @@ end
 
 end
 function Main(a,b,right,left,mode)
-    gamma1 = a*pi/180;      %ƒP[ƒuƒ‹Î“x
-        phi_n = b*pi/180;      %ƒP[ƒuƒ‹•½–Ê‚Ì‰ñ“]Šp
-        the_nR = right*pi/180;     %‰Eù‰ñŠp
-        the_nL = left*pi/180;    %¶ù‰ñŠp
+    gamma1 = a*pi/180;      %ã‚±ãƒ¼ãƒ–ãƒ«æ–œåº¦
+        phi_n = b*pi/180;      %ã‚±ãƒ¼ãƒ–ãƒ«å¹³é¢ã®å›è»¢è§’
+        the_nR = right*pi/180;     %å³æ—‹å›è§’
+        the_nL = left*pi/180;    %å·¦æ—‹å›è§’
 
-    %ƒ‚[ƒh‘I‘ğ
-        %mode = e;           %‰E•ªŠò(1) ¶•ªŠò(2)
-        save = 1;           %ƒf[ƒ^‚Ì•Û‘¶,CSV‘‚«o‚µon,off
-        animation = 0;      %ƒAƒjƒ[ƒVƒ‡ƒ“on,off
+    %ãƒ¢ãƒ¼ãƒ‰é¸æŠ
+        %mode = e;           %å³åˆ†å²(1) å·¦åˆ†å²(2)
+        save = 1;           %ãƒ‡ãƒ¼ã‚¿ã®ä¿å­˜,CSVæ›¸ãå‡ºã—on,off
+        animation = 0;      %ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³on,off
         workspace = 0;
         robot_plot = 1;
         switching = 0; 
-        %‰E•ªŠòƒ‚[ƒh‚ªŠî€
-        %¶•ªŠò‚ÍGUI‚Å‰ğŒˆ
-        %(0)ƒeƒ“ƒVƒ‡ƒ“‚©‚¯‚½ó‘Ô‚Å•ªŠò
-        %(1)—¼—Öƒm[ƒ}ƒ‹ƒ‚[ƒh‚Ìó‘Ô‚©‚ç‰E‚©‚ç¶‚Ì•ªŠòƒ‚[ƒh‚Ì•ÏX
-        %(2)—¼—Öƒeƒ“ƒVƒ‡ƒ“ƒ‚[ƒh‚Ìó‘Ô‚©‚ç‰E‚©‚ç¶‚Ì•ªŠòƒ‚[ƒh‚Ì•ÏX
-        %(3)—¼—Öƒm[ƒ}ƒ‹ƒ‚[ƒh‚Ìó‘Ô‚©‚çC‘O—Öƒeƒ“ƒVƒ‡ƒ“
-        %(4)—¼—Öƒm[ƒ}ƒ‹ƒ‚[ƒh‚Ìó‘Ô‚©‚çCŒã—Öƒeƒ“ƒVƒ‡ƒ“
-        %(5)—¼—Öƒeƒ“ƒVƒ‡ƒ“ƒ‚[ƒh‚Ìó‘Ô‚©‚çC‘O—Öƒm[ƒ}ƒ‹
-        %(6)—¼—Öƒeƒ“ƒVƒ‡ƒ“ƒ‚[ƒh‚Ìó‘Ô‚©‚çCŒã—Öƒm[ƒ}ƒ‹
-        %(7)Œã—Öƒeƒ“ƒVƒ‡ƒ“C‘O—Öƒm[ƒ}ƒ‹‚©‚çC‘O—Öƒeƒ“ƒVƒ‡ƒ“ƒ‚[ƒh
-        %(8)‘O—Öƒeƒ“ƒVƒ‡ƒ“CŒã—Ö—Öƒm[ƒ}ƒ‹‚©‚çCŒã—Öƒeƒ“ƒVƒ‡ƒ“ƒ‚[ƒh
-        %(9)Œã—Öƒeƒ“ƒVƒ‡ƒ“C‘O—Öƒm[ƒ}ƒ‹‚©‚çCŒã—Öƒm[ƒ}ƒ‹ƒ‚[ƒh
-        %(10)‘O—Öƒeƒ“ƒVƒ‡ƒ“CŒã—Ö—Öƒm[ƒ}ƒ‹‚©‚çC‘O—Öƒm[ƒ}ƒ‹ƒ‚[ƒh
-        %(11)ƒm[ƒ}ƒ‹ƒ‚[ƒh‚Å•ªŠò
-        %(12)‘–‚è‚±‚ñ‚Å‚­‚é‚â‚Âi“®‰æ—pj
-        %(13)ƒeƒ“ƒVƒ‡ƒ“‚©‚¯‚½ó‘Ô‚Å–³’â~•ªŠò
-    %% ’è”
-    %‹@\’è”‚È‚Ç
-        Rw = 83/2;      %ƒ^ƒCƒ„‚Ì’¼ŒaC“àŒa
+        %å³åˆ†å²ãƒ¢ãƒ¼ãƒ‰ãŒåŸºæº–
+        %å·¦åˆ†å²æ™‚ã¯GUIã§è§£æ±º
+        %(0)ãƒ†ãƒ³ã‚·ãƒ§ãƒ³ã‹ã‘ãŸçŠ¶æ…‹ã§åˆ†å²
+        %(1)ä¸¡è¼ªãƒãƒ¼ãƒãƒ«ãƒ¢ãƒ¼ãƒ‰ã®çŠ¶æ…‹ã‹ã‚‰å³ã‹ã‚‰å·¦ã®åˆ†å²ãƒ¢ãƒ¼ãƒ‰ã®å¤‰æ›´
+        %(2)ä¸¡è¼ªãƒ†ãƒ³ã‚·ãƒ§ãƒ³ãƒ¢ãƒ¼ãƒ‰ã®çŠ¶æ…‹ã‹ã‚‰å³ã‹ã‚‰å·¦ã®åˆ†å²ãƒ¢ãƒ¼ãƒ‰ã®å¤‰æ›´
+        %(3)ä¸¡è¼ªãƒãƒ¼ãƒãƒ«ãƒ¢ãƒ¼ãƒ‰ã®çŠ¶æ…‹ã‹ã‚‰ï¼Œå‰è¼ªãƒ†ãƒ³ã‚·ãƒ§ãƒ³
+        %(4)ä¸¡è¼ªãƒãƒ¼ãƒãƒ«ãƒ¢ãƒ¼ãƒ‰ã®çŠ¶æ…‹ã‹ã‚‰ï¼Œå¾Œè¼ªãƒ†ãƒ³ã‚·ãƒ§ãƒ³
+        %(5)ä¸¡è¼ªãƒ†ãƒ³ã‚·ãƒ§ãƒ³ãƒ¢ãƒ¼ãƒ‰ã®çŠ¶æ…‹ã‹ã‚‰ï¼Œå‰è¼ªãƒãƒ¼ãƒãƒ«
+        %(6)ä¸¡è¼ªãƒ†ãƒ³ã‚·ãƒ§ãƒ³ãƒ¢ãƒ¼ãƒ‰ã®çŠ¶æ…‹ã‹ã‚‰ï¼Œå¾Œè¼ªãƒãƒ¼ãƒãƒ«
+        %(7)å¾Œè¼ªãƒ†ãƒ³ã‚·ãƒ§ãƒ³ï¼Œå‰è¼ªãƒãƒ¼ãƒãƒ«ã‹ã‚‰ï¼Œå‰è¼ªãƒ†ãƒ³ã‚·ãƒ§ãƒ³ãƒ¢ãƒ¼ãƒ‰
+        %(8)å‰è¼ªãƒ†ãƒ³ã‚·ãƒ§ãƒ³ï¼Œå¾Œè¼ªè¼ªãƒãƒ¼ãƒãƒ«ã‹ã‚‰ï¼Œå¾Œè¼ªãƒ†ãƒ³ã‚·ãƒ§ãƒ³ãƒ¢ãƒ¼ãƒ‰
+        %(9)å¾Œè¼ªãƒ†ãƒ³ã‚·ãƒ§ãƒ³ï¼Œå‰è¼ªãƒãƒ¼ãƒãƒ«ã‹ã‚‰ï¼Œå¾Œè¼ªãƒãƒ¼ãƒãƒ«ãƒ¢ãƒ¼ãƒ‰
+        %(10)å‰è¼ªãƒ†ãƒ³ã‚·ãƒ§ãƒ³ï¼Œå¾Œè¼ªè¼ªãƒãƒ¼ãƒãƒ«ã‹ã‚‰ï¼Œå‰è¼ªãƒãƒ¼ãƒãƒ«ãƒ¢ãƒ¼ãƒ‰
+        %(11)ãƒãƒ¼ãƒãƒ«ãƒ¢ãƒ¼ãƒ‰ã§åˆ†å²
+        %(12)èµ°ã‚Šã“ã‚“ã§ãã‚‹ã‚„ã¤ï¼ˆå‹•ç”»ç”¨ï¼‰
+        %(13)ãƒ†ãƒ³ã‚·ãƒ§ãƒ³ã‹ã‘ãŸçŠ¶æ…‹ã§ç„¡åœæ­¢åˆ†å²
+    %% å®šæ•°
+    %æ©Ÿæ§‹å®šæ•°ãªã©
+        Rw = 83/2;      %ã‚¿ã‚¤ãƒ¤ã®ç›´å¾„ï¼Œå†…å¾„
         rw = 22.185/2;
-        d = 6;          %ƒP[ƒuƒ‹’¼Œa
-        phi_nw = atan(12/23.5);   %p88ƒ^ƒCƒ„‚ÌŒ`ó‚É‚æ‚Á‚ÄƒP[ƒuƒ‹‚ğ”²‚­Šp“x
+        d = 6;          %ã‚±ãƒ¼ãƒ–ãƒ«ç›´å¾„
+        phi_nw = atan(12/23.5);   %p88ã‚¿ã‚¤ãƒ¤ã®å½¢çŠ¶ã«ã‚ˆã£ã¦ã‚±ãƒ¼ãƒ–ãƒ«ã‚’æŠœãè§’åº¦
 
-        rm = 45/2;  %Šî€‰~’Œ”¼Œaiƒ‚[ƒ^•”•ªj
-        lm = 50;  %Šî€‰~’Œ’·‚³iƒ‚[ƒ^•”•ªj
-        rj = 35; %ÚG”»’è—p‚Ì‹…‚Ì”¼Œa
+        rm = 45/2;  %åŸºæº–å††æŸ±åŠå¾„ï¼ˆãƒ¢ãƒ¼ã‚¿éƒ¨åˆ†ï¼‰
+        lm = 50;  %åŸºæº–å††æŸ±é•·ã•ï¼ˆãƒ¢ãƒ¼ã‚¿éƒ¨åˆ†ï¼‰
+        rj = 35; %æ¥è§¦åˆ¤å®šç”¨ã®çƒã®åŠå¾„
 
-        a1 = 79/180*pi;         %‚Ë‚¶‚êŠp
+        a1 = 79/180*pi;         %ã­ã˜ã‚Œè§’
         a2 = 64/180*pi;
-        a3 = 15/180*pi;         %1²–Ú‚Ìæ‚è•t‚¯Špi˜_•¶‚Å‚Ía0j  
+        a3 = 15/180*pi;         %1è»¸ç›®ã®å–ã‚Šä»˜ã‘è§’ï¼ˆè«–æ–‡ã§ã¯a0ï¼‰  
 
-       % a1 = 95/180*pi;         %‚Ë‚¶‚êŠp
+       % a1 = 95/180*pi;         %ã­ã˜ã‚Œè§’
         %a2 = 65/180*pi;
-       % a3 = 30/180*pi;         %1²–Ú‚Ìæ‚è•t‚¯Špi˜_•¶‚Å‚Ía0j 
+       % a3 = 30/180*pi;         %1è»¸ç›®ã®å–ã‚Šä»˜ã‘è§’ï¼ˆè«–æ–‡ã§ã¯a0ï¼‰ 
 
-    %ŠeƒŠƒ“ƒN‚Ìd‚³CdSˆÊ’uC’·‚³
+    %å„ãƒªãƒ³ã‚¯ã®é‡ã•ï¼Œé‡å¿ƒä½ç½®ï¼Œé•·ã•
         Lc = 300;
         l2_min = (Lc-80)/2;
-        l1 = 90;                %Šeƒ‚[ƒ^[‚Ì’†S“_‚©‚ç‚Ì‹——£
+        l1 = 90;                %å„ãƒ¢ãƒ¼ã‚¿ãƒ¼ã®ä¸­å¿ƒç‚¹ã‹ã‚‰ã®è·é›¢
         l2 = l2_min/sin(a2);
         l3 = 185;
         l4 = 185;
@@ -114,7 +110,7 @@ function Main(a,b,right,left,mode)
         %w5 = 146.34;
         w6 = 800;
 
-        %dSˆÊ’u
+        %é‡å¿ƒä½ç½®
         g0 = [0;0;0];
         %g1 = [0;-19.248;91.207];
         g2 = [0;0;l2];
@@ -123,7 +119,7 @@ function Main(a,b,right,left,mode)
         %g5 = [0;-83.118;42.198];
         g6 = [0;0;0];
 
-    %% dataŠÖ˜A
+    %% dataé–¢é€£
         count1 = zeros(500,3);
         count2 = zeros(500,3);
         data_r = zeros(500,4);
@@ -138,81 +134,81 @@ function Main(a,b,right,left,mode)
 
 
 
-        %”X‚Ì‰Šú‰»
+        %è«¸ã€…ã®åˆæœŸåŒ–
         buf1 = 0; buf2 = 0; buf3 = 0;
         t1 = 0; t2 = 0; t3 = 0;t4 = 0;t5 = 0;
         t3_ = 0;
         cnt = 0;
-        L1 = Lc; %ƒP[ƒuƒ‹‚Ì’·‚³
+        L1 = Lc; %ã‚±ãƒ¼ãƒ–ãƒ«ã®é•·ã•
         L2 = Lc;
-        %ƒSƒ~
+        %ã‚´ãƒŸ
         t0 = 0;
 
-    %% Šp‘¬“x‚È‚Ç‚Ìİ’è
-        %—^‚¦‚éğŒ
-    %   t_step = 0.0485; %50[ms] ƒLƒŠ‚ªˆ«‚¢‚Æ‹““®‚ª‚¨‚©‚µ‚­‚È‚éD48ms‚Å‚¾‚ß
-        t_step = 1.6/33; %ƒLƒŠ‚Ì‚¢‚¢”š‚É‚·‚é‚½‚ß(§ŒäüŠú‚æ‚è­‚µ‚Í‚â‚ß)
-        r_v = 13.5; %—LŒø”¼Œa[mm]
-        vel = 50; %•ªŠò‚ÌŒã—Ö‚ÌˆÚ“®‘¬“x[mm/s]
-        L_gap = 40; %•ªŠò“_’¼‘O‚Å~‚Ü‚é‹——£(–ñƒ^ƒCƒ„’¼Œa‚Ì”¼•ª)
+    %% è§’é€Ÿåº¦ãªã©ã®è¨­å®š
+        %ä¸ãˆã‚‹æ¡ä»¶
+    %   t_step = 0.0485; %50[ms] ã‚­ãƒªãŒæ‚ªã„ã¨æŒ™å‹•ãŒãŠã‹ã—ããªã‚‹ï¼48msã§ã ã‚
+        t_step = 1.6/33; %ã‚­ãƒªã®ã„ã„æ•°å­—ã«ã™ã‚‹ãŸã‚(åˆ¶å¾¡å‘¨æœŸã‚ˆã‚Šå°‘ã—ã¯ã‚„ã‚)
+        r_v = 13.5; %æœ‰åŠ¹åŠå¾„[mm]
+        vel = 50; %åˆ†å²æ™‚ã®å¾Œè¼ªã®ç§»å‹•é€Ÿåº¦[mm/s]
+        L_gap = 40; %åˆ†å²ç‚¹ç›´å‰ã§æ­¢ã¾ã‚‹è·é›¢(ç´„ã‚¿ã‚¤ãƒ¤ç›´å¾„ã®åŠåˆ†)
         %L_gap = 150
 
 
-        %]‘®“I‚ÉŒˆ‚Ü‚é‚à‚Ì‚½‚¿
-        t_bra = 2*L_gap/vel;                    %‹ì“®—Ö‚ª•ªŠò‚É‚©‚©‚éŠÔ(80/50=1.6[s])
-        n_bra = round(t_bra/t_step);            %•ªŠò‚É‚©‚©‚éƒJƒEƒ“ƒg
-        omega_c =vel/r_v*180/pi ;                 %[deg/s] ’Êí‘–s‚Ì‘¬“x    
+        %å¾“å±çš„ã«æ±ºã¾ã‚‹ã‚‚ã®ãŸã¡
+        t_bra = 2*L_gap/vel;                    %é§†å‹•è¼ªãŒåˆ†å²ã«ã‹ã‹ã‚‹æ™‚é–“(80/50=1.6[s])
+        n_bra = round(t_bra/t_step);            %åˆ†å²ã«ã‹ã‹ã‚‹ã‚«ã‚¦ãƒ³ãƒˆ
+        omega_c =vel/r_v*180/pi ;                 %[deg/s] é€šå¸¸èµ°è¡Œæ™‚ã®é€Ÿåº¦    
 
 
 
 
-        %% XYXƒIƒCƒ‰[Šp‚ÆƒNƒH[ƒ^ƒjƒIƒ“‚É‚æ‚é•ªŠò‚Ìp¨•\Œ»
+        %% XYXã‚ªã‚¤ãƒ©ãƒ¼è§’ã¨ã‚¯ã‚©ãƒ¼ã‚¿ãƒ‹ã‚ªãƒ³ã«ã‚ˆã‚‹åˆ†å²æ™‚ã®å§¿å‹¢è¡¨ç¾
 
-        %•ªŠò“®ì‚É‚¨‚¯‚ép
-        E0_R = [-pi/2,0,0];               %ƒIƒCƒ‰[Šp‚Ì‰Šú’l
-        E1_R = [-pi/2-phi_n,-pi/2+the_nL,phi_nw];  %ƒTƒuƒP[ƒuƒ‹‚ğ”²‚­p¨ 
+        %åˆ†å²å‹•ä½œã«ãŠã‘ã‚‹å§¿
+        E0_R = [-pi/2,0,0];               %ã‚ªã‚¤ãƒ©ãƒ¼è§’ã®åˆæœŸå€¤
+        E1_R = [-pi/2-phi_n,-pi/2+the_nL,phi_nw];  %ã‚µãƒ–ã‚±ãƒ¼ãƒ–ãƒ«ã‚’æŠœãå§¿å‹¢ 
         E2_R = [-pi/2-phi_n,-the_nR,atan((-sin(gamma1)*sin(the_nR) + cos(gamma1)*cos(the_nR)*sin(phi_n))/cos(phi_n)*cos(gamma1))]; 
 
-        E0_L = [pi/2,0,0];               %ƒIƒCƒ‰[Šp‚Ì‰Šú’l
-        E1_L = [pi/2-phi_n,-pi/2+the_nR,-phi_nw];  %ƒTƒuƒP[ƒuƒ‹‚ğ”²‚­p¨ 
+        E0_L = [pi/2,0,0];               %ã‚ªã‚¤ãƒ©ãƒ¼è§’ã®åˆæœŸå€¤
+        E1_L = [pi/2-phi_n,-pi/2+the_nR,-phi_nw];  %ã‚µãƒ–ã‚±ãƒ¼ãƒ–ãƒ«ã‚’æŠœãå§¿å‹¢ 
         E2_L = [pi/2-phi_n,-the_nL,atan((sin(gamma1)*sin(the_nL) + cos(gamma1)*cos(the_nL)*sin(phi_n))/cos(phi_n)*cos(gamma1))]; 
 
-        %XYXƒIƒCƒ‰[Šp‚ğƒNƒH[ƒ^ƒjƒIƒ“‚É•ÏŠ·
-        quat0_R = quaternion(E0_R,'euler','XYX','frame');   %ƒNƒH[ƒ^ƒjƒIƒ“‚Ì‰Šú’l
-        quat1_R = quaternion(E1_R,'euler','XYX','frame');   %ƒTƒuƒP[ƒuƒ‹‚ğ”²‚­p¨
-        quat2_R = quaternion(E2_R,'euler','XYX','frame');   %•ªŠòŒã‚Ìp¨
-        quat0_L = quaternion(E0_L,'euler','XYX','frame');   %ƒNƒH[ƒ^ƒjƒIƒ“‚Ì‰Šú’l
-        quat1_L = quaternion(E1_L,'euler','XYX','frame');   %ƒTƒuƒP[ƒuƒ‹‚ğ”²‚­p¨
-        quat2_L = quaternion(E2_L,'euler','XYX','frame');   %•ªŠòŒã‚Ìp¨
+        %XYXã‚ªã‚¤ãƒ©ãƒ¼è§’ã‚’ã‚¯ã‚©ãƒ¼ã‚¿ãƒ‹ã‚ªãƒ³ã«å¤‰æ›
+        quat0_R = quaternion(E0_R,'euler','XYX','frame');   %ã‚¯ã‚©ãƒ¼ã‚¿ãƒ‹ã‚ªãƒ³ã®åˆæœŸå€¤
+        quat1_R = quaternion(E1_R,'euler','XYX','frame');   %ã‚µãƒ–ã‚±ãƒ¼ãƒ–ãƒ«ã‚’æŠœãå§¿å‹¢
+        quat2_R = quaternion(E2_R,'euler','XYX','frame');   %åˆ†å²å¾Œã®å§¿å‹¢
+        quat0_L = quaternion(E0_L,'euler','XYX','frame');   %ã‚¯ã‚©ãƒ¼ã‚¿ãƒ‹ã‚ªãƒ³ã®åˆæœŸå€¤
+        quat1_L = quaternion(E1_L,'euler','XYX','frame');   %ã‚µãƒ–ã‚±ãƒ¼ãƒ–ãƒ«ã‚’æŠœãå§¿å‹¢
+        quat2_L = quaternion(E2_L,'euler','XYX','frame');   %åˆ†å²å¾Œã®å§¿å‹¢
 
         if mode == 1
-            %‰E•ªŠòƒ‚[ƒh
-            quat0 = quaternion(E0_R,'euler','XYX','frame');   %ƒNƒH[ƒ^ƒjƒIƒ“‚Ì‰Šú’l
-            quat1 = quaternion(E1_R,'euler','XYX','frame');   %ƒTƒuƒP[ƒuƒ‹‚ğ”²‚­p¨
-            quat2 = quaternion(E2_R,'euler','XYX','frame');   %•ªŠòŒã‚Ìp¨
+            %å³åˆ†å²ãƒ¢ãƒ¼ãƒ‰
+            quat0 = quaternion(E0_R,'euler','XYX','frame');   %ã‚¯ã‚©ãƒ¼ã‚¿ãƒ‹ã‚ªãƒ³ã®åˆæœŸå€¤
+            quat1 = quaternion(E1_R,'euler','XYX','frame');   %ã‚µãƒ–ã‚±ãƒ¼ãƒ–ãƒ«ã‚’æŠœãå§¿å‹¢
+            quat2 = quaternion(E2_R,'euler','XYX','frame');   %åˆ†å²å¾Œã®å§¿å‹¢
             E2 = E2_R;
             tension_angle = pi/2*1.2;
             %tension_angle = acos((d+2*rw)/(2*Rw));
         else
-            quat0 = quaternion(E0_L,'euler','XYX','frame');   %ƒNƒH[ƒ^ƒjƒIƒ“‚Ì‰Šú’l
-            quat1 = quaternion(E1_L,'euler','XYX','frame');   %ƒTƒuƒP[ƒuƒ‹‚ğ”²‚­p¨
-            quat2 = quaternion(E2_L,'euler','XYX','frame');   %•ªŠòŒã‚Ìp¨
+            quat0 = quaternion(E0_L,'euler','XYX','frame');   %ã‚¯ã‚©ãƒ¼ã‚¿ãƒ‹ã‚ªãƒ³ã®åˆæœŸå€¤
+            quat1 = quaternion(E1_L,'euler','XYX','frame');   %ã‚µãƒ–ã‚±ãƒ¼ãƒ–ãƒ«ã‚’æŠœãå§¿å‹¢
+            quat2 = quaternion(E2_L,'euler','XYX','frame');   %åˆ†å²å¾Œã®å§¿å‹¢
             E2 = E2_L;
             tension_angle = -pi/2*1.2;
             %tension_angle = -acos((d+2*rw)/(2*Rw));
         end    
 
-        %•ªŠò‚Ì–Ú•WŠp“x(•âŠÔŒã)
+        %åˆ†å²æ™‚ã®ç›®æ¨™è§’åº¦(è£œé–“å¾Œ)
         [X_01,Y_01,Z_01] = slerp_xyz_euler(quat0,quat1,ceil(n_bra/2));
-        [X_12,Y_12,Z_12] = slerp_xyz_euler(quat1,quat2,fix(n_bra/2));            %‹ô”‚¶‚á‚È‚©‚Á‚½‚çDDD
+        [X_12,Y_12,Z_12] = slerp_xyz_euler(quat1,quat2,fix(n_bra/2));            %å¶æ•°ã˜ã‚ƒãªã‹ã£ãŸã‚‰ï¼ï¼ï¼
         X = [X_01;X_12];
-        Y = [Y_01;Y_12];   %˜AŒ‹
+        Y = [Y_01;Y_12];   %é€£çµ
         Z = [Z_01;Z_12];
 
 
-        %[L_def,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] =  node_cal1(0,0,0,X(n_bra),Y(n_bra),Z(n_bra),phi_n,the_n,0,Lc,Rw,rw,d,mode); %‘O—Ö•ªŠò’¼Œã‚ÌLn1‚Ì’·‚³i‚±‚ê‚©‚çŒã—Ö‚ªˆÚ“®‚·‚é‚×‚«‹——£C‹óŠÔ‚¾‚ÆLc‚ÆˆÙ‚È‚éj
-        %t_const = (L_def-L_gap)/vel - t_bra;    %’è‘¬‘–sŠÔ[s]
-        %n_const = t_const/t_step;               %’è‘¬‘–sƒJƒEƒ“ƒg
+        %[L_def,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] =  node_cal1(0,0,0,X(n_bra),Y(n_bra),Z(n_bra),phi_n,the_n,0,Lc,Rw,rw,d,mode); %å‰è¼ªåˆ†å²ç›´å¾Œã®Ln1ã®é•·ã•ï¼ˆã“ã‚Œã‹ã‚‰å¾Œè¼ªãŒç§»å‹•ã™ã‚‹ã¹ãè·é›¢ï¼Œç©ºé–“ã ã¨Lcã¨ç•°ãªã‚‹ï¼‰
+        %t_const = (L_def-L_gap)/vel - t_bra;    %å®šé€Ÿèµ°è¡Œæ™‚é–“[s]
+        %n_const = t_const/t_step;               %å®šé€Ÿèµ°è¡Œã‚«ã‚¦ãƒ³ãƒˆ
 
         if mode == 1
             the_x_init = -pi/2;
@@ -221,7 +217,7 @@ function Main(a,b,right,left,mode)
             the_x_init = pi/2;
             the_n = -the_nL;
         end
-    %% ƒƒCƒ“ƒ‹[ƒv
+    %% ãƒ¡ã‚¤ãƒ³ãƒ«ãƒ¼ãƒ—
 
     
     flag = 0;
@@ -229,9 +225,9 @@ function Main(a,b,right,left,mode)
 
         if switching==13
             disp("no stop")
-            if flag == 0    %‘O—Ö‚Ì•ªŠòŠJn
+            if flag == 0    %å‰è¼ªã®åˆ†å²é–‹å§‹
                 t1 = t1+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
                 phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
 
@@ -248,14 +244,14 @@ function Main(a,b,right,left,mode)
                 if t1 == n_bra
                     flag = 1;
                     L_def = Ln1;
-                    t_const = (L_def-2*L_gap)/vel;    %’è‘¬‘–sŠÔ[s]
-                    n_const = t_const/t_step;               %’è‘¬‘–sƒJƒEƒ“ƒg
+                    t_const = (L_def-2*L_gap)/vel;    %å®šé€Ÿèµ°è¡Œæ™‚é–“[s]
+                    n_const = t_const/t_step;               %å®šé€Ÿèµ°è¡Œã‚«ã‚¦ãƒ³ãƒˆ
                 end
 
             elseif flag == 1
-                %‘O—Ö‚Ì•ªŠòI—¹`‰Á‘¬
+                %å‰è¼ªã®åˆ†å²çµ‚äº†ï½åŠ é€Ÿ
                 t2 = t2+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
                 phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
 
@@ -274,9 +270,9 @@ function Main(a,b,right,left,mode)
                     L_def = Ln1;
                 end
             elseif flag == 2
-                %’è‘¬‹æŠÔ
+                %å®šé€ŸåŒºé–“
                 t3 = t3+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
                 phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
 
@@ -287,13 +283,13 @@ function Main(a,b,right,left,mode)
                 the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
 
                 if Ln1 <= 250
-                    %‘O—Ö‚Éƒeƒ“ƒVƒ‡ƒ“‚ğ‚©‚¯‚é
+                    %å‰è¼ªã«ãƒ†ãƒ³ã‚·ãƒ§ãƒ³ã‚’ã‹ã‘ã‚‹
                     if((t3_+1)*t_step<=1)
                         t3_ = t3_+1;
                         rotm = R("x",E2(1))*R("y",E2(2))*R("x",E2(3))*R("z",-tension_angle*(6*(t3_*t_step)^5-15*(t3_*t_step)^4+10*(t3_*t_step)^3));
                         eulxyz = rotm2eul(rotm,'xyz');
                         the_xf = eulxyz(1); the_yf = eulxyz(2); the_zf = eulxyz(3);
-                    %Œã—Ö‚Ìƒeƒ“ƒVƒ‡ƒ“‚ğ‰ğ‚­
+                    %å¾Œè¼ªã®ãƒ†ãƒ³ã‚·ãƒ§ãƒ³ã‚’è§£ã
                     elseif ((t3_+1)*t_step >1) && ((t3_+1)*t_step<=2)
                         t3_ = t3_+1;
                         rotm = R("x",E2(1))*R("y",E2(2))*R("x",E2(3))*R("z",-tension_angle);
@@ -317,9 +313,9 @@ function Main(a,b,right,left,mode)
                 end
 
             elseif flag == 3
-                %Œ¸‘¬‹æŠÔiŒã—Ö•ªŠòŠJnj
+                %æ¸›é€ŸåŒºé–“ï¼ˆå¾Œè¼ªåˆ†å²é–‹å§‹ï¼‰
                 t4 = t4+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
                 phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
 
@@ -337,10 +333,10 @@ function Main(a,b,right,left,mode)
                 end
 
             elseif flag == 4
-                %•ªŠòŒã(‰Á‘¬‹æŠÔ)
+                %åˆ†å²å¾Œ(åŠ é€ŸåŒºé–“)
                 t5 = t5+1;
 
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = -phi_n; the_nr = the_n ;phi_nr2 = E2(3); 
                 phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
 
@@ -355,7 +351,7 @@ function Main(a,b,right,left,mode)
                 omega_f = omega_r;
 
                 if t5 == n_bra+1
-                   %ƒf[ƒ^‚Ì‘‚«o‚µ 
+                   %ãƒ‡ãƒ¼ã‚¿ã®æ›¸ãå‡ºã— 
                    text = "C:\Users\MSD\Documents\GitHub\SSR\SSR-AutonomousDriveingControl\SSC-ImageRecognition\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode+"_"+"T";
                    T = t1+t2+t3+t4+t5-1;
                    data(T+1:500,:)=[];
@@ -364,9 +360,9 @@ function Main(a,b,right,left,mode)
                    end
 
 
-                   %‘‚«o‚µƒf[ƒ^‚Ì•`‰æ
+                   %æ›¸ãå‡ºã—ãƒ‡ãƒ¼ã‚¿ã®æç”»
                    %figure(2)
-                   %ƒ_ƒ~[ƒf[ƒ^‚Ìì¬
+                   %ãƒ€ãƒŸãƒ¼ãƒ‡ãƒ¼ã‚¿ã®ä½œæˆ
     %                x0 = [1 1];
     %                x1 = [n_count01 n_count01];
     %                x2 = [t1 t1];                            
@@ -390,11 +386,11 @@ function Main(a,b,right,left,mode)
     %                plot(x0,y,'--k','LineWidth',0.5)
     %                plot(x5,y,'--k','LineWidth',0.5)
 
-                   legend('1²–Ú(‘O)','2²–Ú(‘O)','3²–Ú(‘O)','1²–Ú(Œã)','2²–Ú(Œã)','3²–Ú(Œã)','Location','NorthEast')
+                   legend('1è»¸ç›®(å‰)','2è»¸ç›®(å‰)','3è»¸ç›®(å‰)','1è»¸ç›®(å¾Œ)','2è»¸ç›®(å¾Œ)','3è»¸ç›®(å¾Œ)','Location','NorthEast')
                    ylim([-180 180]) 
                    yticks(-180:30:180)
-                   xlabel('ŠÔCƒXƒeƒbƒv')
-                   ylabel('Šp“x[deg]')
+                   xlabel('æ™‚é–“ï¼Œã‚¹ãƒ†ãƒƒãƒ—')
+                   ylabel('è§’åº¦[deg]')
 
                    %figure(3)
                    plot(data_r(1:T,1),data(1:T,7),'LineWidth',2)
@@ -407,18 +403,18 @@ function Main(a,b,right,left,mode)
     %                plot(x0,y,'--k','LineWidth',0.5)
     %                plot(x5,y,'--k','LineWidth',0.5)
                    ylim([0 350])
-                   xlabel('ŠÔCƒXƒeƒbƒv')
-                   ylabel('Šp‘¬“x[deg/s]')
+                   xlabel('æ™‚é–“ï¼Œã‚¹ãƒ†ãƒƒãƒ—')
+                   ylabel('è§’é€Ÿåº¦[deg/s]')
 
                     break;
                 end
 
             end
 
-        elseif switching == 0 %ƒeƒ“ƒVƒ‡ƒ“ƒ‚[ƒh
-            if flag == 0    %‘O—Ö‚Ì•ªŠòŠJn
+        elseif switching == 0 %ãƒ†ãƒ³ã‚·ãƒ§ãƒ³ãƒ¢ãƒ¼ãƒ‰
+            if flag == 0    %å‰è¼ªã®åˆ†å²é–‹å§‹
                 t1 = t1+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
                 phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
 
@@ -435,14 +431,14 @@ function Main(a,b,right,left,mode)
                 if t1 == n_bra
                     flag = 1;
                     L_def = Ln1;
-                    t_const = (L_def-2*L_gap)/vel;    %’è‘¬‘–sŠÔ[s]
-                    n_const = t_const/t_step;               %’è‘¬‘–sƒJƒEƒ“ƒg
+                    t_const = (L_def-2*L_gap)/vel;    %å®šé€Ÿèµ°è¡Œæ™‚é–“[s]
+                    n_const = t_const/t_step;               %å®šé€Ÿèµ°è¡Œã‚«ã‚¦ãƒ³ãƒˆ
                 end
 
             elseif flag == 1
-                %‘O—Ö‚Ì•ªŠòI—¹`‰Á‘¬
+                %å‰è¼ªã®åˆ†å²çµ‚äº†ï½åŠ é€Ÿ
                 t2 = t2+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
                 phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
 
@@ -461,9 +457,9 @@ function Main(a,b,right,left,mode)
                     L_def = Ln1;
                 end
             elseif flag == 2
-                %’è‘¬‹æŠÔ
+                %å®šé€ŸåŒºé–“
                 t3 = t3+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
                 phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
 
@@ -474,13 +470,13 @@ function Main(a,b,right,left,mode)
                 the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
 
                 if Ln1 <= 250
-                    %‘O—Ö‚Éƒeƒ“ƒVƒ‡ƒ“‚ğ‚©‚¯‚é
+                    %å‰è¼ªã«ãƒ†ãƒ³ã‚·ãƒ§ãƒ³ã‚’ã‹ã‘ã‚‹
                     if((t3_+1)*t_step<=1)
                         t3_ = t3_+1;
                         rotm = R("x",E2(1))*R("y",E2(2))*R("x",E2(3))*R("z",-tension_angle*(6*(t3_*t_step)^5-15*(t3_*t_step)^4+10*(t3_*t_step)^3));
                         eulxyz = rotm2eul(rotm,'xyz');
                         the_xf = eulxyz(1); the_yf = eulxyz(2); the_zf = eulxyz(3);
-                    %Œã—Ö‚Ìƒeƒ“ƒVƒ‡ƒ“‚ğ‰ğ‚­
+                    %å¾Œè¼ªã®ãƒ†ãƒ³ã‚·ãƒ§ãƒ³ã‚’è§£ã
                     elseif ((t3_+1)*t_step >1) && ((t3_+1)*t_step<=2)
                         t3_ = t3_+1;
                         rotm = R("x",E2(1))*R("y",E2(2))*R("x",E2(3))*R("z",-tension_angle);
@@ -504,9 +500,9 @@ function Main(a,b,right,left,mode)
                 end
 
             elseif flag == 3
-                %Œ¸‘¬‹æŠÔiŒã—Ö•ªŠòŠJnj
+                %æ¸›é€ŸåŒºé–“ï¼ˆå¾Œè¼ªåˆ†å²é–‹å§‹ï¼‰
                 t4 = t4+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
                 phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
 
@@ -524,10 +520,10 @@ function Main(a,b,right,left,mode)
                 end
 
             elseif flag == 4
-                %•ªŠòŒã(‰Á‘¬‹æŠÔ)
+                %åˆ†å²å¾Œ(åŠ é€ŸåŒºé–“)
                 t5 = t5+1;
 
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = -phi_n; the_nr = the_n ;phi_nr2 = E2(3); 
                 phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
 
@@ -542,7 +538,7 @@ function Main(a,b,right,left,mode)
                 omega_f = omega_r;
 
                 if t5 == n_bra+1
-                   %ƒf[ƒ^‚Ì‘‚«o‚µ 
+                   %ãƒ‡ãƒ¼ã‚¿ã®æ›¸ãå‡ºã— 
                    text = "C:\Users\MSD\Documents\GitHub\SSR\SSR-AutonomousDriveingControl\SSC-ImageRecognition\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode+"_"+"T";
                    T = t1+t2+t3+t4+t5-1;
                    data(T+1:500,:)=[];
@@ -551,9 +547,9 @@ function Main(a,b,right,left,mode)
                    end
 
 
-                   %‘‚«o‚µƒf[ƒ^‚Ì•`‰æ
+                   %æ›¸ãå‡ºã—ãƒ‡ãƒ¼ã‚¿ã®æç”»
                    %figure(2)
-                   %ƒ_ƒ~[ƒf[ƒ^‚Ìì¬
+                   %ãƒ€ãƒŸãƒ¼ãƒ‡ãƒ¼ã‚¿ã®ä½œæˆ
     %                x0 = [1 1];
     %                x1 = [n_count01 n_count01];
     %                x2 = [t1 t1];                            
@@ -577,11 +573,11 @@ function Main(a,b,right,left,mode)
     %                plot(x0,y,'--k','LineWidth',0.5)
     %                plot(x5,y,'--k','LineWidth',0.5)
 
-                   legend('1²–Ú(‘O)','2²–Ú(‘O)','3²–Ú(‘O)','1²–Ú(Œã)','2²–Ú(Œã)','3²–Ú(Œã)','Location','NorthEast')
+                   legend('1è»¸ç›®(å‰)','2è»¸ç›®(å‰)','3è»¸ç›®(å‰)','1è»¸ç›®(å¾Œ)','2è»¸ç›®(å¾Œ)','3è»¸ç›®(å¾Œ)','Location','NorthEast')
                    ylim([-180 180]) 
                    yticks(-180:30:180)
-                   xlabel('ŠÔCƒXƒeƒbƒv')
-                   ylabel('Šp“x[deg]')
+                   xlabel('æ™‚é–“ï¼Œã‚¹ãƒ†ãƒƒãƒ—')
+                   ylabel('è§’åº¦[deg]')
 
                    %figure(3)
                    plot(data_r(1:T,1),data(1:T,7),'LineWidth',2)
@@ -594,8 +590,8 @@ function Main(a,b,right,left,mode)
     %                plot(x0,y,'--k','LineWidth',0.5)
     %                plot(x5,y,'--k','LineWidth',0.5)
                    ylim([0 350])
-                   xlabel('ŠÔCƒXƒeƒbƒv')
-                   ylabel('Šp‘¬“x[deg/s]')
+                   xlabel('æ™‚é–“ï¼Œã‚¹ãƒ†ãƒƒãƒ—')
+                   ylabel('è§’é€Ÿåº¦[deg/s]')
 
                     break;
                 end
@@ -605,16 +601,16 @@ function Main(a,b,right,left,mode)
     %111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111%
 
         elseif switching ==1
-            %‰E‚©‚ç¶‚Ö‚ÌƒXƒCƒbƒ`ƒ“ƒO
+            %å³ã‹ã‚‰å·¦ã¸ã®ã‚¹ã‚¤ãƒƒãƒãƒ³ã‚°
             omega_r = 0;
             omega_f = 0;
 
-            %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+            %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
             phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
             phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
-            T1 = 20; %–ñ1•b
-            T2 = 40; %–ñ2•b
-            T3 = 20; %–ñ1•b
+            T1 = 20; %ç´„1ç§’
+            T2 = 40; %ç´„2ç§’
+            T3 = 20; %ç´„1ç§’
             the_switch = pi/2;
             %the_switch = acos((d+2*rw)/(2*Rw))
             %h = acos((d+2*rw)/(2*Rw))*180/pi
@@ -665,11 +661,11 @@ function Main(a,b,right,left,mode)
                 plot(data_r(1:T,1),data(1:T,4)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,5)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,6)*180/pi,'LineWidth',2)
-                legend('1²–Ú(‘O)','2²–Ú(‘O)','3²–Ú(‘O)','1²–Ú(Œã)','2²–Ú(Œã)','3²–Ú(Œã)','Location','northeast')
+                legend('1è»¸ç›®(å‰)','2è»¸ç›®(å‰)','3è»¸ç›®(å‰)','1è»¸ç›®(å¾Œ)','2è»¸ç›®(å¾Œ)','3è»¸ç›®(å¾Œ)','Location','northeast')
                 ylim([-180 210]) 
                 yticks(-180:30:180)
-                xlabel('ŠÔ[s]')
-                ylabel('Šp“x[deg]')
+                xlabel('æ™‚é–“[s]')
+                ylabel('è§’åº¦[deg]')
                 break;
             end
             [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal_tension(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
@@ -678,12 +674,12 @@ function Main(a,b,right,left,mode)
         elseif switching ==2
             omega_r = 0;
             omega_f = 0;
-            %‰E‚©‚ç¶‚Ö‚ÌƒXƒCƒbƒ`ƒ“ƒO
+            %å³ã‹ã‚‰å·¦ã¸ã®ã‚¹ã‚¤ãƒƒãƒãƒ³ã‚°
 
-            %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+            %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
             phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
             phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
-            T2 = 40; %–ñ2•b
+            T2 = 40; %ç´„2ç§’
             the_switch=pi/2;
             Ln1 = 450;
 
@@ -732,11 +728,11 @@ function Main(a,b,right,left,mode)
                 plot(data_r(1:T,1),data(1:T,4)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,5)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,6)*180/pi,'LineWidth',2)
-                legend('1²–Ú(‘O)','2²–Ú(‘O)','3²–Ú(‘O)','1²–Ú(Œã)','2²–Ú(Œã)','3²–Ú(Œã)','Location','northeast')
+                legend('1è»¸ç›®(å‰)','2è»¸ç›®(å‰)','3è»¸ç›®(å‰)','1è»¸ç›®(å¾Œ)','2è»¸ç›®(å¾Œ)','3è»¸ç›®(å¾Œ)','Location','northeast')
                 ylim([-180 210]) 
                 yticks(-180:30:180)
-                xlabel('ŠÔ[s]')
-                ylabel('Šp“x[deg]')
+                xlabel('æ™‚é–“[s]')
+                ylabel('è§’åº¦[deg]')
                 break;
             end
             [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal_tension(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
@@ -745,7 +741,7 @@ function Main(a,b,right,left,mode)
         elseif switching ==3
             omega_r = 0;
             omega_f = 0;
-            %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+            %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
             phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
             phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
             T1 = 20;
@@ -781,11 +777,11 @@ function Main(a,b,right,left,mode)
                 plot(data_r(1:T,1),data(1:T,4)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,5)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,6)*180/pi,'LineWidth',2)
-                legend('1²–Ú(‘O)','2²–Ú(‘O)','3²–Ú(‘O)','1²–Ú(Œã)','2²–Ú(Œã)','3²–Ú(Œã)','Location','northeast')
+                legend('1è»¸ç›®(å‰)','2è»¸ç›®(å‰)','3è»¸ç›®(å‰)','1è»¸ç›®(å¾Œ)','2è»¸ç›®(å¾Œ)','3è»¸ç›®(å¾Œ)','Location','northeast')
                 ylim([-180 210]) 
                 yticks(-180:30:180)
-                xlabel('ŠÔ[s]')
-                ylabel('Šp“x[deg]')
+                xlabel('æ™‚é–“[s]')
+                ylabel('è§’åº¦[deg]')
                 break;
             end
             [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal_tension(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
@@ -794,7 +790,7 @@ function Main(a,b,right,left,mode)
         elseif switching ==4
             omega_r = 0;
             omega_f = 0;
-            %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+            %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
             phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
             phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
             T1 = 20;
@@ -830,11 +826,11 @@ function Main(a,b,right,left,mode)
                 plot(data_r(1:T,1),data(1:T,4)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,5)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,6)*180/pi,'LineWidth',2)
-                legend('1²–Ú(‘O)','2²–Ú(‘O)','3²–Ú(‘O)','1²–Ú(Œã)','2²–Ú(Œã)','3²–Ú(Œã)','Location','northeast')
+                legend('1è»¸ç›®(å‰)','2è»¸ç›®(å‰)','3è»¸ç›®(å‰)','1è»¸ç›®(å¾Œ)','2è»¸ç›®(å¾Œ)','3è»¸ç›®(å¾Œ)','Location','northeast')
                 ylim([-180 210]) 
                 yticks(-180:30:180)
-                xlabel('ŠÔ[s]')
-                ylabel('Šp“x[deg]')
+                xlabel('æ™‚é–“[s]')
+                ylabel('è§’åº¦[deg]')
                 break;
 
             end
@@ -844,7 +840,7 @@ function Main(a,b,right,left,mode)
         elseif switching ==5
             omega_r = 0;
             omega_f = 0;
-            %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+            %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
             phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
             phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
             T1 = 20;
@@ -880,11 +876,11 @@ function Main(a,b,right,left,mode)
                 plot(data_r(1:T,1),data(1:T,4)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,5)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,6)*180/pi,'LineWidth',2)
-                legend('1²–Ú(‘O)','2²–Ú(‘O)','3²–Ú(‘O)','1²–Ú(Œã)','2²–Ú(Œã)','3²–Ú(Œã)','Location','northeast')
+                legend('1è»¸ç›®(å‰)','2è»¸ç›®(å‰)','3è»¸ç›®(å‰)','1è»¸ç›®(å¾Œ)','2è»¸ç›®(å¾Œ)','3è»¸ç›®(å¾Œ)','Location','northeast')
                 ylim([-180 210]) 
                 yticks(-180:30:180)
-                xlabel('ŠÔ[s]')
-                ylabel('Šp“x[deg]')
+                xlabel('æ™‚é–“[s]')
+                ylabel('è§’åº¦[deg]')
                 break;
             end
             [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal_tension(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
@@ -893,7 +889,7 @@ function Main(a,b,right,left,mode)
         elseif switching ==6
             omega_r = 0;
             omega_f = 0;
-            %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+            %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
             phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
             phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
             T1 = 20;
@@ -929,11 +925,11 @@ function Main(a,b,right,left,mode)
                 plot(data_r(1:T,1),data(1:T,4)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,5)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,6)*180/pi,'LineWidth',2)
-                legend('1²–Ú(‘O)','2²–Ú(‘O)','3²–Ú(‘O)','1²–Ú(Œã)','2²–Ú(Œã)','3²–Ú(Œã)','Location','northeast')
+                legend('1è»¸ç›®(å‰)','2è»¸ç›®(å‰)','3è»¸ç›®(å‰)','1è»¸ç›®(å¾Œ)','2è»¸ç›®(å¾Œ)','3è»¸ç›®(å¾Œ)','Location','northeast')
                 ylim([-180 210]) 
                 yticks(-180:30:180)
-                xlabel('ŠÔ[s]')
-                ylabel('Šp“x[deg]')
+                xlabel('æ™‚é–“[s]')
+                ylabel('è§’åº¦[deg]')
                 break;
             end
             [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal_tension(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
@@ -942,7 +938,7 @@ function Main(a,b,right,left,mode)
         elseif switching ==7
             omega_r = 0;
             omega_f = 0;
-            %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+            %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
             phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
             phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
             T1 = 20;
@@ -978,11 +974,11 @@ function Main(a,b,right,left,mode)
                 plot(data_r(1:T,1),data(1:T,4)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,5)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,6)*180/pi,'LineWidth',2)
-                legend('1²–Ú(‘O)','2²–Ú(‘O)','3²–Ú(‘O)','1²–Ú(Œã)','2²–Ú(Œã)','3²–Ú(Œã)','Location','northeast')
+                legend('1è»¸ç›®(å‰)','2è»¸ç›®(å‰)','3è»¸ç›®(å‰)','1è»¸ç›®(å¾Œ)','2è»¸ç›®(å¾Œ)','3è»¸ç›®(å¾Œ)','Location','northeast')
                 ylim([-180 210]) 
                 yticks(-180:30:180)
-                xlabel('ŠÔ[s]')
-                ylabel('Šp“x[deg]')
+                xlabel('æ™‚é–“[s]')
+                ylabel('è§’åº¦[deg]')
                 break;
             end
             [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal_tension(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
@@ -991,7 +987,7 @@ function Main(a,b,right,left,mode)
         elseif switching ==8
             omega_r = 0;
             omega_f = 0;
-            %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+            %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
             phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
             phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
             T1 = 20;
@@ -1027,11 +1023,11 @@ function Main(a,b,right,left,mode)
                 plot(data_r(1:T,1),data(1:T,4)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,5)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,6)*180/pi,'LineWidth',2)
-                legend('1²–Ú(‘O)','2²–Ú(‘O)','3²–Ú(‘O)','1²–Ú(Œã)','2²–Ú(Œã)','3²–Ú(Œã)','Location','northeast')
+                legend('1è»¸ç›®(å‰)','2è»¸ç›®(å‰)','3è»¸ç›®(å‰)','1è»¸ç›®(å¾Œ)','2è»¸ç›®(å¾Œ)','3è»¸ç›®(å¾Œ)','Location','northeast')
                 ylim([-180 210]) 
                 yticks(-180:30:180)
-                xlabel('ŠÔ[s]')
-                ylabel('Šp“x[deg]')
+                xlabel('æ™‚é–“[s]')
+                ylabel('è§’åº¦[deg]')
                 break;
             end
             [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal_tension(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
@@ -1039,7 +1035,7 @@ function Main(a,b,right,left,mode)
         elseif switching ==9
             omega_r = 0;
             omega_f = 0;
-            %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+            %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
             phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
             phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
             T1 = 20;
@@ -1075,11 +1071,11 @@ function Main(a,b,right,left,mode)
                 plot(data_r(1:T,1),data(1:T,4)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,5)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,6)*180/pi,'LineWidth',2)
-                legend('1²–Ú(‘O)','2²–Ú(‘O)','3²–Ú(‘O)','1²–Ú(Œã)','2²–Ú(Œã)','3²–Ú(Œã)','Location','northeast')
+                legend('1è»¸ç›®(å‰)','2è»¸ç›®(å‰)','3è»¸ç›®(å‰)','1è»¸ç›®(å¾Œ)','2è»¸ç›®(å¾Œ)','3è»¸ç›®(å¾Œ)','Location','northeast')
                 ylim([-180 210]) 
                 yticks(-180:30:180)
-                xlabel('ŠÔ[s]')
-                ylabel('Šp“x[deg]')
+                xlabel('æ™‚é–“[s]')
+                ylabel('è§’åº¦[deg]')
                 break;
             end
             [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal_tension(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
@@ -1088,7 +1084,7 @@ function Main(a,b,right,left,mode)
         elseif switching ==10
             omega_r = 0;
             omega_f = 0;
-            %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+            %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
             phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
             phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
             T1 = 20;
@@ -1124,20 +1120,20 @@ function Main(a,b,right,left,mode)
                 plot(data_r(1:T,1),data(1:T,4)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,5)*180/pi,'LineWidth',2)
                 plot(data_r(1:T,1),data(1:T,6)*180/pi,'LineWidth',2)
-                legend('1²–Ú(‘O)','2²–Ú(‘O)','3²–Ú(‘O)','1²–Ú(Œã)','2²–Ú(Œã)','3²–Ú(Œã)','Location','northeast')
+                legend('1è»¸ç›®(å‰)','2è»¸ç›®(å‰)','3è»¸ç›®(å‰)','1è»¸ç›®(å¾Œ)','2è»¸ç›®(å¾Œ)','3è»¸ç›®(å¾Œ)','Location','northeast')
                 ylim([-180 210]) 
                 yticks(-180:30:180)
-                xlabel('ŠÔ[s]')
-                ylabel('Šp“x[deg]')
+                xlabel('æ™‚é–“[s]')
+                ylabel('è§’åº¦[deg]')
                 break;
             end
             [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal_tension(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
 
     %nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn%
         elseif switching ==11
-            if flag == 0    %‘O—Ö‚Ì•ªŠòŠJn
+            if flag == 0    %å‰è¼ªã®åˆ†å²é–‹å§‹
                 t1 = t1+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
                 phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
 
@@ -1153,14 +1149,14 @@ function Main(a,b,right,left,mode)
                 if t1 == n_bra
                     flag = 1;
                     L_def = Ln1;
-                    t_const = (L_def-2*L_gap)/vel;    %’è‘¬‘–sŠÔ[s]
-                    n_const = t_const/t_step;               %’è‘¬‘–sƒJƒEƒ“ƒg
+                    t_const = (L_def-2*L_gap)/vel;    %å®šé€Ÿèµ°è¡Œæ™‚é–“[s]
+                    n_const = t_const/t_step;               %å®šé€Ÿèµ°è¡Œã‚«ã‚¦ãƒ³ãƒˆ
                 end
 
             elseif flag == 1
-                %‘O—Ö‚Ì•ªŠòI—¹`‰Á‘¬
+                %å‰è¼ªã®åˆ†å²çµ‚äº†ï½åŠ é€Ÿ
                 t2 = t2+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
                 phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
 
@@ -1178,9 +1174,9 @@ function Main(a,b,right,left,mode)
                     L_def = Ln1;
                 end
             elseif flag == 2
-                %’è‘¬‹æŠÔ
+                %å®šé€ŸåŒºé–“
                 t3 = t3+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
                 phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
 
@@ -1199,9 +1195,9 @@ function Main(a,b,right,left,mode)
                 end
 
             elseif flag == 3
-                %Œ¸‘¬‹æŠÔiŒã—Ö•ªŠòŠJnj
+                %æ¸›é€ŸåŒºé–“ï¼ˆå¾Œè¼ªåˆ†å²é–‹å§‹ï¼‰
                 t4 = t4+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
                 phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
 
@@ -1219,10 +1215,10 @@ function Main(a,b,right,left,mode)
                 end
 
             elseif flag == 4
-                %•ªŠòŒã(‰Á‘¬‹æŠÔ)
+                %åˆ†å²å¾Œ(åŠ é€ŸåŒºé–“)
                 t5 = t5+1;
 
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = -phi_n; the_nr = the_n ;phi_nr2 = E2(3); 
                 phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
 
@@ -1242,16 +1238,16 @@ function Main(a,b,right,left,mode)
             else
                 T = t-1;
                 data(T+1:500,:)=[];
-               %ƒf[ƒ^‚Ì‘‚«o‚µ 
+               %ãƒ‡ãƒ¼ã‚¿ã®æ›¸ãå‡ºã— 
                text = "C:\Users\MSD\Documents\GitHub\SSR\SSR-AutonomousDriveingControl\SSC-ImageRecognition\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
                if save ==1
                     writematrix(data,"data/"+text+'.csv')
                end
 
      break;
-               %‘‚«o‚µƒf[ƒ^‚Ì•`‰æ
+               %æ›¸ãå‡ºã—ãƒ‡ãƒ¼ã‚¿ã®æç”»
                %figure(2)
-               %ƒ_ƒ~[ƒf[ƒ^‚Ìì¬
+               %ãƒ€ãƒŸãƒ¼ãƒ‡ãƒ¼ã‚¿ã®ä½œæˆ
     %                x0 = [1 1];
     %                x1 = [n_count01 n_count01];
     %                x2 = [t1 t1];                            
@@ -1275,11 +1271,11 @@ function Main(a,b,right,left,mode)
     %                plot(x0,y,'--k','LineWidth',0.5)
     %                plot(x5,y,'--k','LineWidth',0.5)
 
-               legend('1²–Ú(‘O)','2²–Ú(‘O)','3²–Ú(‘O)','1²–Ú(Œã)','2²–Ú(Œã)','3²–Ú(Œã)','Location','NorthEast')
+               legend('1è»¸ç›®(å‰)','2è»¸ç›®(å‰)','3è»¸ç›®(å‰)','1è»¸ç›®(å¾Œ)','2è»¸ç›®(å¾Œ)','3è»¸ç›®(å¾Œ)','Location','NorthEast')
                ylim([-180 180]) 
                yticks(-180:30:180)
-               xlabel('ŠÔCƒXƒeƒbƒv')
-               ylabel('Šp“x[deg]')
+               xlabel('æ™‚é–“ï¼Œã‚¹ãƒ†ãƒƒãƒ—')
+               ylabel('è§’åº¦[deg]')
 
                %figure(3)
                plot(data_r(1:T,1),data(1:T,7),'LineWidth',2)
@@ -1292,17 +1288,17 @@ function Main(a,b,right,left,mode)
     %                plot(x0,y,'--k','LineWidth',0.5)
     %                plot(x5,y,'--k','LineWidth',0.5)
                ylim([0 350])
-               xlabel('ŠÔCƒXƒeƒbƒv')
-               ylabel('Šp‘¬“x[deg/s]')
+               xlabel('æ™‚é–“ï¼Œã‚¹ãƒ†ãƒƒãƒ—')
+               ylabel('è§’é€Ÿåº¦[deg/s]')
 
                 break;
             end
     %nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn%
         else
 
-            if flag == 10    %‘O—Ö‚Ì•ªŠòŠJn   
+            if flag == 10    %å‰è¼ªã®åˆ†å²é–‹å§‹   
                 t1 = t1+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
                 phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
 
@@ -1318,14 +1314,14 @@ function Main(a,b,right,left,mode)
                 if t1 == n_bra
                     flag = 1;
                     L_def = Ln1;
-                    t_const = (L_def-2*L_gap)/vel;    %’è‘¬‘–sŠÔ[s]
-                    n_const = t_const/t_step;               %’è‘¬‘–sƒJƒEƒ“ƒg
+                    t_const = (L_def-2*L_gap)/vel;    %å®šé€Ÿèµ°è¡Œæ™‚é–“[s]
+                    n_const = t_const/t_step;               %å®šé€Ÿèµ°è¡Œã‚«ã‚¦ãƒ³ãƒˆ
                 end
 
             elseif flag == 1
-                %‘O—Ö‚Ì•ªŠòI—¹`‰Á‘¬
+                %å‰è¼ªã®åˆ†å²çµ‚äº†ï½åŠ é€Ÿ
                 t2 = t2+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
                 phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
 
@@ -1343,9 +1339,9 @@ function Main(a,b,right,left,mode)
                     L_def = Ln1;
                 end
             elseif flag == 2
-                %’è‘¬‹æŠÔ
+                %å®šé€ŸåŒºé–“
                 t3 = t3+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
                 phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
 
@@ -1364,9 +1360,9 @@ function Main(a,b,right,left,mode)
                 end
 
             elseif flag == 3
-                %Œ¸‘¬‹æŠÔiŒã—Ö•ªŠòŠJnj
+                %æ¸›é€ŸåŒºé–“ï¼ˆå¾Œè¼ªåˆ†å²é–‹å§‹ï¼‰
                 t4 = t4+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
                 phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
 
@@ -1384,10 +1380,10 @@ function Main(a,b,right,left,mode)
                 end
 
             elseif flag == 4
-                %•ªŠòŒã(‰Á‘¬‹æŠÔ)
+                %åˆ†å²å¾Œ(åŠ é€ŸåŒºé–“)
                 t5 = t5+1;
 
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = -phi_n; the_nr = the_n ;phi_nr2 = E2(3); 
                 phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
 
@@ -1407,7 +1403,7 @@ function Main(a,b,right,left,mode)
 
             elseif flag == 0
                 t0 = t0+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
                 phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
 
@@ -1426,11 +1422,11 @@ function Main(a,b,right,left,mode)
                 if Ln1 < 340 + omega_c*t_step*pi/180*r_v
                     flag = 10;
                     t0 = 0;
-                  %’è‘¬‘–sƒJƒEƒ“ƒg
+                  %å®šé€Ÿèµ°è¡Œã‚«ã‚¦ãƒ³ãƒˆ
                 end
             elseif flag == 5
                 t0 = t0+1;
-                %ƒƒCƒ“ƒP[ƒuƒ‹‚É‘Î‚µ‚ÄC‚Ç‚ÌƒP[ƒuƒ‹‚Éæ‚Á‚Ä‚¢‚é‚Ì‚©‚Ìî•ñC
+                %ãƒ¡ã‚¤ãƒ³ã‚±ãƒ¼ãƒ–ãƒ«ã«å¯¾ã—ã¦ï¼Œã©ã®ã‚±ãƒ¼ãƒ–ãƒ«ã«ä¹—ã£ã¦ã„ã‚‹ã®ã‹ã®æƒ…å ±ï¼Œ
 
                 phi_nr1 = -phi_n; the_nr = the_n ;phi_nr2 = E2(3); 
                 phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
@@ -1450,35 +1446,35 @@ function Main(a,b,right,left,mode)
 
                 if Ln1 < -150 
                     flag = 6;
-                  %’è‘¬‘–sƒJƒEƒ“ƒg
+                  %å®šé€Ÿèµ°è¡Œã‚«ã‚¦ãƒ³ãƒˆ
                 end
             else
                 break;
             end        
         end
-        %% ŠeŠÖßŠp“x‚ÌŒvZ
+        %% å„é–¢ç¯€è§’åº¦ã®è¨ˆç®—
 
-        %û‘©ŒvZ
+        %åæŸè¨ˆç®—
         fun = @(x)Joint_angle_calc8(x,the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,phi_nr2,the_nr,phi_nf1,phi_nf2,the_nf,...
                                            gamma1,a1,a2,a3,Lc,OrCr,OfCf,OrOf,g0,g2,g3,g4,g6,w0,w2,w3,w4,w6,mode);
         [x,fval,exitflag,output]= fzero(fun,0);
         output;
-        %û‘©‚µ‚½Œ‹‰Ê‚ğ—p‚¢‚ÄCŠÖßŠp“x‚ğZo
+        %åæŸã—ãŸçµæœã‚’ç”¨ã„ã¦ï¼Œé–¢ç¯€è§’åº¦ã‚’ç®—å‡º
         [F,the_2r,the_3r,the_1r,the_2f,the_3f,the_1f] ...
                 = Joint_angle_calc8(x,the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,phi_nr2,the_nr,phi_nf1,phi_nf2,the_nf,...
                                     gamma1,a1,a2,a3,Lc,OrCr,OfCf,OrOf,g0,g2,g3,g4,g6,w0,w2,w3,w4,w6,mode);
 
-        %% switching==1 or switching==2 ‚Ì‚Æ‚«‚Ì—áŠOˆ—
+        %% switching==1 or switching==2 ã®ã¨ãã®ä¾‹å¤–å‡¦ç†
         if (switching ==1)||(switching ==2)
             if (mode == 1) && (the_1f > 0)
                 mode = 2;
                 [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal_tension(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
 
-                %û‘©ŒvZ
+                %åæŸè¨ˆç®—
                 fun = @(x)Joint_angle_calc8(x,the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,phi_nr2,the_nr,phi_nf1,phi_nf2,the_nf,...
                                                    gamma1,a1,a2,a3,Lc,OrCr,OfCf,OrOf,g0,g2,g3,g4,g6,w0,w2,w3,w4,w6,mode);
                 [x,fval,exitflag,output]= fzero(fun,0);
-                %û‘©‚µ‚½Œ‹‰Ê‚ğ—p‚¢‚ÄCŠÖßŠp“x‚ğZo
+                %åæŸã—ãŸçµæœã‚’ç”¨ã„ã¦ï¼Œé–¢ç¯€è§’åº¦ã‚’ç®—å‡º
                 [F,the_2r,the_3r,the_1r,the_2f,the_3f,the_1f] ...
                         = Joint_angle_calc8(x,the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,phi_nr2,the_nr,phi_nf1,phi_nf2,the_nf,...
                                             gamma1,a1,a2,a3,Lc,OrCr,OfCf,OrOf,g0,g2,g3,g4,g6,w0,w2,w3,w4,w6,mode);
@@ -1486,36 +1482,36 @@ function Main(a,b,right,left,mode)
         end
 
     %%                            
-             %ŠÖßŠp“xƒf[ƒ^‚Ì•Û‘¶
+             %é–¢ç¯€è§’åº¦ãƒ‡ãƒ¼ã‚¿ã®ä¿å­˜
              data_r(t,:) = [t*t_step the_1r the_2r the_3r];
              data_f(t,:) = [t*t_step the_1f the_2f the_3f];
              data(t,:) = [the_1f the_2f the_3f the_1r the_2r the_3r omega_f omega_r t*t_step];
         if animation == 1
-            %% ƒf[ƒ^‚Ì•`‰æ
+            %% ãƒ‡ãƒ¼ã‚¿ã®æç”»
 
-                lw = 45;  %Šî€‰~’Œ’·‚³i‘Ì‚ y•”•ªj
+                lw = 45;  %åŸºæº–å††æŸ±é•·ã•ï¼ˆä½“ã‚yéƒ¨åˆ†ï¼‰
 
-                %ƒ‚[ƒ^‚ÌˆÊ’u‚¾‚µ
-                %€”õ
-                [Xm,Ym,Zm] = cylinder(rm);                  %Šî€‰~’ŒÀ•Wiƒ‚[ƒ^•”•ªj
-                Zm = (Zm - 0.5).*lm;                        %‰~’Œ‚Ì‚‚³•â³
+                %ãƒ¢ãƒ¼ã‚¿ã®ä½ç½®ã ã—
+                %æº–å‚™
+                [Xm,Ym,Zm] = cylinder(rm);                  %åŸºæº–å††æŸ±åº§æ¨™ï¼ˆãƒ¢ãƒ¼ã‚¿éƒ¨åˆ†ï¼‰
+                Zm = (Zm - 0.5).*lm;                        %å††æŸ±ã®é«˜ã•è£œæ­£
                 %Xm = Xm + 0.01*t; 
-                m_top     = [Xm(1,:);Ym(1,:);Zm(1,:)];      %Šî€‰~’ŒÀ•Wiã‰ºŠe¬•ªj
+                m_top     = [Xm(1,:);Ym(1,:);Zm(1,:)];      %åŸºæº–å††æŸ±åº§æ¨™ï¼ˆä¸Šä¸‹å„æˆåˆ†ï¼‰
                 m_bottom  = [Xm(2,:);Ym(2,:);Zm(2,:)];
-                m1_top    = [Xm(1,:);Ym(1,:);Zm(1,:)+l1];   %Å‰‚Ìƒ‚[ƒ^‚ÌˆÊ’u
+                m1_top    = [Xm(1,:);Ym(1,:);Zm(1,:)+l1];   %æœ€åˆã®ãƒ¢ãƒ¼ã‚¿ã®ä½ç½®
                 m1_bottom = [Xm(2,:);Ym(2,:);Zm(2,:)+l1];
-                m2_top    = [Xm(1,:);Ym(1,:);Zm(1,:)+l2];   %2”Ô–Ú‚Ìƒ‚[ƒ^‚ÌŠî€ˆÊ’u
+                m2_top    = [Xm(1,:);Ym(1,:);Zm(1,:)+l2];   %2ç•ªç›®ã®ãƒ¢ãƒ¼ã‚¿ã®åŸºæº–ä½ç½®
                 m2_bottom = [Xm(2,:);Ym(2,:);Zm(2,:)+l2];
-                m3_top    = [Xm(1,:);Ym(1,:);Zm(1,:)+l3];   %3”Ô–Ú‚Ìƒ‚[ƒ^‚ÌŠî€ˆÊ’u
+                m3_top    = [Xm(1,:);Ym(1,:);Zm(1,:)+l3];   %3ç•ªç›®ã®ãƒ¢ãƒ¼ã‚¿ã®åŸºæº–ä½ç½®
                 m3_bottom = [Xm(2,:);Ym(2,:);Zm(2,:)+l3];
-                m4_top    = [Xm(1,:);Ym(1,:);Zm(1,:)+l4];   %4”Ô–Ú‚Ìƒ‚[ƒ^‚ÌŠî€ˆÊ’u
+                m4_top    = [Xm(1,:);Ym(1,:);Zm(1,:)+l4];   %4ç•ªç›®ã®ãƒ¢ãƒ¼ã‚¿ã®åŸºæº–ä½ç½®
                 m4_bottom = [Xm(2,:);Ym(2,:);Zm(2,:)+l4];
-                m5_top    = [Xm(1,:);Ym(1,:);Zm(1,:)+l5];   %5”Ô–Ú‚Ìƒ‚[ƒ^‚ÌŠî€ˆÊ’u
+                m5_top    = [Xm(1,:);Ym(1,:);Zm(1,:)+l5];   %5ç•ªç›®ã®ãƒ¢ãƒ¼ã‚¿ã®åŸºæº–ä½ç½®
                 m5_bottom = [Xm(2,:);Ym(2,:);Zm(2,:)+l5];
-                m6_top    = [Xm(1,:);Ym(1,:);Zm(1,:)+l6];   %6”Ô–Ú‚Ìƒ‚[ƒ^‚ÌŠî€ˆÊ’u
+                m6_top    = [Xm(1,:);Ym(1,:);Zm(1,:)+l6];   %6ç•ªç›®ã®ãƒ¢ãƒ¼ã‚¿ã®åŸºæº–ä½ç½®
                 m6_bottom = [Xm(2,:);Ym(2,:);Zm(2,:)+l6];
 
-                %ƒ‚[ƒ^‚ÌÀ•W‚¾‚µ
+                %ãƒ¢ãƒ¼ã‚¿ã®åº§æ¨™ã ã—
 
                 OrCf = OrOf+OfCf;
                 m1_coord = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*horzcat(m1_top,m1_bottom));
@@ -1526,7 +1522,7 @@ function Main(a,b,right,left,mode)
                 m6_coord = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*horzcat(m6_top,m6_bottom));
 
 
-                %ƒ^ƒCƒ„•”•ª‚ÌˆÊ’u‚¾‚µiƒ^ƒCƒ„‚Í‚Ğ‚å‚¤‚½‚ñŒ^j
+                %ã‚¿ã‚¤ãƒ¤éƒ¨åˆ†ã®ä½ç½®ã ã—ï¼ˆã‚¿ã‚¤ãƒ¤ã¯ã²ã‚‡ã†ãŸã‚“å‹ï¼‰
                 i = 1:11;
                 [Xw,Yw,Zw] = cylinder((Rw+rw)/2+(Rw-rw)/2*cos(2*pi*(i-1)/10));
                 Zw = (Zw - 0.5).*lw;
@@ -1537,7 +1533,7 @@ function Main(a,b,right,left,mode)
                 W1 = W - [0;Rw;0];
                 W2 = W + [0;Rw;0];
 
-                %phi_nr1‚Æ‚©‚Íí‚É0‚È‚Ì‚ÅÀ¿“I‚É‰½‚à‚µ‚Ä‚¢‚È‚¢i•ªŠòŒã‚ğ•`‰æ‚µ‚½‚¢‚Æ‚«‚Ì‚İg—pj
+                %phi_nr1ã¨ã‹ã¯å¸¸ã«0ãªã®ã§å®Ÿè³ªçš„ã«ä½•ã‚‚ã—ã¦ã„ãªã„ï¼ˆåˆ†å²å¾Œã‚’æç”»ã—ãŸã„ã¨ãã®ã¿ä½¿ç”¨ï¼‰
                 w1r_coord = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W1);
                 w2r_coord = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W2);
                 w1f_coord = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W2);
@@ -1550,7 +1546,7 @@ function Main(a,b,right,left,mode)
                 w2f_middle_bottom = (sum(w1f_coord(:,11*21-20:11*21),2)-w1f_coord(:,231))/20;
 
 
-                %’¼ü‚Ì•`‰æƒf[ƒ^¶¬(ƒŠƒ“ƒN•”•ª)
+                %ç›´ç·šã®æç”»ãƒ‡ãƒ¼ã‚¿ç”Ÿæˆ(ãƒªãƒ³ã‚¯éƒ¨åˆ†)
                 m1_middle_top    = (sum(m1_coord(:,1:21),2)-m1_coord(:,1))/20;
                 m1_middle_bottom = (sum(m1_coord(:,22:42),2)-m1_coord(:,22))/20;
                 m2_middle_top    = (sum(m2_coord(:,1:21),2)-m2_coord(:,1))/20;
@@ -1600,23 +1596,23 @@ function Main(a,b,right,left,mode)
                 line(c6w1(1,:)',c6w1(2,:)',c6w1(3,:)','LineWidth',1,'Color','k')
                 line(c6w2(1,:)',c6w2(2,:)',c6w2(3,:)','LineWidth',1,'Color','k')
             end
-                 %ƒP[ƒuƒ‹‚Ì•`‰æ
+                 %ã‚±ãƒ¼ãƒ–ãƒ«ã®æç”»
                 [Xc,Yc,Zc] = cylinder(3);
-                Zc = (Zc - 0.5).*2*Lc;                        %‰~’Œ‚Ì‚‚³•â³
+                Zc = (Zc - 0.5).*2*Lc;                        %å††æŸ±ã®é«˜ã•è£œæ­£
 
-                c_top     = [Xc(1,:);Yc(1,:);Zc(1,:)];      %Šî€‰~’ŒÀ•Wiã‰ºŠe¬•ªj
+                c_top     = [Xc(1,:);Yc(1,:);Zc(1,:)];      %åŸºæº–å††æŸ±åº§æ¨™ï¼ˆä¸Šä¸‹å„æˆåˆ†ï¼‰
                 c_bottom  = [Xc(2,:);Yc(2,:);Zc(2,:)];
                 c_top = R("y",gamma1)*R("y",pi/2)*c_top;
                 c_bottom = R("y",gamma1)*R("y",pi/2)*c_bottom;
                 cable_plot(c_top,c_bottom)
 
-                %•ªŠòƒP[ƒuƒ‹(ƒƒCƒ“EƒTƒu)
+                %åˆ†å²ã‚±ãƒ¼ãƒ–ãƒ«(ãƒ¡ã‚¤ãƒ³ãƒ»ã‚µãƒ–)
                 [Xc2,Yc2,Zc2] = cylinder(3);
                 Zc2 = Zc2*600;
-                c_top2     = [Xc2(1,:);Yc2(1,:);Zc2(1,:)];      %Šî€‰~’ŒÀ•Wiã‰ºŠe¬•ªj
+                c_top2     = [Xc2(1,:);Yc2(1,:);Zc2(1,:)];      %åŸºæº–å††æŸ±åº§æ¨™ï¼ˆä¸Šä¸‹å„æˆåˆ†ï¼‰
                 c_bottom2  = [Xc2(2,:);Yc2(2,:);Zc2(2,:)];
 
-                %‚±‚±‚Í•`‰æ‚¾‚¯‚È‚Ì‚Å“K“–‚É‚µ‚Ä‚ ‚é
+                %ã“ã“ã¯æç”»ã ã‘ãªã®ã§é©å½“ã«ã—ã¦ã‚ã‚‹
                 c_top2h = R("y",gamma1)*([L1;0;0]+R("x",-phi_n)*R("z",the_nR)*R("y",pi/2)*c_top2);
                 c_bottom2h = R("y",gamma1)*([L1;0;0]+R("x",-phi_n)*R("z",the_nR)*R("y",pi/2)*c_bottom2);
                 c_top2s = R("y",gamma1)*([L1;0;0]+R("x",-phi_n)*R("z",-the_nL)*R("y",pi/2)*c_top2);
@@ -1631,10 +1627,10 @@ function Main(a,b,right,left,mode)
                 ylabel('y[mm]')
                 zlabel('z[mm]')
 
-    %% ‚¢‚ç‚È‚¢•”•ª          
+    %% ã„ã‚‰ãªã„éƒ¨åˆ†          
         %
-                %À•W‚ÌƒgƒŒ[ƒX‚ÆÚG”»’è
-                %ƒ‚[ƒ^‚Ì’†SÀ•W
+                %åº§æ¨™ã®ãƒˆãƒ¬ãƒ¼ã‚¹ã¨æ¥è§¦åˆ¤å®š
+                %ãƒ¢ãƒ¼ã‚¿ã®ä¸­å¿ƒåº§æ¨™
     %            Pr2 = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCr + R("y",the_yr)*R("x",the_xr)*R("z",the_zr)*R("z",-the_3r-pi/2)*R("x",a2)*[0;0;l2]));
     %            Pf2 = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCf + R("y",the_yr)*R("x",the_xr)*R("z",the_zr)*R("z",-the_3r-pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi)*R("y",2*a3)*R("z",the_1f)*R("x",a1)*[0;0;l2]));
 
@@ -1642,7 +1638,7 @@ function Main(a,b,right,left,mode)
     %             [data_collide_f(t,1),data_collide_f(t,2)] = collide(gamma1,phi_n,the_nR,Pf2(1),Pf2(2),Pf2(3),rj,L1);
     % 
     %             if (data_collide_r(t,1)+data_collide_r(t,2)+data_collide_f(t,1)+data_collide_f(t,2)) ~= 0
-    %                 flag_fin =1;     %ÚG‚ğŒŸ’m‚µ‚½‚çƒtƒ‰ƒO‚ğ—§‚Ä‚é
+    %                 flag_fin =1;     %æ¥è§¦ã‚’æ¤œçŸ¥ã—ãŸã‚‰ãƒ•ãƒ©ã‚°ã‚’ç«‹ã¦ã‚‹
     %                 Data_sim(p,15) = 1;
     % 
     %             end
@@ -1662,15 +1658,15 @@ function Main(a,b,right,left,mode)
     %                 surf(Xs+Pf2(1),Ys+Pf2(2),Zs+Pf2(3),'FaceColor','b','EdgeColor','none', 'FaceAlpha','0.5')
     %             end
 
-    %%            %‰Â‘€ì‘È‰~‚Ì•`‰æ
+    %%            %å¯æ“ä½œæ¥•å††ã®æç”»
     %             [e_r,M_ellipsoid_r] = manipulability_ellipsoid(a1,a2,the_2r,the_3r,phi_r,the_r,psi_r,phi_nr1,the_nr,phi_nr2,gamma1,L1,Ln1,OrCr,phi_nr1,the_nr,phi_nr2);
     %             [e_f,M_ellipsoid_f] = manipulability_ellipsoid(a1,a2,the_2f,the_3f,phi_f,the_f,psi_f,phi_nr1,the_nr,phi_nr2,gamma1,L1,Ln1,OrCf,phi_nf1,the_nf,phi_nf2);
 
-                %ƒKƒ“ƒ}‚ª’l‚ğ‚Â‚Æ‚«‚Í‚š²ü‚è‚Épi‰ñ‚·‚¾‚¯‚¶‚á‚¾‚ß‚Á‚Û‚¢
+                %ã‚¬ãƒ³ãƒãŒå€¤ã‚’æŒã¤ã¨ãã¯ï½šè»¸å‘¨ã‚Šã«piå›ã™ã ã‘ã˜ã‚ƒã ã‚ã£ã½ã„
      %           M_R_ellipsoid_r = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCr)) + R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*R("x",phi_r)*R("z",the_r)*R("y",psi_r)*R("z",pi)*R("x",-pi/2)*e_r*M_ellipsoid_r;
      %           M_R_ellipsoid_f = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCf)) + R("x",phi_nf1)*R("z",the_nf)*R("x",phi_nf2)*R("x",phi_f)*R("z",the_f)*R("y",psi_f)*R("x",-pi/2)*e_f*M_ellipsoid_f;
 
-                %ƒKƒ“ƒ}‚ª’l‚ğ‚Â‚Æ‚«‚Í‚š²ü‚è‚Épi‰ñ‚·‚¾‚¯‚¶‚á‚¾‚ß‚Á‚Û‚¢
+                %ã‚¬ãƒ³ãƒãŒå€¤ã‚’æŒã¤ã¨ãã¯ï½šè»¸å‘¨ã‚Šã«piå›ã™ã ã‘ã˜ã‚ƒã ã‚ã£ã½ã„
     %             M_R_ellipsoid_r = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCr)) + R("y",gamma1)*R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*R("y",the_yr)*R("x",the_xr)*R("z",the_zr)*e_r*M_ellipsoid_r;
     %             M_R_ellipsoid_f = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCf)) + R("y",gamma1)*R("x",phi_nf1)*R("z",the_nf)*R("x",phi_nf2)*R("x",phi_f)*R("z",the_f)*R("y",psi_f)*R("x",-pi/2)*e_f*M_ellipsoid_f;
 
@@ -1684,7 +1680,7 @@ function Main(a,b,right,left,mode)
 
                  % surf(xr, yr, zr,'FaceColor','b', 'FaceAlpha','0.3')
                  % surf(xf, yf, zf,'FaceColor','b', 'FaceAlpha','0.3')
-    %%           ƒ[ƒNƒXƒy[ƒX‚Ì‰Â‹‰»
+    %%           ãƒ¯ãƒ¼ã‚¯ã‚¹ãƒšãƒ¼ã‚¹ã®å¯è¦–åŒ–
 
             if workspace == 1
                 [n_line,M_w_sphere] =  Work_space_sphere(a1,a2,l2);
@@ -1705,7 +1701,7 @@ function Main(a,b,right,left,mode)
                 surf(Xr, Yr, Zr,'FaceColor','b','FaceAlpha','0.5','LineStyle',':')
                 surf(Xf, Yf, Zf,'FaceColor','b','FaceAlpha','0.5','LineStyle',':')
             end   
-    %              %Šm”F—p‚Ìƒvƒƒbƒg
+    %              %ç¢ºèªç”¨ã®ãƒ—ãƒ­ãƒƒãƒˆ
     %              xp = [Pr2(1);Pf2(1)];
     %              yp = [Pr2(2);Pf2(2)];
     %              zp = [Pr2(3);Pf2(3)];
@@ -1733,9 +1729,9 @@ function Main(a,b,right,left,mode)
     end
 end
 
-%% ŠÖ”
+%% é–¢æ•°
 
-%% ‰ñ“]s—ñ
+%% å›è»¢è¡Œåˆ—
 function X = R(i,j)
     if i == "x"
         X = [1 0 0 ; 0 cos(j) -sin(j) ; 0 sin(j) cos(j)];
@@ -1747,23 +1743,23 @@ function X = R(i,j)
 end
 
 %%
-%Ln2‚ğ—^‚¦‚ÄCLn1‚ğ•Ô‚·ŠÖ”
+%Ln2ã‚’ä¸ãˆã¦ï¼ŒLn1ã‚’è¿”ã™é–¢æ•°
 function [Ln1,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal1(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln2,Lc,Rw,rw,d,mode)
-    if mode == 1 %‰E•ªŠòƒ‚[ƒh
-        %Œã—Ö
+    if mode == 1 %å³åˆ†å²ãƒ¢ãƒ¼ãƒ‰
+        %å¾Œè¼ª
         OrCr =   R("x",the_xr)*R("y",the_yr)*[Rw*sin(the_zr);d/2+rw-Rw*cos(the_zr);0];
         OrOw1r = R("x",the_xr)*R("y",the_yr)*[0;d/2+rw;0];
         OrOw2r = R("x",the_xr)*R("y",the_yr)*[2*Rw*sin(the_zr);d/2+rw-2*Rw*cos(the_zr);0];
-        %‘O—Ö
+        %å‰è¼ª
         OfCf =   R("x",the_xf)*R("y",the_yf)*[Rw*sin(the_zf);d/2+rw-Rw*cos(the_zf);0];
         OfOw1f = R("x",the_xf)*R("y",the_yf)*[0;d/2+rw;0];
         OfOw2f = R("x",the_xf)*R("y",the_yf)*[2*Rw*sin(the_zf);d/2+rw-2*Rw*cos(the_zf);0];
-    elseif mode == 2 %¶•ªŠòƒ‚[ƒh
-        %Œã—Ö
+    elseif mode == 2 %å·¦åˆ†å²ãƒ¢ãƒ¼ãƒ‰
+        %å¾Œè¼ª
         OrCr =   R("x",the_xr)*R("y",the_yr)*[-Rw*sin(the_zr);-d/2-rw+Rw*cos(the_zr);0];
         OrOw1r =  R("x",the_xr)*R("y",the_yr)*[-2*Rw*sin(the_zr);-d/2-rw+2*Rw*cos(the_zr);0];
         OrOw2r =  R("x",the_xr)*R("y",the_yr)*[0;-d/2-rw;0];
-        %‘O—Ö
+        %å‰è¼ª
         OfCf =    R("x",the_xf)*R("y",the_yf)*[-Rw*sin(the_zf);-d/2-rw+Rw*cos(the_zf);0];
         OfOw1f =  R("x",the_xf)*R("y",the_yf)*[-2*Rw*sin(the_zf);-d/2-rw+2*Rw*cos(the_zf);0];
         OfOw2f =  R("x",the_xf)*R("y",the_yf)*[0;-d/2-rw;0];   
@@ -1788,32 +1784,32 @@ function [Ln1,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal1(the_xr,the
     
 end
 
-%% RCM’†SÀ•W‚ÌŒvZ1(‰E•ªŠòƒ‚[ƒhC¶•ªŠòƒ‚[ƒh)kakikaezumi
+%% RCMä¸­å¿ƒåº§æ¨™ã®è¨ˆç®—1(å³åˆ†å²ãƒ¢ãƒ¼ãƒ‰ï¼Œå·¦åˆ†å²ãƒ¢ãƒ¼ãƒ‰)kakikaezumi
 function [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal2(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode)
 
     %gap  = 2*Rw*cos(the_zr)-d-2*rw;
-    if mode == 1 %‰E•ªŠòƒ‚[ƒh
-        %Œã—Ö
+    if mode == 1 %å³åˆ†å²ãƒ¢ãƒ¼ãƒ‰
+        %å¾Œè¼ª
         OrCr =   R("x",the_xr)*R("y",the_yr)*[Rw*sin(the_zr);d/2+rw-Rw*cos(the_zr);0];
         OrOw1r = R("x",the_xr)*R("y",the_yr)*[0;d/2+rw;0];
         OrOw2r = R("x",the_xr)*R("y",the_yr)*[2*Rw*sin(the_zr);d/2+rw-2*Rw*cos(the_zr);0];
-        %‘O—Ö
+        %å‰è¼ª
         OfCf =   R("x",the_xf)*R("y",the_yf)*[Rw*sin(the_zf);d/2+rw-Rw*cos(the_zf);0];
         OfOw1f = R("x",the_xf)*R("y",the_yf)*[0;d/2+rw;0];
         OfOw2f = R("x",the_xf)*R("y",the_yf)*[2*Rw*sin(the_zf);d/2+rw-2*Rw*cos(the_zf);0];
-    elseif mode == 2 %¶•ªŠòƒ‚[ƒh
-        %Œã—Ö
+    elseif mode == 2 %å·¦åˆ†å²ãƒ¢ãƒ¼ãƒ‰
+        %å¾Œè¼ª
         OrCr =   R("x",the_xr)*R("y",the_yr)*[-Rw*sin(the_zr);-d/2-rw+Rw*cos(the_zr);0];
         OrOw1r = R("x",the_xr)*R("y",the_yr)*[-2*Rw*sin(the_zr);-d/2-rw+2*Rw*cos(the_zr);0];
         OrOw2r = R("x",the_xr)*R("y",the_yr)*[0;-d/2-rw;0];
-        %‘O—Ö
+        %å‰è¼ª
         OfCf =   R("x",the_xf)*R("y",the_yf)*[-Rw*sin(the_zf);-d/2-rw+Rw*cos(the_zf);0];
         OfOw1f = R("x",the_xf)*R("y",the_yf)*[-2*Rw*sin(the_zf);-d/2-rw+2*Rw*cos(the_zf);0];
         OfOw2f = R("x",the_xf)*R("y",the_yf)*[0;-d/2-rw;0];   
     else         
     end
     
-    %OrOfŠÔ‚ÌŒvZ
+    %OrOfé–“ã®è¨ˆç®—
     R1 = R("x",phi_nr1)*R("z",the_nr);
     R2 = R("x",phi_nf1)*R("z",the_nf);
     
@@ -1830,22 +1826,22 @@ function [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal2(the_xr,the
 end
 
 
-%% •ªŠòƒ‚[ƒhƒXƒCƒbƒ`‚Ì‚½‚ß‚Ì“Áê‚ÈŠÖ”i‰E‚©‚ç¶j
+%% åˆ†å²ãƒ¢ãƒ¼ãƒ‰ã‚¹ã‚¤ãƒƒãƒã®ãŸã‚ã®ç‰¹æ®Šãªé–¢æ•°ï¼ˆå³ã‹ã‚‰å·¦ï¼‰
 function [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal_tension(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode)
 
     %gap  = 2*Rw*cos(the_zr)-d-2*rw;
 
-        %Œã—Ö
+        %å¾Œè¼ª
         OrCr =   R("x",the_xr)*R("y",the_yr)*[Rw*sin(the_zr);d/2+rw-Rw*cos(the_zr);0];
         OrOw1r = R("x",the_xr)*R("y",the_yr)*[0;d/2+rw;0];
         OrOw2r = R("x",the_xr)*R("y",the_yr)*[2*Rw*sin(the_zr);d/2+rw-2*Rw*cos(the_zr);0];
-        %‘O—Ö
+        %å‰è¼ª
         OfCf =   R("x",the_xf)*R("y",the_yf)*[Rw*sin(the_zf);d/2+rw-Rw*cos(the_zf);0];
         OfOw1f = R("x",the_xf)*R("y",the_yf)*[0;d/2+rw;0];
         OfOw2f = R("x",the_xf)*R("y",the_yf)*[2*Rw*sin(the_zf);d/2+rw-2*Rw*cos(the_zf);0];
 
     
-    %OrOfŠÔ‚ÌŒvZ
+    %OrOfé–“ã®è¨ˆç®—
     R1 = R("x",phi_nr1)*R("z",the_nr);
     R2 = R("x",phi_nf1)*R("z",the_nf);
     
@@ -1860,17 +1856,17 @@ function [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal_tension(the
     Ln2 = (-(E+F*Ln1)+sqrt((E+F*Ln1)^2-B*(A*Ln1*Ln1+2*D*Ln1+C-Lc^2)))/B;
     OrOf = R1*[Ln1;0;0]+R2*[Ln2;0;0];
 end
-%% ‹…–ÊüŒ`•âŠÔ{ƒIƒCƒ‰[Šp•\¦
-%•âŠÔƒNƒH[ƒ^ƒjƒIƒ“‚ğ‹‚ß‚½ŒãCƒIƒCƒ‰[Špip¨Šp•\Œ»‚·‚éj
+%% çƒé¢ç·šå½¢è£œé–“ï¼‹ã‚ªã‚¤ãƒ©ãƒ¼è§’è¡¨ç¤º
+%è£œé–“ã‚¯ã‚©ãƒ¼ã‚¿ãƒ‹ã‚ªãƒ³ã‚’æ±‚ã‚ãŸå¾Œï¼Œã‚ªã‚¤ãƒ©ãƒ¼è§’ï¼ˆå§¿å‹¢è§’è¡¨ç¾ã™ã‚‹ï¼‰
 function [X,Y,Z] = slerp_xyz_euler(q1,q2,t)
         
-    the = dist(q1,q2);  %q1,q2‚Ì“àÏ
+    the = dist(q1,q2);  %q1,q2ã®å†…ç©
     X = zeros(t,1);
     Y = zeros(t,1);
     Z = zeros(t,1);
        
     for i=1:t
-        %t‚Í•ªŠ„”Ci‚Íi”Ô–Ú‚Ì•ªŠ„“_
+        %tã¯åˆ†å‰²æ•°ï¼Œiã¯iç•ªç›®ã®åˆ†å‰²ç‚¹
         k = 6*(i/t)^5-15*(i/t)^4+10*(i/t)^3;
         qt = sin((1-k)*the)/sin(the)*q1+sin(k*the)/sin(the)*q2;
         temp = euler(qt,'XYZ','frame');
@@ -1880,10 +1876,10 @@ function [X,Y,Z] = slerp_xyz_euler(q1,q2,t)
     end
 end
 
-%% ÚG”»’è
+%% æ¥è§¦åˆ¤å®š
 function [f1,f2] = collide(gamma1,phi_n,the_nR,xp,yp,zp,rj,L)
-     %ÚG”»’è•”•ªp2-90
-     %0522@•ªŠò“_‚ğ’´‚¦‚½•”•ª‚Å‚ÌÚG‚ğŒŸ’m‚µ‚È‚¢‚æ‚¤‚É‰ü—Ç
+     %æ¥è§¦åˆ¤å®šéƒ¨åˆ†p2-90
+     %0522ã€€åˆ†å²ç‚¹ã‚’è¶…ãˆãŸéƒ¨åˆ†ã§ã®æ¥è§¦ã‚’æ¤œçŸ¥ã—ãªã„ã‚ˆã†ã«æ”¹è‰¯
      f1 = 0;
      f2 = 0;
      
@@ -1894,16 +1890,16 @@ function [f1,f2] = collide(gamma1,phi_n,the_nR,xp,yp,zp,rj,L)
      B = a*xp+b*yp+c*zp-a*L*cos(gamma1)+c*L*sin(gamma1); 
      C = (L*cos(gamma1)-xp)^2+yp^2+(-L*sin(gamma1)-zp)^2-rj^2;
      
-     %‘–sƒP[ƒuƒ‹
+     %èµ°è¡Œã‚±ãƒ¼ãƒ–ãƒ«
      judge1 = (cos(gamma1)*xp-sin(gamma1)*zp)^2-(xp^2+yp^2+zp^2-rj^2);
      
-     %•ªŠòƒP[ƒuƒ‹
+     %åˆ†å²ã‚±ãƒ¼ãƒ–ãƒ«
      judge2 = B^2-A*C;
      
-     if (judge1 >= 0) && (cos(gamma1)*xp-sin(gamma1)*zp-sqrt(judge1) <= L)   %ÚG‚µC‚»‚Ì‰ğ‚ªL‚æ‚è‚à¬‚³‚¢‚È‚ç‚Î
+     if (judge1 >= 0) && (cos(gamma1)*xp-sin(gamma1)*zp-sqrt(judge1) <= L)   %æ¥è§¦ã—ï¼Œãã®è§£ãŒLã‚ˆã‚Šã‚‚å°ã•ã„ãªã‚‰ã°
          f1 = 1;
      end
-%      if judge2 >= 0 %ÚG‚µ‚½‚ç
+%      if judge2 >= 0 %æ¥è§¦ã—ãŸã‚‰
 %          f1 = 1;
 %      end
      
@@ -1917,17 +1913,17 @@ function [f1,f2] = collide(gamma1,phi_n,the_nR,xp,yp,zp,rj,L)
          end
      end
 end
-%% ‰Â‘€ì‘È‰~‚ğì¬‚·‚éŠÖ”iƒGƒ“ƒhƒGƒtƒFƒNƒ^‚ÌÀ•WŒnj
+%% å¯æ“ä½œæ¥•å††ã‚’ä½œæˆã™ã‚‹é–¢æ•°ï¼ˆã‚¨ãƒ³ãƒ‰ã‚¨ãƒ•ã‚§ã‚¯ã‚¿ã®åº§æ¨™ç³»ï¼‰
 function [e,M_ellipsoid] =  manipulability_ellipsoid(a1,a2,the2,the3,phi,the,psi,phi_n1,the_n1,phi_n2,gamma1,L1,Ln1,OC,phi_n3,the_n2,phi_n4)
 
     J = [sin(a1)*(cos(the3)*sin(the2) + cos(a2)*cos(the2)*sin(the3)) + cos(a1)*sin(a2)*sin(the3) sin(a2)*sin(the3) 0; ...
          cos(a1)*sin(a2)*cos(the3) - sin(a1)*(sin(the2)*sin(the3) - cos(a2)*cos(the2)*cos(the3)) sin(a2)*cos(the3) 0; ...
          cos(a1)*cos(a2) - sin(a1)*sin(a2)*cos(the2) cos(a2) 1];
 
-     [e,g] = eig(J*J');    %ŒÅ—LƒxƒNƒgƒ‹‚ÆCŒÅ—L’l‚Ì‘ÎŠp‰»s—ñ*
+     [e,g] = eig(J*J');    %å›ºæœ‰ãƒ™ã‚¯ãƒˆãƒ«ã¨ï¼Œå›ºæœ‰å€¤ã®å¯¾è§’åŒ–è¡Œåˆ—*
      
      
-     %g‚ÌƒTƒCƒY’²®
+     %gã®ã‚µã‚¤ã‚ºèª¿æ•´
      G = 75;
     [x, y, z] = ellipsoid(0,0,0,G*sqrt(g(1,1)),G*sqrt(g(2,2)),G*sqrt(g(3,3)));
      
@@ -1938,7 +1934,7 @@ function [e,M_ellipsoid] =  manipulability_ellipsoid(a1,a2,the2,the3,phi,the,psi
 
      M_ellipsoid = [x;y;z]; 
 end 
-%% ƒ[ƒNƒXƒy[ƒX‚Ì‰Â‹‰»
+%% ãƒ¯ãƒ¼ã‚¯ã‚¹ãƒšãƒ¼ã‚¹ã®å¯è¦–åŒ–
 function [n_line,M_w_sphere] =  Work_space_sphere(a1,a2,l2)
 
     A1 = a1+a2-pi/2;
@@ -1967,11 +1963,11 @@ function [n_line,M_w_sphere] =  Work_space_sphere(a1,a2,l2)
    M_w_sphere=[X;Y;Z];
    n_line = t_max-t_min+1;
 end
-%% •`‰æŠÖ˜A‚ÌŠÖ”
+%% æç”»é–¢é€£ã®é–¢æ•°
 
 function clinder_plot(Cl_bottom,Cl_top)
-    %Cl_top‚Í‰~’Œ‚Ìã–Ê‚ÌÀ•W
-    %Cl_bottom‚Í‰~’Œ‚Ì‰º–Ê‚ÌÀ•W
+    %Cl_topã¯å††æŸ±ã®ä¸Šé¢ã®åº§æ¨™
+    %Cl_bottomã¯å††æŸ±ã®ä¸‹é¢ã®åº§æ¨™
     ax = gca;
     ax.YDir = 'reverse';
     ax.ZDir = 'reverse';
@@ -1983,10 +1979,10 @@ function clinder_plot(Cl_bottom,Cl_top)
     Z(2,:)= Cl_top(3,:);
 
 
-    surf(X,Y,Z,'FaceColor','r','EdgeColor','none')    %‘¤–Êƒvƒƒbƒg
+    surf(X,Y,Z,'FaceColor','r','EdgeColor','none')    %å´é¢ãƒ—ãƒ­ãƒƒãƒˆ
     hold on
-    fill3(X(1,:),Y(1,:),Z(1,:),"w")                     %’ê–Êƒvƒƒbƒg
-    fill3(X(2,:),Y(2,:),Z(2,:),"w")                     %ã–Êƒvƒƒbƒg
+    fill3(X(1,:),Y(1,:),Z(1,:),"w")                     %åº•é¢ãƒ—ãƒ­ãƒƒãƒˆ
+    fill3(X(2,:),Y(2,:),Z(2,:),"w")                     %ä¸Šé¢ãƒ—ãƒ­ãƒƒãƒˆ
     xlim([-300 500]) 
     ylim([-300 500]) 
     zlim([-300 500])
@@ -1994,8 +1990,8 @@ function clinder_plot(Cl_bottom,Cl_top)
 end
 
 function gourd_plot(W)
-    %‚Ğ‚å‚¤‚½‚ñŒ^‚ğ‰æ–Êo—Í‚·‚éŠÖ”
-    %“ü—Ís—ñ‚Ì‘å‚«‚³‚ğ“Ç‚İæ‚ê‚ÎC”Ä—p“I‚È‚à‚Ì‚ªì‚ê‚é‚¯‚Ç¡‰ñ‚ÍƒXƒ‹[
+    %ã²ã‚‡ã†ãŸã‚“å‹ã‚’ç”»é¢å‡ºåŠ›ã™ã‚‹é–¢æ•°
+    %å…¥åŠ›è¡Œåˆ—ã®å¤§ãã•ã‚’èª­ã¿å–ã‚Œã°ï¼Œæ±ç”¨çš„ãªã‚‚ã®ãŒä½œã‚Œã‚‹ã‘ã©ä»Šå›ã¯ã‚¹ãƒ«ãƒ¼
     ax = gca;
     ax.YDir = 'reverse';
     ax.ZDir = 'reverse';
@@ -2010,12 +2006,12 @@ function gourd_plot(W)
            Z(i,:)=W(3,i+20*(i-1):i+20*i);
     end
 
-    surf(X,Y,Z,'FaceColor','green','EdgeColor','k')    %‘¤–Êƒvƒƒbƒg
+    surf(X,Y,Z,'FaceColor','green','EdgeColor','k')    %å´é¢ãƒ—ãƒ­ãƒƒãƒˆ
 
     hold on
 
-    fill3(X(1,:),Y(1,:),Z(1,:),"g",'EdgeColor','k')                     %’ê–Êƒvƒƒbƒg
-    fill3(X(11,:),Y(11,:),Z(11,:),"g",'EdgeColor','k')                     %ã–Êƒvƒƒbƒg
+    fill3(X(1,:),Y(1,:),Z(1,:),"g",'EdgeColor','k')                     %åº•é¢ãƒ—ãƒ­ãƒƒãƒˆ
+    fill3(X(11,:),Y(11,:),Z(11,:),"g",'EdgeColor','k')                     %ä¸Šé¢ãƒ—ãƒ­ãƒƒãƒˆ
     xlim([-300 500]) 
     ylim([-300 500]) 
     zlim([-300 500])
@@ -2023,8 +2019,8 @@ function gourd_plot(W)
 end
 
 function cable_plot(Cl_bottom,Cl_top)
-%Cl_top‚Í‰~’Œ‚Ìã–Ê‚ÌÀ•W
-%Cl_bottom‚Í‰~’Œ‚Ì‰º–Ê‚ÌÀ•W
+%Cl_topã¯å††æŸ±ã®ä¸Šé¢ã®åº§æ¨™
+%Cl_bottomã¯å††æŸ±ã®ä¸‹é¢ã®åº§æ¨™
 ax = gca;
 ax.YDir = 'reverse';
 ax.ZDir = 'reverse';
@@ -2036,21 +2032,21 @@ Z(1,:)= Cl_bottom(3,:);
 Z(2,:)= Cl_top(3,:);
 
 
-surf(X,Y,Z,'FaceColor','blue','EdgeColor','none')    %‘¤–Êƒvƒƒbƒg
+surf(X,Y,Z,'FaceColor','blue','EdgeColor','none')    %å´é¢ãƒ—ãƒ­ãƒƒãƒˆ
 hold on
-fill3(X(1,:),Y(1,:),Z(1,:),"b")                     %’ê–Êƒvƒƒbƒg
-fill3(X(2,:),Y(2,:),Z(2,:),"b")                     %ã–Êƒvƒƒbƒg
+fill3(X(1,:),Y(1,:),Z(1,:),"b")                     %åº•é¢ãƒ—ãƒ­ãƒƒãƒˆ
+fill3(X(2,:),Y(2,:),Z(2,:),"b")                     %ä¸Šé¢ãƒ—ãƒ­ãƒƒãƒˆ
 %xlim([-250 350]) 
 xlim([-50 700]) 
 ylim([-400 350]) 
 zlim([-250 550])
-%Ê^—p
+%å†™çœŸç”¨
 xlim([-300 600]) 
 ylim([-450 450]) 
 zlim([-450 450])
 
 
-% % %ƒAƒbƒv—p
+% % %ã‚¢ãƒƒãƒ—ç”¨
 %  xlim([200 600]) 
 %  ylim([-100 300]) 
 %  zlim([-250 150])
