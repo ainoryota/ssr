@@ -115,7 +115,6 @@ class RealSense(object):
         if(self.StopFlag == True):return
         start = time.time()
 
-
         accel = self.vs.acc
         gyro = self.vs.gyro
         color_image = self.vs.color_image
@@ -124,15 +123,28 @@ class RealSense(object):
         self.timerLog.pop(0)
         self.timerLog.append(time.time() - self.startTime)
 
+        
         DebugImage(depth_image_original,0,True)
         depth_image = np.zeros((360,640),dtype=np.int16)
-        for x in range(640):
-            for y in range(360):
-                depth_image[y][x] = depth_image_original[int(y * 1.333)][int(x * 1.325)]
 
-        #depth_image = depth_image_original[::2,::2]
+        print("B",time.time() - start)
+
+        Y_all, X_all = np.mgrid[:360, :640]
+        Y_all = Y_all * 1.333
+        X_all = X_all * 1.325
+        Y_all=Y_all.flatten().astype(int)
+        X_all=X_all.flatten().astype(int)
+
+        depth_image = depth_image_original[(Y_all,X_all)]
+        depth_image = np.reshape(depth_image,((360,640)))
+
+        
+        print("C",time.time() - start)
+
         hoge = np.where((depth_image < 600) & (depth_image > 0))
 
+
+        print("D",time.time() - start)
         try:
             x,y,z,fit = FormSingleton().updateThreeGraph(hoge[1],hoge[0],depth_image[hoge])
         except Exception as e:
@@ -140,6 +152,7 @@ class RealSense(object):
             self.imgArea.after(100,self.getRealsense)
             return
         
+        print("E",time.time() - start)
         depth_image.fill(0)
         mask = (x < 640) & (y < 360) & (x > 0) & (y > 0)
 
@@ -157,7 +170,11 @@ class RealSense(object):
 
 
         self.branchSystem.setImage(color_image,depth_image,ir_image1,ir_image2,self.web_image)
+
+
         value,rule0,rule1,rule2,a = self.branchSystem.calcCablewayInf(accel,self.timerLog,True)
+
+
         rule3_L = np.var(self.LAngleLog)
         rule3_R = np.var(self.RAngleLog)
         nonzero1 = np.where(np.array(self.MaxValue1Log) != 0)
@@ -251,5 +268,6 @@ class RealSense(object):
                     self.stop_branch_time = 15
             else:
                 OutputController().msgPrint("No like data")
+
 
         self.imgArea.after(100,self.getRealsense)

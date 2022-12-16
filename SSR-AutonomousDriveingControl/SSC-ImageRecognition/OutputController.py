@@ -63,7 +63,7 @@ class OutputController(object):
             self.box.see(tk.END)
         except:
             print(",".join([str(_) for _ in msg]))
-            print("Print Exception")
+            #print("Print Exception")
 
 
 

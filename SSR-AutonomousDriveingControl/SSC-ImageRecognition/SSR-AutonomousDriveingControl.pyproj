@@ -77,6 +77,9 @@
     <Compile Include="test.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="test2.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ThetaViewer.py" />
     <Compile Include="Utilty.py" />
     <Compile Include="VideoStream.py">

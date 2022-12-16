@@ -142,6 +142,13 @@ def WeightedIRImage(h,w,minDistance,maxDistance,overDistance,ir_scale,depth_scal
     return flag
 
 def IR(color_image,depth_image,ir_image,depth_scale,ir_scale,robot_rotation,minDistance,maxDistance,overDistance,extMode=True):
+    #np.save("np/color_image",color_image)
+    #np.save("np/depth_image",depth_image)
+    #np.save("np/ir_image",ir_image)
+    #np.save("np/depth_scale",depth_scale)
+    #np.save("np/ir_scale",ir_scale)
+
+
     #戻り値
     GammalAngle = 0
     TurnAngle = 0
@@ -161,6 +168,8 @@ def IR(color_image,depth_image,ir_image,depth_scale,ir_scale,robot_rotation,minD
     step = 12
     branchsize = 24
     thickness = 10
+
+
     (maxX,maxY,maxAngle1,maxAngle2,maxAngle3,maxValue1,maxValue2,maxValue3) = CalcTurningAngle(binaryScale,step,branchsize,thickness)
 
     #y軸を起点としたとき、角度が小さい方が左分岐角
