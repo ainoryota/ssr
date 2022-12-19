@@ -1,10 +1,9 @@
 SSC-ImageRecognition/SSC-ImageRecognition/robotvideo1.mp4
 SSC-ImageRecognition/SSC-ImageRecognition/robotvideo2.mp4
 SSC-ImageRecognition/SSC-ImageRecognition/Data/*.csv
+SSC-ImageRecognition/SSC-ImageRecognition/DataData/*.csv
 SSR-CreateRute/*.csv
+Data/*.csv
 SSR-AutonomousDriveingControl/SSC-ImageRecognition/Data/*.csv
-*.csv
-*.csv
 SSR-GUIControl.zip
-*.csv
-*.csv
+
