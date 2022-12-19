@@ -9,7 +9,7 @@ from OutputController import OutputController
 @lru_cache()
 def getAngleList(anglestep,targetAngle,ruleAngle):
     angles = np.array(range(0,360,anglestep))
-    angles = angles[np.where(((190 < angles) & (angles < 260)) | ((280 < angles) & (angles < 350)))]
+    angles = angles[np.where(((170 < angles) & (angles < 270)) | ((270 < angles) & (angles < 360)))]
     angles = angles[CalcDiffAngleNP(angles,targetAngle,ruleAngle)]    
     return angles
 

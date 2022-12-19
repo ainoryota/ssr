@@ -25,13 +25,13 @@ class Branch(object):
 
     def FileBranch(self,csvfile,runDirection,save,a=24):
         #分岐データの読み込み
-        csvfile = "Data/" + csvfile
+        csvfile = "C:/Users/MSD/Documents/GitHub/Data/" + csvfile
         OutputController().msgPrint("Branch",csvfile,"a=",round(a,2))
         
         
         data = np.loadtxt(csvfile,delimiter=",")
         (n,m) = data.shape
-        log = [[0] * 21for i in range(n)]#初期化
+        log = [[0] * 21 for i in range(n)]#初期化
         time_start = time.perf_counter()
     
         #前進後退でモータに流す入力を変えるため
@@ -73,8 +73,8 @@ class Branch(object):
             #self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct *
             #2.12206591 * 100),t))
 
-            #t+=0.024
-            t+=(0.024 * 35) / a #aが大きいほど小さな値にする。
+            t+=0.024
+            #t+=(0.024 * 100) / a #aが大きいほど小さな値にする。
 
         OutputController().pushStep()
 

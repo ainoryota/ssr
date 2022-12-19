@@ -42,6 +42,9 @@ class BranchSystem:
         self.RAngleLog = [0 for a in range(self.LogNumber)]
         self.InclinationAngleLog = [0 for a in range(self.LogNumber)]
         self.tAngleLog = [0 for a in range(self.LogNumber)]
+        self.Value1Log = [0 for a in range(self.LogNumber)]
+        self.Value2Log = [0 for a in range(self.LogNumber)]
+        self.Value3Log = [0 for a in range(self.LogNumber)]
         #self.YLog = [0 for a in range(self.LogNumber)]
 
         self.maxValue1 = 0
@@ -110,19 +113,19 @@ class BranchSystem:
         if(np.sum(self.ir_image1) < 0.1 or np.sum(self.color_image) < 0.1):#カメラがほぼ真っ暗
             self.Error = True
             OutputController().msgPrint("Camera is black")
-            return 0,0,0,0,0
+            return 0,0,0,0,0,0,0,0
         result = IR(self.color_image,self.depth_image,self.ir_image1,self.depth_scale,self.ir_scale,accel,self.minDistance,self.maxDistance,self.overDistance,extMode)
         if(len(result) == 1):#不正ならFalseだけが返ってくる
             self.Error = True
             OutputController().msgPrint("Invalid Camera error")
-            return 0,0,0,0,0
+            return 0,0,0,0,0,0,0,0
         (self.y,self.x,self.branchValue,self.Rangle,self.Langle,self.ProceedAngle,self.DepthIRFlag,self.maxValue1,self.maxValue2,self.maxValue3) = result
         self.tangle = math.degrees(-math.atan2(accel.y,accel.z))
         self.appendLog()
         
 
-        (rule0,rule1,rule2,a) = self.calcRule(timerLog)
-        return self.branchValue,rule0,rule1,rule2,a
+        (rule0,rule1,rule2,rule5,rule6,rule7,a) = self.calcRule(timerLog)
+        return self.branchValue,rule0,rule1,rule2,rule5,rule6,rule7,a
 
     def get3DImages(self):
         # データを用意する
@@ -178,6 +181,12 @@ class BranchSystem:
         self.InclinationAngleLog.pop(0)
         self.tAngleLog.append(self.tangle)
         self.tAngleLog.pop(0)
+        self.Value1Log.append(self.maxValue1)
+        self.Value1Log.pop(0)
+        self.Value2Log.append(self.maxValue2)
+        self.Value2Log.pop(0)
+        self.Value3Log.append(self.maxValue3)
+        self.Value3Log.pop(0)
 
 
 
@@ -185,7 +194,7 @@ class BranchSystem:
         #A→屋外実験により720以上必要であると確認。屋内実験で880以下でなければならないと確認済み
         #1.直近N1ログ以内のvalueLog平均値がA以上
         #2.直近N1ログ以内のvalueLog平均値がA以上の結果から推定された5ログあとのYLogの線形近似解が高さhの1.2倍を超えた
-        N1 = 8 #処理時間が500msなら10、300msなら15
+        N1 = 12 #処理時間が500msなら8、300msなら12
 
         #YLogList = np.array(self.YLog[len(self.YLog) - N1:])
         #rule0 = np.average(YLogList)
@@ -193,38 +202,62 @@ class BranchSystem:
 
         valueLogList = np.array(self.valueLog[len(self.valueLog) - N1:])
         timerLogList = np.array(timerLog[len(timerLog) - N1:])
+        Value1LogList = np.array(self.Value1Log[len(self.Value1Log) - N1:])
+        Value2LogList = np.array(self.Value2Log[len(self.Value2Log) - N1:])
+        Value3LogList = np.array(self.Value3Log[len(self.Value3Log) - N1:])
+        
+        
+        
+        
+        
         rule1 = np.average(valueLogList) / 750
 
         hoge2 = np.array(self.YLog[len(self.YLog) - N1:])
+        print("Ylog",hoge2)
 
         one_time,_ = reg1dim(np.array([n for n in range(len(timerLogList))]),timerLogList)
         
 
         l1 = timerLogList[np.nonzero(valueLogList > 750)]
         l2 = hoge2[np.nonzero(valueLogList > 750)]
+
+        l3 = Value1LogList[np.nonzero(valueLogList > 750)]
+        l4 = Value2LogList[np.nonzero(valueLogList > 750)]
+        l5 = Value3LogList[np.nonzero(valueLogList > 750)]
+
+
         if(len(l2) > 0):
             foo = np.where(l2 < np.max(l2))
         
             print(np.max(l2))
             l1 = l1[foo]
             l2 = l2[foo]
+            l3 = l3[foo]
+            l4 = l4[foo]
+            l5 = l5[foo]
 
         if(len(l1) < N1 / 2):
             if(len(l1) > 0):
                 a,b = reg1dim(l1,l2)   
                 rule2 = (b + a * (start_time + one_time * (5 + N1))) / (self.h * 1.2)
             else:
-                a=0
-                b=0
+                a = 0
+                b = 0
                 rule2 = 0
 
             OutputController().msgPrint("▲:","len=",len(l1),a,b,rule2)
             rule2 = 0
             rule0 = 0
+            rule5 = 0
+            rule6 = 0
+            rule7 = 0
         else:
             #OutputController().printmsg(len(l1) < 2)
 
             rule0 = np.corrcoef(l1,l2)[0,1]
+            rule5 = np.corrcoef(l1,l3)[0,1]
+            rule6 = np.corrcoef(l1,l4)[0,1]
+            rule7 = -np.corrcoef(l1,l5)[0,1]
 
             a,b = reg1dim(l1,l2)
             #a,b = L_abs_minimize(l1,l2)
@@ -240,7 +273,7 @@ class BranchSystem:
             #OutputController().msgPrint("calc rule YLog:",self.YLog)
             #OutputController().msgPrint("calc rule l1:",l1)
             #OutputController().msgPrint("calc rule l2:",l2)
-        return (rule0,rule1,rule2,a)
+        return (rule0,rule1,rule2,rule5,rule6,rule7,a)
 
 
     def ResetLog(self):

@@ -112,9 +112,9 @@ class Form(object):
         self.data["v2"].set(False) 
         self.data["v3"].set(True) 
         self.data["v4"].set(False)
-        self.data["v5"].set(True) 
-        self.data["v6"].set(True)
-        self.data["v_tention"].set(True)
+        self.data["v5"].set(False) 
+        self.data["v6"].set(False)
+        self.data["v_tention"].set(False)
         self.data["v8"].set(False)
         self.data["v_auto"].set(False)
 
@@ -195,7 +195,7 @@ class Form(object):
         self.robot.motors[11].insertOrder(MotorModeOrder(MotorMode.VelocityNormal,0))
 
         #初期姿勢
-        d = np.loadtxt("Data/normal_switching.csv",delimiter=",")
+        d = np.loadtxt("C:/Users/MSD/Documents/GitHub/Data/normal_switching.csv",delimiter=",")
         self.robot.motors[0].insertOrder(PosOrder(0,0))
         self.robot.motors[1].insertOrder(PosOrder(round(d[0,0] / math.pi * 180,2),0))
         self.robot.motors[2].insertOrder(PosOrder(round(d[0,1] / math.pi * 180,2),0))

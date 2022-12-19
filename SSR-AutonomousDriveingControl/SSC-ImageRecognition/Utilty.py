@@ -76,24 +76,20 @@ def CreteViewImage(img11, img12, img21, img22, img31, img32):
         result = np.vstack((a, b))
         result = np.vstack((result, c))
     except Exception as e:
-        OutputController().msgPrint(
-            "Image Integrate Error",
+        OutputController().msgPrint("Image Integrate Error",
             img11.shape,
             img12.shape,
             img21.shape,
             img22.shape,
             img31.shape,
-            img32.shape,
-        )
+            img32.shape,)
     return result
 
 
 def DebugImage(img, No=0, depthMode=False):
     return
     if depthMode:
-        image = cv2.applyColorMap(
-            cv2.convertScaleAbs(img, alpha=0.08), cv2.COLORMAP_JET
-        )
+        image = cv2.applyColorMap(cv2.convertScaleAbs(img, alpha=0.08), cv2.COLORMAP_JET)
     image = cv2.resize(image, (640, 360))
     cv2.namedWindow("RealSense" + str(No), cv2.WINDOW_AUTOSIZE)
     cv2.imshow("RealSense" + str(No), image)
@@ -101,11 +97,9 @@ def DebugImage(img, No=0, depthMode=False):
 
 def ScalarImage2RGB(img, ClipMinDistance, ClipMaxDistance):
     rate = 255.0 / (ClipMaxDistance - ClipMinDistance)
-    img = np.where(
-        (img <= ClipMinDistance) | (img >= ClipMaxDistance),
+    img = np.where((img <= ClipMinDistance) | (img >= ClipMaxDistance),
         255,
-        rate * (img - ClipMinDistance),
-    )
+        rate * (img - ClipMinDistance),)
     return np.dstack([img, img, img]).astype(np.uint8)
 
 
@@ -113,7 +107,7 @@ def ScalarImage2RGB(img, ClipMinDistance, ClipMaxDistance):
 def reg1dim(x, y):
     try:
         n = len(x)
-        under = (x**2).sum() - x.sum() ** 2 / n
+        under = (x ** 2).sum() - x.sum() ** 2 / n
         if under == 0:
             a = 0
         else:
@@ -188,12 +182,8 @@ def CalcDiffAngleNP(angle1, angle2, ruleAngle):
 def CalcDiffAngleNPOld(angle1, angle2):
     angle1 = np.where(angle1 > 360, angle1 - 360, angle1)
     angle1 = np.where(angle1 > np.abs(angle1 - angle2), np.abs(angle1 - angle2), angle1)
-    angle1 = np.where(
-        angle1 > np.abs(angle1 - angle2 - 360), np.abs(angle1 - angle2 - 360), angle1
-    )
-    angle1 = np.where(
-        angle1 > np.abs(angle1 - angle2 + 360), np.abs(angle1 - angle2 + 360), angle1
-    )
+    angle1 = np.where(angle1 > np.abs(angle1 - angle2 - 360), np.abs(angle1 - angle2 - 360), angle1)
+    angle1 = np.where(angle1 > np.abs(angle1 - angle2 + 360), np.abs(angle1 - angle2 + 360), angle1)
     return angle1
 
 
@@ -213,7 +203,7 @@ def ConvertDepthCoordinate(x, y, z):
         tmp_b.append(z[i])
     b = np.matrix(tmp_b).T
     A = np.matrix(tmp_A)
-    if(A.shape==(1,0)):
+    if(A.shape == (1,0)):
         raise ValueError("GGrafic matrix error!")
     fit = (A.T * A).I * A.T * b
     # errors = b - A * fit
@@ -235,11 +225,7 @@ def ConvertDepthCoordinate(x, y, z):
     z -= d.astype(int)
 
     x2 = x * c * alpha * sigma - z * a * alpha * sigma
-    y2 = (
-        x * alpha * beta * a * b
-        + y * alpha * beta * (a * a + c * c)
-        - z * alpha * beta * b * c
-    )
+    y2 = (x * alpha * beta * a * b + y * alpha * beta * (a * a + c * c) - z * alpha * beta * b * c)
     z2 = x * a * beta * sigma + y * b * beta * sigma + z * c * beta * sigma
     x2 += 320
     y2 += 180
@@ -279,9 +265,7 @@ def getWeightedLineArray(theta, len, thickness, y, x, h, w):
         # Now instead of 2 values for y, we have 2*np.ceil(w/2).
         # All values are 1 except the upmost and bottommost.
         #thickness = np.ceil(w / 2)
-        yy = np.floor(y).reshape(-1, 1) + np.arange(
-            -thickness - 1, thickness + 2
-        ).reshape(1, -1)
+        yy = np.floor(y).reshape(-1, 1) + np.arange(-thickness - 1, thickness + 2).reshape(1, -1)
         xx = np.repeat(x, yy.shape[1])
         vals = trapez(yy, y.reshape(-1, 1), w).flatten()
 
@@ -311,16 +295,12 @@ def getDiskArray(y, x, r, h, w):
 
 # 角度を持った線を引く
 def DrawAngleLine(img, x, y, theta, color, thickness):
-    return cv2.line(
-        img,
+    return cv2.line(img,
         (x, y),
-        (
-            x + int(360 * math.cos(math.radians(theta))),
-            y + int(360 * math.sin(math.radians(theta))),
-        ),
+        (x + int(360 * math.cos(math.radians(theta))),
+            y + int(360 * math.sin(math.radians(theta))),),
         color=color,
-        thickness=thickness,
-    )
+        thickness=thickness,)
 
 
 # abs関数と同じ
@@ -341,23 +321,19 @@ def IsArea(value, min, max):
 
 # 現在のパスから画像ファイルを開く
 def getImageFromFile(filePath):
-    return Image.open(
-        os.path.abspath(
-            "C:/Users/MSD/Documents/GitHub/SSR/SSR-AutonomousDriveingControl/SSC-ImageRecognition/"
-            + filePath
-        )
-    )
+    return Image.open(os.path.abspath("C:/Users/MSD/Documents/GitHub/SSR/SSR-AutonomousDriveingControl/SSC-ImageRecognition/" + filePath))
 
 
 # 指定の桁数に丸める
 def rounddown(value, n):
-    return math.floor(value * 10**n) / (10**n)
+    return math.floor(value * 10 ** n) / (10 ** n)
 
 
 def getLikeAngle(a1, b1, c1, d1):
+
     a = int(a1 / 5) * 5
     b = int(b1 / 5) * 5
-    c = int(c1 / 5) * 5
+    c = int(c1 / 5) * 5 
     d = int(d1 / 5) * 5
 
     # sw = True
@@ -371,7 +347,8 @@ def getLikeAngle(a1, b1, c1, d1):
     if c + d < 90:
         d = 90 - c
 
-    path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
+    basepath = "C:/Users/MSD/Documents/GitHub/Data/"
+    path = basepath + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1.csv"
     if os.path.exists(path):
         return (a, b, c, d)
     else:
@@ -382,7 +359,7 @@ def getLikeAngle(a1, b1, c1, d1):
     c = int(c1 / 10) * 10
     d = int(d1 / 10) * 10
 
-    path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
+    path = basepath + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1.csv"
     if os.path.exists(path):
         return (a, b, c, d)
     else:
@@ -393,7 +370,7 @@ def getLikeAngle(a1, b1, c1, d1):
     c = int(c1 / 10) * 10
     d = int(d1 / 10) * 10
 
-    path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
+    path = basepath + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1.csv"
     if os.path.exists(path):
         return (a, b, c, d)
     else:
@@ -404,7 +381,7 @@ def getLikeAngle(a1, b1, c1, d1):
     c = int(c1 / 10) * 10
     d = int(d1 / 10) * 10
 
-    path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
+    path = basepath + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1.csv"
     if os.path.exists(path):
         return (a, b, c, d)
     else:
@@ -415,7 +392,7 @@ def getLikeAngle(a1, b1, c1, d1):
     c = int(c1 / 10) * 10 + 10
     d = int(d1 / 10) * 10
 
-    path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
+    path = basepath + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1.csv"
     if os.path.exists(path):
         return (a, b, c, d)
     else:
@@ -426,7 +403,7 @@ def getLikeAngle(a1, b1, c1, d1):
     c = int(c1 / 10) * 10
     d = int(d1 / 10) * 10 + 10
 
-    path = "Data/" + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1_T.csv"
+    path = basepath + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1.csv"
     if os.path.exists(path):
         return (a, b, c, d)
     else:

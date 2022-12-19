@@ -165,7 +165,7 @@ class RealSense(object):
         self.branchSystem.setImage(color_image,depth_image,ir_image1,ir_image2,self.web_image)
 
 
-        value,rule0,rule1,rule2,a = self.branchSystem.calcCablewayInf(accel,self.timerLog,True)
+        value,rule0,rule1,rule2,rule5,rule6,rule7,a = self.branchSystem.calcCablewayInf(accel,self.timerLog,True)
 
 
         rule3_L = np.var(self.LAngleLog)
@@ -241,11 +241,12 @@ class RealSense(object):
         OutputController().msgPrint("■CurrentBranch",round(tangle,2),round(InclinationAngle,2),round(Rangle,2),round(Langle,2))
         (tangle,InclinationAngle,Rangle,Langle) = self.getAverageLog()
         OutputController().msgPrint("■AverageBranch",tangle,InclinationAngle,Rangle,Langle)
-        OutputController().msgPrint("○rule","value=",round(value),"rule0=",round(rule0,2),"rule1=",round(rule1,2),"rule2=",round(rule2,2),"rule3L=",round(rule3_L),"rule3R=",round(rule3_R),"rule4=",round(rule4),"a=",round(a,2),"stop_time=",self.stop_branch_time)
+        OutputController().msgPrint("○rule","value=",round(value),"rule0=",round(rule0,2),"rule1=",round(rule1,2),"rule2=",round(rule2,2),"rule3L=",round(rule3_L),"rule3R=",round(rule3_R),"rule4=",round(rule4),"a=",round(a,2),"rule5=",round(rule5,2),"rule6=",round(rule6,2),"rule7=",round(rule7,2),"stop_time=",self.stop_branch_time)
+        OutputController().msgPrint("○rule","v1=",round(self.branchSystem.maxValue1),"v2=",round(self.branchSystem.maxValue2,2),"v3=",round(self.branchSystem.maxValue3,2))
 
         if(self.stop_branch_time > 0):
             self.stop_branch_time-=1
-        elif(rule0 > 0.9 and rule1 > 1 and rule2 > 1):#and rule3_L < 10000 and rule3_R < 10000
+        elif(rule0 > 0.9 and rule1 > 1 and rule2 > 1 and rule5 > 0.5 and rule6 > 0.5 and rule7 > 0.8):#and rule3_L < 10000 and rule3_R < 10000
             OutputController().msgPrint("■■■■■分岐",tangle,InclinationAngle,Rangle,Langle)
             (tangle,InclinationAngle,Rangle,Langle) = getLikeAngle(tangle,InclinationAngle,Rangle,Langle)
             if((InclinationAngle,tangle,Rangle,Langle) != (0,0,0,0)):
@@ -254,7 +255,7 @@ class RealSense(object):
                 if(self.data["v_auto"].get()):
                     self.branchSystem.ResetLog()
                     self.ResetLog()
-                    time.sleep(1)
+                    time.sleep(1.5)
                     #OutputController().msgPrint("Branch
                     #Angle:",ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
                     self.br.branchAngle(a,tangle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())

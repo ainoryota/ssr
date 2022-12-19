@@ -10,15 +10,15 @@ a=15;
 b=-5;
 right=35;
 left=45;
-start_count=23000;
+start_count=0;
 
 for loop=1:2
             for mode=1:2
 %Main(a,b,c,right,mode)
 %disp(["clac",a,b,c,right,mode]);
 %continue;
-for a=-45:5:45
-for b=-90:5:90
+for a=-10:5:30
+for b=-20:5:20
     for left=0:5:90
         for right=0:5:90
             if loop==1
@@ -30,6 +30,12 @@ for b=-90:5:90
             if(count<start_count)
                 continue
             end
+            
+            name= "C:\Users\MSD\Documents\GitHub\Data\"+a+ "_" + b+ "_" + right+ "_" + left+"_"+mode+".csv";
+            if(exist(name, 'file')~=0)
+                continue
+            end
+
             disp(["clac",count,"/",idx,"time:",(idx-count)/10/60+"[min]",":",a,b,right,left,mode]);
             if left+right>100 || left+right<80
                 continue
@@ -44,7 +50,7 @@ end
 end
 end
             end
-
+disp("fin")
 end
 function Main(a,b,right,left,mode)
     gamma1 = a*pi/180;      %ケーブル斜度
@@ -58,7 +64,7 @@ function Main(a,b,right,left,mode)
         animation = 0;      %アニメーションon,off
         workspace = 0;
         robot_plot = 1;
-        switching = 0; 
+        switching = 11; 
         %右分岐モードが基準
         %左分岐時はGUIで解決
         %(0)テンションかけた状態で分岐
@@ -356,7 +362,7 @@ function Main(a,b,right,left,mode)
 
                 if t5 == n_bra+1
                    %データの書き出し 
-                   text = "C:\Users\MSD\Documents\GitHub\SSR\SSR-AutonomousDriveingControl\SSC-ImageRecognition\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode+"_"+"T";
+                   text = "C:\Users\MSD\Documents\GitHub\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode+"_"+"T";
                    T = t1+t2+t3+t4+t5-1;
                    data(T+1:500,:)=[];
                    if save ==1
@@ -543,7 +549,7 @@ function Main(a,b,right,left,mode)
 
                 if t5 == n_bra+1
                    %データの書き出し 
-                   text = "C:\Users\MSD\Documents\GitHub\SSR\SSR-AutonomousDriveingControl\SSC-ImageRecognition\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode+"_"+"T";
+                   text = "C:\Users\MSD\Documents\GitHub\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode+"_"+"T";
                    T = t1+t2+t3+t4+t5-1;
                    data(T+1:500,:)=[];
                    if save ==1
@@ -652,7 +658,7 @@ function Main(a,b,right,left,mode)
             elseif flag == 4
                 T = t1+t2+t3+1;
                 data(t:500,:)=[];
-                text = "C:\Users\MSD\Documents\GitHub\SSR\SSR-AutonomousDriveingControl\SSC-ImageRecognition\Data\"+"normal_switching";
+                text = "C:\Users\MSD\Documents\GitHub\Data\"+"normal_switching";
                 if save == 1
                     writematrix(data,text+'.csv')
                 end
@@ -719,7 +725,7 @@ function Main(a,b,right,left,mode)
             elseif flag == 4
                 T = t-1;
                 data(T+1:500,:)=[];
-                text = "C:\Users\MSD\Documents\GitHub\SSR\SSR-AutonomousDriveingControl\SSC-ImageRecognition\Data\"+"tension_switching";
+                text = "C:\Users\MSD\Documents\GitHub\Data\"+"tension_switching";
                 if save ==1
                         writematrix(data,text+'.csv')
                 end
@@ -768,7 +774,7 @@ function Main(a,b,right,left,mode)
             else
                 T = t-1;
                 data(T+1:500,:)=[];
-                text = "C:\Users\MSD\Documents\GitHub\SSR\SSR-AutonomousDriveingControl\SSC-ImageRecognition\Data\"+"f_tension_r-n";
+                text = "C:\Users\MSD\Documents\GitHub\Data\"+"f_tension_r-n";
                if save ==1
                    writematrix(data,text+'.csv')
                end
@@ -817,7 +823,7 @@ function Main(a,b,right,left,mode)
             else
                 T = t-1;
                 data(T+1:500,:)=[];
-                text = "C:\Users\MSD\Documents\GitHub\SSR\SSR-AutonomousDriveingControl\SSC-ImageRecognition\Data\"+"r_tension_f-n";
+                text = "C:\Users\MSD\Documents\GitHub\Data\"+"r_tension_f-n";
                 if save ==1
                     writematrix(data,text+'.csv')
                 end
@@ -867,7 +873,7 @@ function Main(a,b,right,left,mode)
             else
                 T = t-1;
                 data(T+1:500,:)=[];
-                text = "C:\Users\MSD\Documents\GitHub\SSR\SSR-AutonomousDriveingControl\SSC-ImageRecognition\Data\"+"f_normal_r-t";
+                text = "C:\Users\MSD\Documents\GitHub\Data\"+"f_normal_r-t";
                 if save ==1
                     writematrix(data,text+'.csv')
                 end
@@ -916,7 +922,7 @@ function Main(a,b,right,left,mode)
             else
                 T = t-1;
                 data(T+1:500,:)=[];
-                text = "C:\Users\MSD\Documents\GitHub\SSR\SSR-AutonomousDriveingControl\SSC-ImageRecognition\Data\"+"r_normal_f-t";
+                text = "C:\Users\MSD\Documents\GitHub\Data\"+"r_normal_f-t";
                 if save ==1
                     writematrix(data,text+'.csv')
                 end
@@ -965,7 +971,7 @@ function Main(a,b,right,left,mode)
             else
                 T = t-1;
                 data(T+1:500,:)=[];
-                text = "C:\Users\MSD\Documents\GitHub\SSR\SSR-AutonomousDriveingControl\SSC-ImageRecognition\Data\"+"f_tension_r-t";
+                text = "C:\Users\MSD\Documents\GitHub\Data\"+"f_tension_r-t";
                 if save ==1
                     writematrix(data,text+'.csv')
                 end
@@ -1014,7 +1020,7 @@ function Main(a,b,right,left,mode)
             else
                 T = t-1;
                 data(T+1:500,:)=[];
-                text = "C:\Users\MSD\Documents\GitHub\SSR\SSR-AutonomousDriveingControl\SSC-ImageRecognition\Data\"+"r_tension_f-t";
+                text = "C:\Users\MSD\Documents\GitHub\Data\"+"r_tension_f-t";
                 if save ==1
                     writematrix(data,text+'.csv')
                 end
@@ -1062,7 +1068,7 @@ function Main(a,b,right,left,mode)
             else
                 T = t-1;
                 data(T+1:500,:)=[];
-                text = "C:\Users\MSD\Documents\GitHub\SSR\SSR-AutonomousDriveingControl\SSC-ImageRecognition\Data\"+"r_normal_f-n";
+                text = "C:\Users\MSD\Documents\GitHub\Data\"+"r_normal_f-n";
                 if save ==1
                     writematrix(data,text+'.csv')
                 end
@@ -1111,7 +1117,7 @@ function Main(a,b,right,left,mode)
             else
                 T = t-1;
                 data(T+1:500,:)=[];
-                text = "C:\Users\MSD\Documents\GitHub\SSR\SSR-AutonomousDriveingControl\SSC-ImageRecognition\Data\"+"f_normal_r-n";
+                text = "C:\Users\MSD\Documents\GitHub\Data\"+"f_normal_r-n";
                 if save ==1
                     writematrix(data,text+'.csv')
                 end
@@ -1243,9 +1249,9 @@ function Main(a,b,right,left,mode)
                 T = t-1;
                 data(T+1:500,:)=[];
                %データの書き出し 
-               text = "C:\Users\MSD\Documents\GitHub\SSR\SSR-AutonomousDriveingControl\SSC-ImageRecognition\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
+               text = "C:\Users\MSD\Documents\GitHub\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
                if save ==1
-                    writematrix(data,"data/"+text+'.csv')
+                    writematrix(data,text+'.csv')
                end
 
      break;
