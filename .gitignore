@@ -6,3 +6,5 @@ SSR-AutonomousDriveingControl/SSC-ImageRecognition/Data/*.csv
 *.csv
 *.csv
 SSR-GUIControl.zip
+*.csv
+*.csv
