@@ -138,9 +138,8 @@ class RealSense(object):
         hoge = np.where((depth_image < 600) & (depth_image > 0))
 
         print("A",time.time() - start)
-        try:
-            x,y,z,fit = FormSingleton().updateThreeGraph(hoge[1],hoge[0],depth_image[hoge])
-        except Exception as e:
+        result,x,y,z,fit = FormSingleton().updateThreeGraph(hoge[1],hoge[0],depth_image[hoge])
+        if(result ==False):
             print("Graph Error")
             self.imgArea.after(100,self.getRealsense)
             return
@@ -246,7 +245,7 @@ class RealSense(object):
 
         if(self.stop_branch_time > 0):
             self.stop_branch_time-=1
-        elif(rule0 > 0.9 and rule1 > 1 and rule2 > 1 and rule5 > 0.5 and rule6 > 0.5 and rule7 > 0.8):#and rule3_L < 10000 and rule3_R < 10000
+        elif(rule0 > 0.9 and rule1 > 1 and rule2 > 1 and rule5 > 0.5 and rule6 > 0.5 and rule7 > 0):#and rule3_L < 10000 and rule3_R < 10000
             OutputController().msgPrint("■■■■■分岐",tangle,InclinationAngle,Rangle,Langle)
             (tangle,InclinationAngle,Rangle,Langle) = getLikeAngle(tangle,InclinationAngle,Rangle,Langle)
             if((InclinationAngle,tangle,Rangle,Langle) != (0,0,0,0)):
@@ -255,7 +254,7 @@ class RealSense(object):
                 if(self.data["v_auto"].get()):
                     self.branchSystem.ResetLog()
                     self.ResetLog()
-                    time.sleep(1.5)
+                    time.sleep(1)
                     #OutputController().msgPrint("Branch
                     #Angle:",ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
                     self.br.branchAngle(a,tangle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())

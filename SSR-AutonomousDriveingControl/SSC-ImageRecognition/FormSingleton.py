@@ -75,29 +75,33 @@ class FormSingleton(object):
     
 
     def updateThreeGraph(self,x,y,z):
-        #self.ax.cla()
-        #self.ax.set_xlim(0,640)
-        #self.ax.set_ylim(0,360)
-        #self.ax.set_zlim(0,700)
+        Debug = False
 
-        #xlim = self.ax.get_xlim()
-        #ylim = self.ax.get_ylim()
-        #X,Y = np.meshgrid(np.arange(xlim[0], xlim[1],100),
-        #                      np.arange(ylim[0], ylim[1],100))
-        #Z = np.zeros(X.shape)
+        if(Debug):
+            self.ax.cla()
+            self.ax.set_xlim(0,640)
+            self.ax.set_ylim(0,360)
+            self.ax.set_zlim(0,700)
 
-        (x2,y2,z2,fit) = ConvertDepthCoordinate(x,y,z)
+            xlim = self.ax.get_xlim()
+            ylim = self.ax.get_ylim()
+            X,Y = np.meshgrid(np.arange(xlim[0], xlim[1],100),
+                                  np.arange(ylim[0], ylim[1],100))
+            Z = np.zeros(X.shape)
 
-        #for r in range(X.shape[0]):
-        #    for c in range(X.shape[1]):
-        #        Z[r,c] = fit[0] * X[r,c] + fit[1] * Y[r,c] + fit[2]
-        #self.ax.plot_wireframe(X,Y,Z, color='k')
+        (result,x2,y2,z2,fit) = ConvertDepthCoordinate(x,y,z)
 
-        #self.ax.scatter(x2.tolist(),y2.tolist(),z2.tolist())
-        #self.ax.scatter(x,y,z)
+        if(Debug):
+            for r in range(X.shape[0]):
+                for c in range(X.shape[1]):
+                    Z[r,c] = fit[0] * X[r,c] + fit[1] * Y[r,c] + fit[2]
+            self.ax.plot_wireframe(X,Y,Z, color='k')
 
-        #self.graph.draw()
-        return x2,y2,z2,fit
+            self.ax.scatter(x2.tolist(),y2.tolist(),z2.tolist())
+            self.ax.scatter(x,y,z)
+
+            self.graph.draw()
+        return result,x2,y2,z2,fit
 
 
 
