@@ -5,12 +5,30 @@
 %ケーブル条件
 
 idx=0;
-count=0
+count=0;
 a=15;
 b=-5;
 right=35;
 left=45;
 start_count=0;
+
+global save           %データの保存,CSV書き出しon,off
+global animation       %アニメーションon,off
+global workspace 
+global robot_plot
+global switching 
+
+save = 0;           %データの保存,CSV書き出しon,off
+animation = 1;      %アニメーションon,off
+workspace = 0;
+robot_plot = 1;
+switching = 0; 
+
+if animation==1
+    Main(15,20,40,70,1)
+    return
+end
+
 
 for loop=1:2
             for mode=1:2
@@ -53,6 +71,12 @@ end
 disp("fin")
 end
 function Main(a,b,right,left,mode)
+global save           %データの保存,CSV書き出しon,off
+global animation       %アニメーションon,off
+global workspace 
+global robot_plot
+global switching 
+
     gamma1 = a*pi/180;      %ケーブル斜度
         phi_n = b*pi/180;      %ケーブル平面の回転角
         the_nR = right*pi/180;     %右旋回角
@@ -60,11 +84,6 @@ function Main(a,b,right,left,mode)
 
     %モード選択
         %mode = e;           %右分岐(1) 左分岐(2)
-        save = 1;           %データの保存,CSV書き出しon,off
-        animation = 0;      %アニメーションon,off
-        workspace = 0;
-        robot_plot = 1;
-        switching = 11; 
         %右分岐モードが基準
         %左分岐時はGUIで解決
         %(0)テンションかけた状態で分岐
