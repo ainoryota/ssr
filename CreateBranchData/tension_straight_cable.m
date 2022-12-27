@@ -22,7 +22,7 @@ save = 0;           %データの保存,CSV書き出しon,off
 animation = 1;      %アニメーションon,off
 workspace = 0;
 robot_plot = 1;
-switching = 0; 
+switching = 13; 
 
 if animation==1
     Main(15,20,40,70,1)
@@ -267,7 +267,6 @@ global switching
                 [Ln1,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal1(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln2,Lc,Rw,rw,d,mode);
 
                 omega_r = omega_c*(2*(t1*t_step)^3/(t_bra^3) -3*(t1*t_step)^2/(t_bra^2)+1);
-                omega_r=max(omega_r,omega_c);
                 omega_f = omega_r;
 
                 if t1 == n_bra
@@ -291,7 +290,6 @@ global switching
                 [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal2(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
 
                 omega_r = omega_c*(-2*(t2*t_step)^3/(t_bra^3) +3*(t2*t_step)^2/(t_bra^2));
-                omega_r=max(omega_r,omega_c);
                 omega_f = omega_r;
 
                 if t2 == n_bra
@@ -333,7 +331,6 @@ global switching
                 [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal2(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
 
                 omega_r = omega_c;
-                omega_r=max(omega_r,omega_c);
                 omega_f = omega_r;
 
                 if t3 >= n_const-1
@@ -1746,13 +1743,13 @@ global switching
 
 
                  pause(0.0001)
-                 if t == 1
-                     w = waitforbuttonpress;
-                     w = waitforbuttonpress;
-                     w = waitforbuttonpress;
-                     w = waitforbuttonpress;
-                     w = waitforbuttonpress;
-                 end
+%                  if t == 1
+%                      w = waitforbuttonpress;
+%                      w = waitforbuttonpress;
+%                      w = waitforbuttonpress;
+%                      w = waitforbuttonpress;
+%                      w = waitforbuttonpress;
+%                  end
         end
     %%         w = waitforbuttonpress;
     end
