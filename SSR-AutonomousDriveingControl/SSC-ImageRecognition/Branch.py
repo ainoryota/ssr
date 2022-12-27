@@ -72,7 +72,7 @@ class Branch(object):
             #2.12206591 * 100),t))
             #self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct *
             #2.12206591 * 100),t))
-
+            if(line == n // 2):t+=2#0.7
             t+=0.024
             #t+=(0.024 * 100) / a #aが大きいほど小さな値にする。
 
