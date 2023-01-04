@@ -25,7 +25,7 @@ robot_plot = 1;
 switching = 13; 
 
 if animation==1
-    Main(0,0,40,70,1)
+    Main(15,20,40,70,1)
     return
 end
 
@@ -246,23 +246,6 @@ global switching
             the_x_init = pi/2;
             the_n = -the_nL;
         end
-        
-        L_gap=200;
-        
-        On=[40;0;0];
-        P1=[-L_gap;0;0];
-        P2=On+100*[cos(the_n);sin(the_n);cos(the_n)*sin(a)];%適当
-        Ps=P1;
-        
-        a_w=6;
-        b_w=30;
-        
-        [O_R,Curve_R,theta]=SolveCurveEquation(P1,P2,On,a_w,b_w,the_n);
-        
-        Q1=O_R+[0;-Curve_R;0];
-        Q2=O_R+Curve_R*[sin(2*theta);-cos(2*theta);0];
-        %hoge=[On P1 P2 O_R Q1 Q2]
-        %scatter3(hoge(1,:),hoge(2,:),hoge(3,:))
     %% メインループ
 
     
@@ -271,7 +254,7 @@ global switching
 
         if switching==13
             
-            
+            Solve
             
             disp("no stop")
             if flag == 0    %前輪の分岐前
@@ -281,8 +264,8 @@ global switching
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi;
                 phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
 
-                the_xr = the_x_init; the_yr = 0/180*pi; the_zr = 0;
-                the_xf = X(1); the_yf = Y(1); the_zf = Z(1);
+                the_xr = the_x_init; the_yr = 0/180*pi; the_zr = tension_angle;
+                the_xf = X(t1); the_yf = Y(t1); the_zf = Z(t1);
 
                 
                 [Ln1,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal1(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln2,Lc,Rw,rw,d,mode);
@@ -300,31 +283,23 @@ global switching
             elseif flag == 1
                 %前輪の分岐終了～加速
                 t2 = t2+1;
-                Ln2 = norm(Q1-Ps)+omega_c*(t2*t_step)*pi/180*r_v;
-                
                 %メインケーブルに対して，どのケーブルに乗っているのかの情報，
-                [Pf,phi_nf1,the_nf]=SolveWheelPoint(O_R,Curve_R,theta,Ps,Ln2,the_n,phi_n);
-                phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;
+                phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
+                phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
 
-                the_xr = the_x_init; the_yr = 0/180*pi; the_zr = 0;
-                the_xf = X(t2); the_yf = Y(t2); the_zf = Z(t2);
-                [Ln1,OrCr,OfCf,R1,R2]  = CalcOrOf(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln2,Lc,Rw,rw,d,mode);
+                the_xr = the_x_init; the_yr = 0/180*pi; the_zr = tension_angle;
+                the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
 
-                [Pr,phi_nr1,the_nr]=SolveWheelPoint(O_R,Curve_R,theta,Ps,Ln1,the_n,phi_n);%phi_nr1やthe_nrは0になるはず
-                OrOf = R1*(Pr-On)+R2*(Pf-On);
-                
-                omega_r = omega_c;
+                Ln1 = L_def - omega_c*(-(t2*t_step)^4/(2*t_bra^3) +(t2*t_step)^3/(t_bra^2))*pi/180*r_v;
+                [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal2(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
+
+                omega_r = omega_c*(-2*(t2*t_step)^3/(t_bra^3) +3*(t2*t_step)^2/(t_bra^2));
                 omega_f = omega_r;
 
-                disp([Curve_R*(pi-2*theta)+norm(Q1-Ps),Ln2,t2])
-                
-                disp([Pr,Pf,OrOf])
-                if(Curve_R*(pi-2*theta)+norm(Q1-Ps)<=Ln2 || t2==n_bra)
-                    break;
+                if t2 == n_bra
                     flag = 2;
                     L_def = Ln1;
                 end
-
             elseif flag == 2
                 %定速区間
                 t3 = t3+1;
@@ -425,7 +400,7 @@ global switching
     %                x4 = [t1+t2+n_count01 t1+t2+n_count01];                            
     %                x5 = [t1+t2+t3 t1+t2+t3];
     %                y = [-180 350];
-
+                   break;
 
                    plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
                    hold on
@@ -635,7 +610,6 @@ global switching
         %% 各関節角度の計算
 
         %収束計算
-        
         fun = @(x)Joint_angle_calc8(x,the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,phi_nr2,the_nr,phi_nf1,phi_nf2,the_nf,...
                                            gamma1,a1,a2,a3,Lc,OrCr,OfCf,OrOf,g0,g2,g3,g4,g6,w0,w2,w3,w4,w6,mode);
         [x,fval,exitflag,output]= fzero(fun,0);
@@ -1236,11 +1210,11 @@ end
 
 
 function [O_R,R,theta]= SolveCurveEquation(P1,P2,On,a_w,b_w,theta_n)
-    theta=(pi-theta_n)/2;
+    theta=theta_n/2;
     e1=[-1;0;0];
     e2=[cos(theta_n);sin(theta_n);0];
-    P1_=P1+[0;-b_w;0];
-    P2_=P2+b_w*[sin(theta_n);-cos(theta_n);0];
+    P1_=P1+[-b_w;0;0];
+    P2_=P2+[-cos(theta_n);sin(theta_n);0];
     
     fun = @(x)norm((P1_+x(1)*e1)-(P2_+x(2)*e2));
     [x,fval] = fminunc(fun,[0,0]);%普通に計算してといてもいいけど面倒なので数値計算に投げる
@@ -1249,79 +1223,35 @@ function [O_R,R,theta]= SolveCurveEquation(P1,P2,On,a_w,b_w,theta_n)
     On_=P1_+t*e1; %P2_+s*e2でもよい
     Ra=norm(On-On_)-a_w;
     R=(Ra*sin(theta))/(1-sin(theta));
-    original_OR=((e1+e2)/norm(e1+e2)*(Ra+R)+On_);
-    O_R=On-On_+((e1+e2)/norm(e1+e2)*(Ra+R)+On_);
+    O_R=On-On_+(e1+e2)/norm(e1+e2)*(Ra+R);
 end
 
 function [P,phi_n,theta_n]=SolveWheelPoint(O_R,R,theta,Ps,Ln,cable_theta_n,cable_phi_n)
-    Q1=O_R+[0;-R;0];
-    Q2=O_R+R*[sin(2*theta);-cos(2*theta);0];
+    Q1=O_R+[0;-R;0]
+    Q2=O_R+R*[sin(2*theta);-cos(2*theta);0]
     if(0<=Ln && Ln<norm(Q1-Ps))
-        P=Ps+[Ln;0;0];
-        phi_n=0;
-        theta_n=0;
-    elseif(Ln<R*(pi-2*theta)+norm(Q1-Ps))
-        P=O_R+R*[sin((Ln-norm(Q1-Ps))/R);-cos((Ln-norm(Q1-Ps))/R);0];
+        P=[Ln;0;0]
+        phi_n=0
+        theta_n=0
+    elseif(Ln<R*(pi-2*theta))
+        P=O_R+R*[-cos((Ln-norm(Q1-Ps))/R);sin((Ln-norm(Q1-Ps)/R));0]
         e_R1=[0;-1;0];
         e_R2=[1;0;0];
-
-        alpha=(Ln-norm(Q1-Ps))/R;
-        dP=-R*sin(alpha)*e_R1+R*cos(alpha)*e_R2;
-        if(dP(2)==0)
-            phi_n=0;
-        else
-            phi_n=atan(dP(3)/dP(2));
-        end
-        if(dP(1)==0)
-            theta_n=0;
-        else
-            theta_n=atan(dP(2)/dP(1));
-        end
         
+        
+        alpha=(Ln-norm(Q1-Ps))/R
+        dP=-R*sin(alpha)*e_R1+R*cos(alpha)*e_R2
+        if(dp(2)==0)
+            phi_n=0
+            theta_n=0
+        else
+            phi_n=atan(dP(3)/dP(2))
+            theta_n=atan(dP(1)/dP(2))
+        end
     else
-        P=Q2+(Ln-R*(pi-2*theta))*[cos(cable_theta_n);sin(cable_theta_n);0];
-        phi_n=cable_phi_n;
-        theta_n=cable_theta_n;
+        P=Q2+(Ln-R*(pi-2*theta))*[cos(theta_n);sin(theta_n);0]
+        phi_n=cable_phi_n
+        theta_n=cable_theta_n
     end
 end
 
-%% RCM中心座標の計算1(右分岐モード，左分岐モード)kakikaezumi
-function [Ln1,OrCr,OfCf,R1,R2] = CalcOrOf(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln2,Lc,Rw,rw,d,mode)
-
-    if mode == 1 %右分岐モード
-        %後輪
-        OrCr =   R("x",the_xr)*R("y",the_yr)*[Rw*sin(the_zr);d/2+rw-Rw*cos(the_zr);0];
-
-        %前輪
-        OfCf =   R("x",the_xf)*R("y",the_yf)*[Rw*sin(the_zf);d/2+rw-Rw*cos(the_zf);0];
-
-    elseif mode == 2 %左分岐モード
-        %後輪
-        OrCr =   R("x",the_xr)*R("y",the_yr)*[-Rw*sin(the_zr);-d/2-rw+Rw*cos(the_zr);0];
-
-        %前輪
-        OfCf =    R("x",the_xf)*R("y",the_yf)*[-Rw*sin(the_zf);-d/2-rw+Rw*cos(the_zf);0];
-
-    else         
-    end
-    
-      
-    R1 = R("x",phi_nr1)*R("z",the_nr);
-    R2 = R("x",phi_nf1)*R("z",the_nf);
-    
-    
-    x_ = OfCf(1)-OrCr(1); y_ = OfCf(2)-OrCr(2); z_ = OfCf(3)-OrCr(3);
-    
-    a = [1 0 0]*R1*[1;0;0]; b = [0 1 0]*R1*[1;0;0]; c = [0 0 1]*R1*[1;0;0];
-    d = [1 0 0]*R2*[1;0;0]; e = [0 1 0]*R2*[1;0;0]; f = [0 0 1]*R2*[1;0;0];
-    
-    A = a^2+b^2+c^2; B = d^2+e^2+f^2; C = x_^2+y_^2+z_^2;
-    D = a*x_+b*y_+c*z_; E = d*x_+e*y_+f*z_; F = a*d+b*e+c*f;
-    
-    
-
-
-    Ln1 = (-(D+F*Ln2)+sqrt((D+F*Ln2)^2-A*(B*Ln2*Ln2+2*E*Ln2+C-Lc^2)))/A;
-
-    
-end
