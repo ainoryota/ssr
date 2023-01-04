@@ -25,7 +25,7 @@ robot_plot = 1;
 switching = 13; 
 
 if animation==1
-    Main(0,0,40,70,1)
+    Main(15,30,90,70,1)
     return
 end
 
@@ -76,6 +76,13 @@ global animation       %アニメーションon,off
 global workspace 
 global robot_plot
 global switching 
+global gamma1
+global phi_n
+global L1
+
+L_gap=200;
+L1=L_gap;
+Lc=L_gap;
 
     gamma1 = a*pi/180;      %ケーブル斜度
         phi_n = b*pi/180;      %ケーブル平面の回転角
@@ -120,7 +127,7 @@ global switching
        % a3 = 30/180*pi;         %1軸目の取り付け角（論文ではa0） 
 
     %各リンクの重さ，重心位置，長さ
-        Lc = 300;
+        %Lc = 300;
         l2_min = (Lc-80)/2;
         l1 = 90;                %各モーターの中心点からの距離
         l2 = l2_min/sin(a2);
@@ -168,8 +175,8 @@ global switching
         t1 = 0; t2 = 0; t3 = 0;t4 = 0;t5 = 0;
         t3_ = 0;
         cnt = 0;
-        L1 = Lc; %ケーブルの長さ
-        L2 = Lc;
+        %L1 = Lc; %ケーブルの長さ
+        %L2 = Lc;
         %ゴミ
         t0 = 0;
 
@@ -179,7 +186,7 @@ global switching
         t_step = 1.6/33; %キリのいい数字にするため(制御周期より少しはやめ)
         r_v = 13.5; %有効半径[mm]
         vel = 50; %分岐時の後輪の移動速度[mm/s]
-        L_gap = 40; %分岐点直前で止まる距離(約タイヤ直径の半分)
+        %L_gap = 200; %分岐点直前で止まる距離(約タイヤ直径の半分)
         %L_gap = 150
 
 
@@ -247,27 +254,50 @@ global switching
             the_n = -the_nL;
         end
         
-        L_gap=200;
-        
-        On=[40;0;0];
-        P1=[-L_gap;0;0];
-        P2=On+100*[cos(the_n);sin(the_n);cos(the_n)*sin(a)];%適当
-        Ps=P1;
-        
         a_w=6;
         b_w=30;
         
-        [O_R,Curve_R,theta]=SolveCurveEquation(P1,P2,On,a_w,b_w,the_n);
+        x_cable=Plane2World([1;0;0]);
+        y_cable=Plane2World([0;1;0]);
+        z_cable=Plane2World([0;0;1]);
+        Sigma_cable=Plane2World([0;0;0]);
+
+        O_n=Plane2World([L_gap;0;0]);
+        P_e=Plane2World(World2Plane(O_n)+L_gap*[cos(the_n);sin(the_n);0]);
+        e1=Plane2World([-1;0;0]);
+        e2=(P_e-O_n)/norm(P_e-O_n);
+
+        e2_=axang2rotm([z_cable.' -pi/2])*e2;
+    
+        Sigma_cable_=Sigma_cable-b_w*y_cable;
+        P_e_=P_e+b_w*e2_;
+
+        %On_の導出
+        fun = @(x)norm((Sigma_cable_+x(1)*e1)-(P_e_+x(2)*e2));
+        [x,fval] = fminunc(fun,[0,0]);%普通に計算してといてもいいけど面倒なので数値計算に投げる
+        t=x(1);
+        s=x(2);
+        O_n_=Sigma_cable_+t*e1; %P2_+s*e2でもよい
+
+        theta_rute=(pi-the_n)/2;
+
+        R_a=norm(O_n_-O_n)-a_w;
+        R_rute=(R_a*sin(theta_rute))/(1-sin(theta_rute));
+        O_R=O_n_+(e1+e2)/norm(e1+e2)*(R_a+R_rute);
+        O_R_=O_R+O_n-O_n_;
+        the_arc=pi/2-acos(dot(e1,-e2_));
         
-        Q1=O_R+[0;-Curve_R;0];
-        Q2=O_R+Curve_R*[sin(2*theta);-cos(2*theta);0];
+        Q1=O_R+[0;-R_rute;0];
+        Q2=O_R+R_rute*[sin(2*theta_rute);-cos(2*theta_rute);0];
+
+
         %hoge=[On P1 P2 O_R Q1 Q2]
         %scatter3(hoge(1,:),hoge(2,:),hoge(3,:))
     %% メインループ
 
     
     flag = 0;
-    for t = 1:1000
+    for t = 1:1
 
         if switching==13
             
@@ -290,7 +320,7 @@ global switching
                 omega_r = omega_c;
                 omega_f = omega_r;
 
-                if norm(Q1-Ps)<=Ln2
+                if norm(Q1-Sigma_cable)<=Ln2
                     flag = 1;
                     L_def = Ln1;
                     t_const = (L_def-2*L_gap)/vel;    %定速走行時間[s]
@@ -303,23 +333,23 @@ global switching
                 Ln2 = norm(Q1-Ps)+omega_c*(t2*t_step)*pi/180*r_v;
                 
                 %メインケーブルに対して，どのケーブルに乗っているのかの情報，
-                [Pf,phi_nf1,the_nf]=SolveWheelPoint(O_R,Curve_R,theta,Ps,Ln2,the_n,phi_n);
+                [Pf,phi_nf1,the_nf]=SolveWheelPoint(O_R,R_rute,theta,Ps,Ln2,the_n,phi_n);
                 phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;
 
                 the_xr = the_x_init; the_yr = 0/180*pi; the_zr = 0;
                 the_xf = X(t2); the_yf = Y(t2); the_zf = Z(t2);
                 [Ln1,OrCr,OfCf,R1,R2]  = CalcOrOf(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln2,Lc,Rw,rw,d,mode);
 
-                [Pr,phi_nr1,the_nr]=SolveWheelPoint(O_R,Curve_R,theta,Ps,Ln1,the_n,phi_n);%phi_nr1やthe_nrは0になるはず
-                OrOf = R1*(Pr-On)+R2*(Pf-On);
+                [Pr,phi_nr1,the_nr]=SolveWheelPoint(O_R,R_rute,theta,Ps,Ln1,the_n,phi_n);%phi_nr1やthe_nrは0になるはず
+                OrOf = R1*(Pr-O_n)+R2*(Pf-O_n);
                 
                 omega_r = omega_c;
                 omega_f = omega_r;
 
-                disp([Curve_R*(pi-2*theta)+norm(Q1-Ps),Ln2,t2])
+                disp([R_rute*(pi-2*theta)+norm(Q1-Ps),Ln2,t2])
                 
                 disp([Pr,Pf,OrOf])
-                if(Curve_R*(pi-2*theta)+norm(Q1-Ps)<=Ln2 || t2==n_bra)
+                if(R_rute*(pi-2*theta)+norm(Q1-Ps)<=Ln2 || t2==n_bra)
                     break;
                     flag = 2;
                     L_def = Ln1;
@@ -751,9 +781,9 @@ global switching
                 c5_6 = horzcat(m5_middle_top,m6_middle_bottom);
                 c6w1 = horzcat(m6_middle_top,w1f_middle_bottom);
                 c6w2 = horzcat(m6_middle_top,w2f_middle_bottom);
-
+            hold off
             if(robot_plot == 1)
-                hold off
+                
                 clinder_plot(m1_coord(:,1:21),m1_coord(:,22:42))
                 clinder_plot(m2_coord(:,1:21),m2_coord(:,22:42))
                 clinder_plot(m3_coord(:,1:21),m3_coord(:,22:42))
@@ -778,6 +808,9 @@ global switching
                 line(c6w2(1,:)',c6w2(2,:)',c6w2(3,:)','LineWidth',1,'Color','k')
             end
                  %ケーブルの描画
+                
+
+
                 [Xc,Yc,Zc] = cylinder(3);
                 Zc = (Zc - 0.5).*2*Lc;                        %円柱の高さ補正
 
@@ -788,19 +821,44 @@ global switching
                 cable_plot(c_top,c_bottom)
 
                 %分岐ケーブル(メイン・サブ)
+                
                 [Xc2,Yc2,Zc2] = cylinder(3);
-                Zc2 = Zc2*600;
+                Zc2 = Zc2*L1;
                 c_top2     = [Xc2(1,:);Yc2(1,:);Zc2(1,:)];      %基準円柱座標（上下各成分）
                 c_bottom2  = [Xc2(2,:);Yc2(2,:);Zc2(2,:)];
 
                 %ここは描画だけなので適当にしてある
-                c_top2h = R("y",gamma1)*([L1;0;0]+R("x",-phi_n)*R("z",the_nR)*R("y",pi/2)*c_top2);
+
+                
+                c_top2h =    R("y",gamma1)*([L1;0;0]+R("x",-phi_n)*R("z",the_nR)*R("y",pi/2)*c_top2);
                 c_bottom2h = R("y",gamma1)*([L1;0;0]+R("x",-phi_n)*R("z",the_nR)*R("y",pi/2)*c_bottom2);
-                c_top2s = R("y",gamma1)*([L1;0;0]+R("x",-phi_n)*R("z",-the_nL)*R("y",pi/2)*c_top2);
+                c_top2s =    R("y",gamma1)*([L1;0;0]+R("x",-phi_n)*R("z",-the_nL)*R("y",pi/2)*c_top2);
                 c_bottom2s = R("y",gamma1)*([L1;0;0]+R("x",-phi_n)*R("z",-the_nL)*R("y",pi/2)*c_bottom2);
 
                 cable_plot(c_top2h,c_bottom2h)
                 cable_plot(c_top2s,c_bottom2s)
+
+                %曲線状のケーブルをプロットする
+                %curve_cable_plot(O_R,e2_,-e2,R_rute,the_arc)
+                curve_cable_plot(O_R_,e2_,-e2,R_rute,the_arc)
+
+                %必要な点をプロットする
+                plotP(Sigma_cable_,"Σcable");
+                plotP(Sigma_cable_,"Σcable'");
+
+                plotP(O_n,"On");
+                plotP(O_n_,"On'");
+                
+                plotP(O_R,"OR");
+                plotP(O_R_,"OR'");
+
+                plotP(P_e,"Pe");
+                plotP(P_e_,"Pe'");
+                
+                
+                
+
+
                 %line([400;-400],[0;0],[0;0],'Color','k','LineWidth',6) 
             %     line([0;cable1(1)],[0;cable1(2)],[0;cable1(3)],'LineWidth',1)
             %     line([0;cable2(1)],[0;cable2(2)],[0;cable2(3)],'LineWidth',1)
@@ -1234,6 +1292,46 @@ zlim([-450 450])
 view(-65,25);
 end
 
+%点Oを中心にe1,e2ベクトルに媒介変数を与えて半径Rをかけた円をプロットする
+%媒介変数の定義域は0<=theta<=theta_max
+function curve_cable_plot(O,e1,e2,R,theta_max)
+
+
+%Cl_topは円柱の上面の座標
+%Cl_bottomは円柱の下面の座標
+ax = gca;
+ax.YDir = 'reverse';
+ax.ZDir = 'reverse';
+
+theta = linspace(0, theta_max, 100); % x coordinates
+points=O+e1*R*cos(theta)+e2*R*sin(theta);
+x=points(1,:);
+y=points(2,:);
+z=points(3,:);
+
+scatter3(x, y, z, 20, 'filled')
+
+%surf(X,Y,Z,'FaceColor','blue','EdgeColor','none')    %側面プロット
+hold on
+%fill3(X(1,:),Y(1,:),Z(1,:),"b")                     %底面プロット
+%fill3(X(2,:),Y(2,:),Z(2,:),"b")                     %上面プロット
+%xlim([-250 350]) 
+xlim([-50 700]) 
+ylim([-400 350]) 
+zlim([-250 550])
+%写真用
+xlim([-300 600]) 
+ylim([-450 450]) 
+zlim([-450 450])
+
+
+% % %アップ用
+%  xlim([200 600]) 
+%  ylim([-100 300]) 
+%  zlim([-250 150])
+view(-65,25);
+end
+
 
 function [O_R,R,theta]= SolveCurveEquation(P1,P2,On,a_w,b_w,theta_n)
     theta=(pi-theta_n)/2;
@@ -1324,4 +1422,27 @@ function [Ln1,OrCr,OfCf,R1,R2] = CalcOrOf(the_xr,the_yr,the_zr,the_xf,the_yf,the
     Ln1 = (-(D+F*Ln2)+sqrt((D+F*Ln2)^2-A*(B*Ln2*Ln2+2*E*Ln2+C-Lc^2)))/A;
 
     
+end
+
+function [P]=Plane2World(P)
+    global gamma1
+    global phi_n
+    P =  R("y",gamma1)*R("x",-phi_n)*P;
+end
+
+function [P]=World2Plane(P)
+    global gamma1
+    global phi_n
+    P =  R("x",phi_n)*R("y",-gamma1)*P;
+end
+
+function plotP(P,label)
+
+    x=P(1,:);
+    y=P(2,:);
+    z=P(3,:);
+    scatter3(x,y,z,20,"fill");
+    if nargin>1
+        text(x,y,z,label,"FontSize",20)
+    end
 end
