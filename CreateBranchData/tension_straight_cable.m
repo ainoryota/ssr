@@ -22,7 +22,7 @@ save = 0;           %データの保存,CSV書き出しon,off
 animation = 1;      %アニメーションon,off
 workspace = 0;
 robot_plot = 1;
-switching = 13; 
+switching = 11; 
 
 if animation==1
     Main(15,30,90,70,1)
@@ -297,7 +297,7 @@ Lc=L_gap;
 
     
     flag = 0;
-    for t = 1:1
+    for t = 1:1000
 
         if switching==13
             
@@ -698,9 +698,12 @@ Lc=L_gap;
              data_f(t,:) = [t*t_step the_1f the_2f the_3f];
              data(t,:) = [the_1f the_2f the_3f the_1r the_2r the_3r omega_f omega_r t*t_step];
         if animation == 1
+            if mod(t,10)~=0
+                continue
+            end
             %% データの描画
 
-                lw = 45;  %基準円柱長さ（体あy部分）
+                lw = 45;  %基準円柱長さ（タイヤ部分）
 
                 %モータの位置だし
                 %準備
