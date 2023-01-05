@@ -44,7 +44,7 @@ end
 time_step=30;
 
 if animation==1
-    Main(15,-30,20,70,1)
+    Main(15,-30,60,70,1)
     return
 end
 
@@ -429,7 +429,7 @@ Lnf=0;
                 best_idx=i;
             end
         end
-        disp([best_idx best_diff])
+        disp([t best_idx best_diff])
         List_bestidx=[List_bestidx best_idx];
         P_r=List_P(:,best_idx);
         C_r=List_C(:,best_idx);
@@ -1096,12 +1096,6 @@ Lnf=0;
 
 
 
-
-
-
-
-
-
                 pause(0.0001)
 %                  if t == 1
 %                      w = waitforbuttonpress;
@@ -1113,6 +1107,7 @@ Lnf=0;
         end
     %%         w = waitforbuttonpress;
     end
+    List_bestidx;
 end
 
 %% ŠÖ”
