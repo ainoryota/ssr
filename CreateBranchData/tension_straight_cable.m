@@ -24,10 +24,10 @@ global time_step
 save = 0;           %データの保存,CSV書き出しon,off
 animation = 1;      %アニメーションon,off
 workspace = 0;
-robot_plot = 0;
+robot_plot = 1;
 
 
-testmode=3;
+testmode=2;
 if testmode==0%ノーマルモードで動くとき
     switching = 11; 
     max_time=1000;    
@@ -41,10 +41,10 @@ elseif testmode==3
     switching=14;
     max_time=1000;  
 end
-time_step=30;
+time_step=10;
 
 if animation==1
-    Main(15,-30,60,70,1)
+    Main(15,-30,50,70,1)
     return
 end
 
@@ -101,16 +101,17 @@ global L1
 global max_time
 global time_step
 
-L_gap=400;
-L1=L_gap;
+L_cable=800;
+L1=L_cable;
+L2=L_cable;
 %Lc=L_gap;
 Lnf=0;
 
 
     gamma1 = a*pi/180;      %ケーブル斜度
-        phi_n = b*pi/180;      %ケーブル平面の回転角
-        the_nR = right*pi/180;     %右旋回角
-        the_nL = left*pi/180;    %左旋回角
+    phi_n = b*pi/180;      %ケーブル平面の回転角
+    the_nR = right*pi/180;     %右旋回角
+    the_nL = left*pi/180;    %左旋回角
 
     %モード選択
         %mode = e;           %右分岐(1) 左分岐(2)
@@ -184,6 +185,7 @@ Lnf=0;
         data_r = zeros(500,4);
         data_f = zeros(500,4);
         data = zeros(500,9);
+        data2 = zeros(1000,7); 
         data_r_full = zeros(180,4);
         data_f_full = zeros(180,4);
         moment = zeros(180,2);
@@ -210,7 +212,7 @@ Lnf=0;
         r_v = 13.5; %有効半径[mm]
         vel = 50; %分岐時の後輪の移動速度[mm/s]
         %L_gap = 200; %分岐点直前で止まる距離(約タイヤ直径の半分)
-        %L_gap = 150
+        L_gap = 150;
 
 
         %従属的に決まるものたち
@@ -285,8 +287,8 @@ Lnf=0;
         z_cable=Plane2World([0;0;1]);
         Sigma_cable=Plane2World([0;0;0]);
 
-        O_n=Plane2World([L_gap;0;0]);
-        P_e=Plane2World(World2Plane(O_n)+L_gap*[cos(the_n);sin(the_n);0]);
+        O_n=Plane2World([L_cable;0;0]);
+        P_e=Plane2World(World2Plane(O_n)+L_cable*[cos(the_n);sin(the_n);0]);
         e1=Plane2World([-1;0;0]);
         e2=(P_e-O_n)/norm(P_e-O_n);
 
@@ -316,7 +318,7 @@ Lnf=0;
         L_arc=R_rute*the_arc;
 
         if Q1(1)<0
-            disp("L_gap is too small");
+            disp("L_cable is too small");
         end
 
         %hoge=[On P1 P2 O_R Q1 Q2]
@@ -341,7 +343,7 @@ Lnf=0;
                 the_xf = X(t1); the_yf = Y(t1); the_zf = Z(t1);
                 if t1 == n_bra
                     flag = 1;
-                    L_def = 100;
+                    L_def = 315;
                     t_const = (L_def-2*L_gap)/vel;    %定速走行時間[s]
                     n_const = t_const/t_step;               %定速走行カウント
                 end
@@ -378,10 +380,10 @@ Lnf=0;
                 end
         end
         if 0<=Ln && Ln<norm(Q1-Sigma_cable)
-            P=Ln*x_cable+Sigma_cable
+            P=Ln*x_cable+Sigma_cable;
         elseif norm(Q1-Sigma_cable)<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc
-            t_arc=(Ln-norm(Q1-Sigma_cable))/(R_rute)
-            P=O_R_-y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc)
+            t_arc=(Ln-norm(Q1-Sigma_cable))/(R_rute);
+            P=O_R_-y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc);
             disp([t_arc Ln L_arc-(Ln-norm(Q1-Sigma_cable))])
         elseif norm(Q1-Sigma_cable)+L_arc<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2)
             P=Q2+(Ln-L_arc-norm(Q1-Sigma_cable))*e2;
@@ -390,9 +392,8 @@ Lnf=0;
             disp("Lnf out of Pe");
         end
         P_f=World2Plane(P);
-        C_f=P_f+ R("x",the_xf)*R("y",the_yf)*[Rw*sin(the_zf);d/2+rw-Rw*cos(the_zf);0];
+        C_f=Plane2World(P_f)+ R("x",the_xf)*R("y",the_yf)*[Rw*sin(the_zf);d/2+rw-Rw*cos(the_zf);0];
         P_f=Plane2World(P_f);
-        C_f=Plane2World(C_f);
         List_time=[List_time t];
         List_Ln=[List_Ln Ln];
         List_P=[List_P P_f];%List_Pf(:,2)のようにして取り出す
@@ -412,10 +413,12 @@ Lnf=0;
     flag = 0;
     List_bestidx=[];
 
-    for t = 200:max_time%最低限進んだところを初期値にしたい
+    for t = 300:max_time%最低限進んだところを初期値にしたい
 
         Lnf=t*1;
         Ln=Lnf;
+
+
         P_f=List_P(:,t);
         C_f=List_C(:,t);
 
@@ -439,9 +442,10 @@ Lnf=0;
             OrCr=C_r-P_r;
             OfCf=C_f-P_f;
             OrOf=P_f-P_r;
+
             the_xf=List_the_x(:,t);
-            the_yf=List_the_x(:,t);
-            the_zf=List_the_x(:,t);
+            the_yf=List_the_y(:,t);
+            the_zf=List_the_z(:,t);
             
             the_xr=List_the_x(:,best_idx);
             the_yr=List_the_y(:,best_idx);
@@ -475,6 +479,11 @@ Lnf=0;
                 omega_r = omega_c*(2*(t1*t_step)^3/(t_bra^3) -3*(t1*t_step)^2/(t_bra^2)+1);
                 omega_f = omega_r;
 
+                P_f=Plane2World(World2Plane(O_n)+[Ln2;0;0]);
+                C_f=OfCf+P_f;
+                P_r=Plane2World(World2Plane(O_n)+[-Ln1;0;0]);
+                C_r=OrCr+P_r;
+
                 if t1 == n_bra
                     flag = 1;
                     L_def = Ln1;
@@ -499,6 +508,13 @@ Lnf=0;
                 omega_r = omega_c*(-2*(t2*t_step)^3/(t_bra^3) +3*(t2*t_step)^2/(t_bra^2));
                 omega_f = omega_r;
 
+
+                P_f=Plane2World(World2Plane(O_n)+Ln2*[cos(the_n);sin(the_n);0]);
+                C_f=OfCf+P_f;
+                P_r=Plane2World(World2Plane(O_n)+[-Ln1;0;0]);
+                C_r=OrCr+P_r;
+
+
                 if t2 == n_bra
                     flag = 2;
                     L_def = Ln1;
@@ -518,6 +534,11 @@ Lnf=0;
 
                 omega_r = omega_c;
                 omega_f = omega_r;
+
+                P_f=Plane2World(World2Plane(O_n)+Ln2*[cos(the_n);sin(the_n);0]);
+                C_f=OfCf+P_f;
+                P_r=Plane2World(World2Plane(O_n)+[-Ln1;0;0]);
+                C_r=OrCr+P_r;
 
                 if t3 >= n_const-1
                     flag = 3;
@@ -539,6 +560,11 @@ Lnf=0;
 
                 omega_r = omega_c*(2*(t4*t_step)^3/(t_bra^3) -3*(t4*t_step)^2/(t_bra^2)+1);
                 omega_f = omega_r;
+
+                P_f=Plane2World(World2Plane(O_n)+Ln2*[cos(the_n);sin(the_n);0]);
+                C_f=OfCf+P_f;
+                P_r=Plane2World(World2Plane(O_n)+[-Ln1;0;0]);
+                C_r=OrCr+P_r;
 
                 if t4 == n_bra
                     flag = 4;
@@ -562,66 +588,21 @@ Lnf=0;
                 omega_r = omega_c*(-2*(t5*t_step)^3/(t_bra^3) +3*(t5*t_step)^2/(t_bra^2));
                 omega_f = omega_r;
 
-                if t5 == n_bra
-                    flag = 5;
-                end
-            else
+
+                P_f=Plane2World(World2Plane(O_n)+Ln2*[cos(the_n);sin(the_n);0]);
+                C_f=OfCf+P_f;
+                P_r=Plane2World(World2Plane(O_n)-Ln1*[cos(the_n);sin(the_n);0]);
+                %P_r=Plane2World(World2Plane(O_n)+[-Ln1;0;0]);
+                C_r=OrCr+P_r;
+
                 T = t-1;
                 data(T+1:500,:)=[];
-               %データの書き出し 
-               text = "C:\Users\MSD\Documents\GitHub\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
-               if save ==1
+                %データの書き出し 
+                text = "C:\Users\MSD\Documents\GitHub\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
+                if save ==1
                     writematrix(data,text+'.csv')
-               end
-
-     break;
-               %書き出しデータの描画
-               %figure(2)
-               %ダミーデータの作成
-    %                x0 = [1 1];
-    %                x1 = [n_count01 n_count01];
-    %                x2 = [t1 t1];                            
-    %                x3 = [t1+t2 t1+t2];
-    %                x4 = [t1+t2+n_count01 t1+t2+n_count01];                            
-    %                x5 = [t1+t2+t3 t1+t2+t3];
-    %                y = [-180 350];
-
-
-               plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
-               hold on
-               plot(data_r(1:T,1),data(1:T,2)*180/pi,'LineWidth',2)
-               plot(data_r(1:T,1),data(1:T,3)*180/pi,'LineWidth',2)
-               plot(data_r(1:T,1),data(1:T,4)*180/pi,'LineWidth',2)
-               plot(data_r(1:T,1),data(1:T,5)*180/pi,'LineWidth',2)
-               plot(data_r(1:T,1),data(1:T,6)*180/pi,'LineWidth',2)
-    %                plot(x1,y,'--k','LineWidth',0.5)
-    %                plot(x2,y,'--k','LineWidth',0.5)
-    %                plot(x3,y,'--k','LineWidth',0.5)
-    %                plot(x4,y,'--k','LineWidth',0.5)
-    %                plot(x0,y,'--k','LineWidth',0.5)
-    %                plot(x5,y,'--k','LineWidth',0.5)
-
-               legend('1軸目(前)','2軸目(前)','3軸目(前)','1軸目(後)','2軸目(後)','3軸目(後)','Location','NorthEast')
-               ylim([-180 180]) 
-               yticks(-180:30:180)
-               xlabel('時間，ステップ')
-               ylabel('角度[deg]')
-
-               %figure(3)
-               plot(data_r(1:T,1),data(1:T,7),'LineWidth',2)
-               hold on
-               plot(data_r(1:T,1),data(1:T,8),'LineWidth',2)
-    %                plot(x1,y,'--k','LineWidth',0.5)
-    %                plot(x2,y,'--k','LineWidth',0.5)
-    %                plot(x3,y,'--k','LineWidth',0.5)
-    %                plot(x4,y,'--k','LineWidth',0.5)*
-    %                plot(x0,y,'--k','LineWidth',0.5)
-    %                plot(x5,y,'--k','LineWidth',0.5)
-               ylim([0 350])
-               xlabel('時間，ステップ')
-               ylabel('角速度[deg/s]')
-
-                break;
+                end
+               break
             end
 
     %nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn%
@@ -731,63 +712,6 @@ Lnf=0;
                 if t5 == n_bra
                     flag = 5;
                 end
-            else
-                T = t-1;
-                data(T+1:500,:)=[];
-               %データの書き出し 
-               text = "C:\Users\MSD\Documents\GitHub\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
-               if save ==1
-                    writematrix(data,text+'.csv')
-               end
-
-     break;
-               %書き出しデータの描画
-               %figure(2)
-               %ダミーデータの作成
-    %                x0 = [1 1];
-    %                x1 = [n_count01 n_count01];
-    %                x2 = [t1 t1];                            
-    %                x3 = [t1+t2 t1+t2];
-    %                x4 = [t1+t2+n_count01 t1+t2+n_count01];                            
-    %                x5 = [t1+t2+t3 t1+t2+t3];
-    %                y = [-180 350];
-
-
-               plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
-               hold on
-               plot(data_r(1:T,1),data(1:T,2)*180/pi,'LineWidth',2)
-               plot(data_r(1:T,1),data(1:T,3)*180/pi,'LineWidth',2)
-               plot(data_r(1:T,1),data(1:T,4)*180/pi,'LineWidth',2)
-               plot(data_r(1:T,1),data(1:T,5)*180/pi,'LineWidth',2)
-               plot(data_r(1:T,1),data(1:T,6)*180/pi,'LineWidth',2)
-    %                plot(x1,y,'--k','LineWidth',0.5)
-    %                plot(x2,y,'--k','LineWidth',0.5)
-    %                plot(x3,y,'--k','LineWidth',0.5)
-    %                plot(x4,y,'--k','LineWidth',0.5)
-    %                plot(x0,y,'--k','LineWidth',0.5)
-    %                plot(x5,y,'--k','LineWidth',0.5)
-
-               legend('1軸目(前)','2軸目(前)','3軸目(前)','1軸目(後)','2軸目(後)','3軸目(後)','Location','NorthEast')
-               ylim([-180 180]) 
-               yticks(-180:30:180)
-               xlabel('時間，ステップ')
-               ylabel('角度[deg]')
-
-               %figure(3)
-               plot(data_r(1:T,1),data(1:T,7),'LineWidth',2)
-               hold on
-               plot(data_r(1:T,1),data(1:T,8),'LineWidth',2)
-    %                plot(x1,y,'--k','LineWidth',0.5)
-    %                plot(x2,y,'--k','LineWidth',0.5)
-    %                plot(x3,y,'--k','LineWidth',0.5)
-    %                plot(x4,y,'--k','LineWidth',0.5)*
-    %                plot(x0,y,'--k','LineWidth',0.5)
-    %                plot(x5,y,'--k','LineWidth',0.5)
-               ylim([0 350])
-               xlabel('時間，ステップ')
-               ylabel('角速度[deg/s]')
-
-                break;
             end
             
         end
@@ -830,6 +754,7 @@ Lnf=0;
              data_r(t,:) = [t*t_step the_1r the_2r the_3r];
              data_f(t,:) = [t*t_step the_1f the_2f the_3f];
              data(t,:) = [the_1f the_2f the_3f the_1r the_2r the_3r omega_f omega_r t*t_step];
+             data2(t,:) = [the_xr,the_yr,the_zr,the_xf,the_yf,the_zf t*t_step];
         if animation == 1
             if mod(t,time_step)~=0
                 continue
@@ -860,13 +785,20 @@ Lnf=0;
 
                 %モータの座標だし
 
-                OrCf = OrOf+OfCf;
-                m1_coord = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*horzcat(m1_top,m1_bottom));
-                m2_coord = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*horzcat(m2_top,m2_bottom));
-                m3_coord = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*horzcat(m3_top,m3_bottom));
-                m4_coord = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*horzcat(m4_top,m4_bottom));
-                m5_coord = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*horzcat(m5_top,m5_bottom));
-                m6_coord = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*horzcat(m6_top,m6_bottom));
+                %OrCf =C_f-P_r;
+                %disp([OrOf+OfCf OrCf]);
+
+                OrCr=C_r-P_r;
+                OfCf=C_f-P_f;
+                OrCf =OrOf+OfCf;
+
+                %[L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]→World2Plane(P_r)
+                m1_coord = R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*horzcat(m1_top,m1_bottom));
+                m2_coord = R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*horzcat(m2_top,m2_bottom));
+                m3_coord = R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*horzcat(m3_top,m3_bottom));
+                m4_coord = R("y",gamma1)*(World2Plane(P_r)+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*horzcat(m4_top,m4_bottom));
+                m5_coord = R("y",gamma1)*(World2Plane(P_r)+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*horzcat(m5_top,m5_bottom));
+                m6_coord = R("y",gamma1)*(World2Plane(P_r)+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*horzcat(m6_top,m6_bottom));
 
 
                 %タイヤ部分の位置だし（タイヤはひょうたん型）
@@ -881,10 +813,15 @@ Lnf=0;
                 W2 = W + [0;Rw;0];
 
                 %phi_nr1とかは常に0なので実質的に何もしていない（分岐後を描画したいときのみ使用）
-                w1r_coord = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W1);
-                w2r_coord = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W2);
-                w1f_coord = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W2);
-                w2f_coord = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W1);
+                w1r_coord = R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W1);
+                w2r_coord = R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W2);
+                w1f_coord = R("y",gamma1)*(World2Plane(P_r)+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W2);
+                w2f_coord = R("y",gamma1)*(World2Plane(P_r)+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W1);
+                
+                %w1r_coord = R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W1);
+                %w2r_coord = R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W2);
+                %w1f_coord = R("y",gamma1)*(World2Plane(P_r)+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W2);
+                %w2f_coord = R("y",gamma1)*(World2Plane(P_r)+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W1);
 
 
                 w1r_middle_bottom = (sum(w1r_coord(:,11*21-20:11*21),2)-w1r_coord(:,231))/20;
@@ -948,7 +885,7 @@ Lnf=0;
 
 
                 [Xc,Yc,Zc] = cylinder(3);
-                Zc = (Zc - 0.5).*2*Lc;                        %円柱の高さ補正
+                Zc = (Zc - 0.5).*2*L1;                        %円柱の高さ補正
 
                 c_top     = [Xc(1,:);Yc(1,:);Zc(1,:)];      %基準円柱座標（上下各成分）
                 c_bottom  = [Xc(2,:);Yc(2,:);Zc(2,:)];
@@ -1000,11 +937,11 @@ Lnf=0;
                 
                 
                 
-                plotP(P_f,"P_f",500,20);
-                plotP(C_f,"C_f",500,20);
+                plotP(P_f,"P_f",100,20);
+                plotP(C_f,"C_f",100,20);
 
-                plotP(P_r,"P_r",500,20);
-                plotP(C_r,"C_r",500,20);
+                plotP(P_r,"P_r",100,20);
+                plotP(C_r,"C_r",100,20);
 
 
                 %line([400;-400],[0;0],[0;0],'Color','k','LineWidth',6) 
@@ -1074,8 +1011,8 @@ Lnf=0;
                 %M_w_sphere_r =R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCr)) + R("y",gamma1)*R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*R("y",the_yr)*R("x",the_xr)*R("z",the_zr)*R("z",-the_3r)*R("x",-a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("x",pi)*M_w_sphere;
                 %M_w_sphere_f =R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCf)) + R("y",gamma1)*R("x",phi_nf1)*R("z",the_nf)*R("x",phi_nf2)*R("y",the_yr)*R("x",the_xr)*R("z",the_zr)*R("z",-the_3r)*R("x",-a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("y",2*a3)*R("z",the_1f)*R("x",pi)*M_w_sphere;
 
-                M_w_sphere_r =  R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("x",pi)*M_w_sphere);
-                M_w_sphere_f =  R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("x",pi)*M_w_sphere);
+                M_w_sphere_r =  R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("x",pi)*M_w_sphere);
+                M_w_sphere_f =  R("y",gamma1)*(World2Plane(P_r)+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("x",pi)*M_w_sphere);
 
 
 
@@ -1107,6 +1044,82 @@ Lnf=0;
         end
     %%         w = waitforbuttonpress;
     end
+        
+    if true
+            T = t-1;
+           %書き出しデータの描画
+           figure(2)
+           plot(data_r(1:T,1),data2(1:T,1)*180/pi,'LineWidth',2)
+           hold on
+           plot(data_r(1:T,1),data2(1:T,2)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),data2(1:T,3)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),data2(1:T,4)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),data2(1:T,5)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),data2(1:T,6)*180/pi,'LineWidth',2)
+
+           legend('θxr','θyr','θzr','θxf','θyf','θzf','Location','NorthEast')
+           ylim([-180 180]) 
+           yticks(-180:30:180)
+           xlabel('時間，ステップ')
+           ylabel('角度[deg]')
+    end
+
+    if false
+            T = t-1;
+            data(T+1:500,:)=[];
+            %データの書き出し 
+            text = "C:\Users\MSD\Documents\GitHub\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
+            if save ==1
+                writematrix(data,text+'.csv')
+            end
+           %書き出しデータの描画
+           figure(2)
+           %ダミーデータの作成
+%                x0 = [1 1];
+%                x1 = [n_count01 n_count01];
+%                x2 = [t1 t1];                            
+%                x3 = [t1+t2 t1+t2];
+%                x4 = [t1+t2+n_count01 t1+t2+n_count01];                            
+%                x5 = [t1+t2+t3 t1+t2+t3];
+%                y = [-180 350];
+
+
+           plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
+           hold on
+           plot(data_r(1:T,1),data(1:T,2)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),data(1:T,3)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),data(1:T,4)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),data(1:T,5)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),data(1:T,6)*180/pi,'LineWidth',2)
+%                plot(x1,y,'--k','LineWidth',0.5)
+%                plot(x2,y,'--k','LineWidth',0.5)
+%                plot(x3,y,'--k','LineWidth',0.5)
+%                plot(x4,y,'--k','LineWidth',0.5)
+%                plot(x0,y,'--k','LineWidth',0.5)
+%                plot(x5,y,'--k','LineWidth',0.5)
+
+           legend('1軸目(前)','2軸目(前)','3軸目(前)','1軸目(後)','2軸目(後)','3軸目(後)','Location','NorthEast')
+           ylim([-180 180]) 
+           yticks(-180:30:180)
+           xlabel('時間，ステップ')
+           ylabel('角度[deg]')
+
+           %figure(3)
+           plot(data_r(1:T,1),data(1:T,7),'LineWidth',2)
+           hold on
+           plot(data_r(1:T,1),data(1:T,8),'LineWidth',2)
+%                plot(x1,y,'--k','LineWidth',0.5)
+%                plot(x2,y,'--k','LineWidth',0.5)
+%                plot(x3,y,'--k','LineWidth',0.5)
+%                plot(x4,y,'--k','LineWidth',0.5)*
+%                plot(x0,y,'--k','LineWidth',0.5)
+%                plot(x5,y,'--k','LineWidth',0.5)
+           ylim([0 350])
+           xlabel('時間，ステップ')
+           ylabel('角速度[deg/s]')
+    end
+
+
     List_bestidx;
 end
 
@@ -1364,9 +1377,9 @@ function clinder_plot(Cl_bottom,Cl_top)
     hold on
     fill3(X(1,:),Y(1,:),Z(1,:),"w")                     %底面プロット
     fill3(X(2,:),Y(2,:),Z(2,:),"w")                     %上面プロット
-    xlim([-300 500]) 
-    ylim([-300 500]) 
-    zlim([-300 500])
+    xlim([-300 1500]) 
+    ylim([-300 1500]) 
+    zlim([-300 1500])
     % view(-135, 10);
 end
 
@@ -1393,9 +1406,9 @@ function gourd_plot(W)
 
     fill3(X(1,:),Y(1,:),Z(1,:),"g",'EdgeColor','k')                     %底面プロット
     fill3(X(11,:),Y(11,:),Z(11,:),"g",'EdgeColor','k')                     %上面プロット
-    xlim([-300 500]) 
-    ylim([-300 500]) 
-    zlim([-300 500])
+    xlim([-300 1500]) 
+    ylim([-300 1500]) 
+    zlim([-300 1500])
     % view(-135, 10);
 end
 
@@ -1450,11 +1463,11 @@ hold on
 %fill3(X(1,:),Y(1,:),Z(1,:),"b")                     %底面プロット
 %fill3(X(2,:),Y(2,:),Z(2,:),"b")                     %上面プロット
 %xlim([-250 350]) 
-xlim([-50 700]) 
+xlim([-50 1500]) 
 ylim([-400 350]) 
 zlim([-250 550])
 %写真用
-xlim([-300 1000]) 
+xlim([-300 1500]) 
 ylim([-450 750]) 
 zlim([-450 450])
 
@@ -1463,8 +1476,8 @@ zlim([-450 450])
 %  xlim([200 600]) 
 %  ylim([-100 300]) 
 %  zlim([-250 150])
-view(-95,10);
-%view(-65,25);
+%view(-95,10);
+view(-65,25);
 end
 
 
