@@ -722,6 +722,10 @@ Lnf=0;
         %% 各関節角度の計算
 
         %収束計算
+        OrCr=C_r-P_r;
+        OfCf=C_f-P_f;
+        OrOf=R("y",-gamma1)*(P_f-P_r);
+        OrCf =OrOf+OfCf;
         
         fun = @(x)Joint_angle_calc8(x,the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,...
                                            gamma1,a1,a2,a3,Lc,OrCr,OfCf,OrOf,g0,g2,g3,g4,g6,w0,w2,w3,w4,w6,mode);
@@ -732,22 +736,6 @@ Lnf=0;
                 = Joint_angle_calc8(x,the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,...
                                     gamma1,a1,a2,a3,Lc,OrCr,OfCf,OrOf,g0,g2,g3,g4,g6,w0,w2,w3,w4,w6,mode);
 
-        %% switching==1 or switching==2 のときの例外処理
-        if (switching ==1)||(switching ==2)
-            if (mode == 1) && (the_1f > 0)
-                mode = 2;
-                [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal_tension(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
-
-                %収束計算
-                fun = @(x)Joint_angle_calc8(x,the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,...
-                                                   gamma1,a1,a2,a3,Lc,OrCr,OfCf,OrOf,g0,g2,g3,g4,g6,w0,w2,w3,w4,w6,mode);
-                [x,fval,exitflag,output]= fzero(fun,0);
-                %収束した結果を用いて，関節角度を算出
-                [F,the_2r,the_3r,the_1r,the_2f,the_3f,the_1f] ...
-                        = Joint_angle_calc8(x,the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,...
-                                            gamma1,a1,a2,a3,Lc,OrCr,OfCf,OrOf,g0,g2,g3,g4,g6,w0,w2,w3,w4,w6,mode);
-            end
-        end
 
     %%                            
              %関節角度データの保存
@@ -786,12 +774,6 @@ Lnf=0;
                 %モータの座標だし
 
                 %OrCf =C_f-P_r;
-                %disp([OrOf+OfCf OrCf]);
-
-                OrCr=C_r-P_r;
-                OfCf=C_f-P_f;
-                OrCf =OrOf+OfCf;
-
                 %[L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]→World2Plane(P_r)
                 m1_coord = R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*horzcat(m1_top,m1_bottom));
                 m2_coord = R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*horzcat(m2_top,m2_bottom));
@@ -1250,6 +1232,7 @@ function [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal_tension(the
     Ln2 = (-(E+F*Ln1)+sqrt((E+F*Ln1)^2-B*(A*Ln1*Ln1+2*D*Ln1+C-Lc^2)))/B;
     OrOf = R1*[Ln1;0;0]+R2*[Ln2;0;0];
 end
+
 %% 球面線形補間＋オイラー角表示
 %補間クォータニオンを求めた後，オイラー角（姿勢角表現する）
 function [X,Y,Z] = slerp_xyz_euler(q1,q2,t)
