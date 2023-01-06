@@ -1,17 +1,4 @@
-%% turn_right_comp8に対してのオプション
-
-
-%% 初期設定
-%ケーブル条件
-
-idx=0;
-count=0;
-a=15;
-b=-5;
-right=35;
-left=45;
-start_count=0;
-
+%% 変数定義
 global save           %データの保存,CSV書き出しon,off
 global animation       %アニメーションon,off
 global workspace 
@@ -20,14 +7,20 @@ global switching
 global max_time
 global time_step
 
+idx=0;
+count=0;
+start_count=0;
 
+
+
+%% 初期設定
 save = 0;           %データの保存,CSV書き出しon,off
 animation = 1;      %アニメーションon,off
 workspace = 0;
 robot_plot = 1;
+time_step=10;
+testmode=3;
 
-
-testmode=2;
 if testmode==0%ノーマルモードで動くとき
     switching = 11; 
     max_time=1000;    
@@ -41,96 +34,79 @@ elseif testmode==3
     switching=14;
     max_time=1000;  
 end
-time_step=10;
 
+%% プログラム開始
 if animation==1
     Main(15,-30,50,70,1)
     return
 end
 
-
 for loop=1:2
-            for mode=1:2
-%Main(a,b,c,right,mode)
-%disp(["clac",a,b,c,right,mode]);
-%continue;
-for a=-10:5:30
-for b=-20:5:20
-    for left=0:5:90
-        for right=0:5:90
-            if loop==1
-                idx=idx+1;
-                continue
-            else
-                count=count+1;
-            end
-            if(count<start_count)
-                continue
-            end
+    for mode=1:2
+        for a=-10:5:30
+            for b=-20:5:20
+                for left=0:5:90
+                    for right=0:5:90
+                        if loop==1
+                            idx=idx+1;
+                            continue
+                        else
+                            count=count+1;
+                        end
+                        if(count<start_count)
+                            continue
+                        end
+                        
+                        name= "C:\Users\MSD\Documents\GitHub\Data\"+a+ "_" + b+ "_" + right+ "_" + left+"_"+mode+".csv";
+                        if(exist(name, 'file')~=0)
+                            continue
+                        end
             
-            name= "C:\Users\MSD\Documents\GitHub\Data\"+a+ "_" + b+ "_" + right+ "_" + left+"_"+mode+".csv";
-            if(exist(name, 'file')~=0)
-                continue
+                        disp(["clac",count,"/",idx,"time:",(idx-count)/10/60+"[min]",":",a,b,right,left,mode]);
+                        if left+right>100 || left+right<80
+                            continue
+                        end
+                        try
+                            Main(a,b,right,left,mode)
+                        catch exception
+                            disp(exception)
+                        end
+                    end
+                end
             end
-
-            disp(["clac",count,"/",idx,"time:",(idx-count)/10/60+"[min]",":",a,b,right,left,mode]);
-            if left+right>100 || left+right<80
-                continue
-            end
-            try
-                Main(a,b,right,left,mode)
-            catch exception
-                disp(exception)
         end
     end
 end
-end
-end
-            end
 disp("fin")
-end
+
+%% メイン関数
 function Main(a,b,right,left,mode)
-global save           %データの保存,CSV書き出しon,off
-global animation       %アニメーションon,off
-global workspace 
-global robot_plot
-global switching 
-global gamma1
-global phi_n
-global L1
-global max_time
-global time_step
+    %% 要設定変数
+    L_cable=800;
+  
 
-L_cable=800;
-L1=L_cable;
-L2=L_cable;
-%Lc=L_gap;
-Lnf=0;
-
+    %% 変数定義
+    global save           %データの保存,CSV書き出しon,off
+    global animation       %アニメーションon,off
+    global workspace 
+    global robot_plot
+    global switching 
+    global gamma1
+    global phi_n
+    global L1
+    global L2
+    global max_time
+    global time_step
+    
+    L1=L_cable;
+    L2=L_cable;
 
     gamma1 = a*pi/180;      %ケーブル斜度
     phi_n = b*pi/180;      %ケーブル平面の回転角
     the_nR = right*pi/180;     %右旋回角
     the_nL = left*pi/180;    %左旋回角
+    Lnf=0;
 
-    %モード選択
-        %mode = e;           %右分岐(1) 左分岐(2)
-        %右分岐モードが基準
-        %左分岐時はGUIで解決
-        %(0)テンションかけた状態で分岐
-        %(1)両輪ノーマルモードの状態から右から左の分岐モードの変更
-        %(2)両輪テンションモードの状態から右から左の分岐モードの変更
-        %(3)両輪ノーマルモードの状態から，前輪テンション
-        %(4)両輪ノーマルモードの状態から，後輪テンション
-        %(5)両輪テンションモードの状態から，前輪ノーマル
-        %(6)両輪テンションモードの状態から，後輪ノーマル
-        %(7)後輪テンション，前輪ノーマルから，前輪テンションモード
-        %(8)前輪テンション，後輪輪ノーマルから，後輪テンションモード
-        %(9)後輪テンション，前輪ノーマルから，後輪ノーマルモード
-        %(10)前輪テンション，後輪輪ノーマルから，前輪ノーマルモード
-        %(11)ノーマルモードで分岐
-        %(12)走りこんでくるやつ（動画用）
-        %(13)テンションかけた状態で無停止分岐
     %% 定数
     %機構定数など
         Rw = 83/2;      %タイヤの直径，内径
@@ -326,7 +302,7 @@ Lnf=0;
     %% メインループ
 
     %まずは時間に対応するCのリストを生成する
-    flag = 0;
+    
     List_time=[];
     List_Ln=[];
     List_P=[];
@@ -335,9 +311,10 @@ Lnf=0;
     List_the_y=[];
     List_the_z=[];
 
+    Ln=0;
+    flag = 0;
     for t=1:max_time
-        Ln=t*1;
-
+        Ln=Ln+omega(t);
         if flag == 0    %前輪の分岐開始
                 t1 = t1+1;
                 the_xf = X(t1); the_yf = Y(t1); the_zf = Z(t1);
@@ -404,6 +381,27 @@ Lnf=0;
         List_the_z=[List_the_z the_zf];
     end
 
+
+    %モード選択
+    %mode = e;           %右分岐(1) 左分岐(2)
+    %右分岐モードが基準
+    %左分岐時はGUIで解決
+    %(0)テンションかけた状態で分岐
+    %(1)両輪ノーマルモードの状態から右から左の分岐モードの変更
+    %(2)両輪テンションモードの状態から右から左の分岐モードの変更
+    %(3)両輪ノーマルモードの状態から，前輪テンション
+    %(4)両輪ノーマルモードの状態から，後輪テンション
+    %(5)両輪テンションモードの状態から，前輪ノーマル
+    %(6)両輪テンションモードの状態から，後輪ノーマル
+    %(7)後輪テンション，前輪ノーマルから，前輪テンションモード
+    %(8)前輪テンション，後輪輪ノーマルから，後輪テンションモード
+    %(9)後輪テンション，前輪ノーマルから，後輪ノーマルモード
+    %(10)前輪テンション，後輪輪ノーマルから，前輪ノーマルモード
+    %(11)ノーマルモードで分岐
+    %(12)走りこんでくるやつ（動画用）
+    %(13)テンションかけた状態で無停止分岐
+    
+    
     t1=0;
     t2=0;
     t3=0;
@@ -724,11 +722,9 @@ Lnf=0;
         %収束計算
         OrCr=C_r-P_r;
         OfCf=C_f-P_f;
-        disp([OrOf World2Plane(P_f-P_r)])
-        OrOf=World2Plane(P_f-P_r);
+        OrOf=R("y",-gamma1)*(P_f-P_r);
         OrCf =OrOf+OfCf;
-
-
+        
         fun = @(x)Joint_angle_calc8(x,the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,...
                                            gamma1,a1,a2,a3,Lc,OrCr,OfCf,OrOf,g0,g2,g3,g4,g6,w0,w2,w3,w4,w6,mode);
         [x,fval,exitflag,output]= fzero(fun,0);
@@ -1589,3 +1585,8 @@ function plotP(P,label,plotsize,fontsize)
         text(x,y,z,label,"FontSize",fontsize)
     end
 end
+
+function omega=omega(t)
+    omega=1;
+end
+
