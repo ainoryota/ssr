@@ -6,11 +6,13 @@ global robot_plot
 global switching 
 global max_time
 global time_step
+global t_step
 
 idx=0;
 count=0;
 start_count=0;
 
+t_step = 1.6/33; %キリのいい数字にするため(制御周期より少しはやめ)
 
 
 %% 初期設定
@@ -37,6 +39,7 @@ time_step=10;
 
 %% プログラム開始
 if animation==1
+    figure(1)
     Main(15,-30,50,70,1)
     return
 end
@@ -96,6 +99,7 @@ function Main(a,b,right,left,mode)
     global L2
     global max_time
     global time_step
+    global t_step
     
     L1=L_cable;
     L2=L_cable;
@@ -155,10 +159,10 @@ function Main(a,b,right,left,mode)
         g6 = [0;0;0];
 
     % data関連
-        data_r = zeros(500,4);
-        data_f = zeros(500,4);
-        data = zeros(500,9);
-        data2 = zeros(1000,7); 
+        data_r = zeros(max_time,4);
+        data_f = zeros(max_time,4);
+        data = zeros(max_time,9);
+        data2 = zeros(max_time,10); 
 
         %諸々の初期化
         t1 = 0; t2 = 0; t3 = 0;t4 = 0;t5 = 0;
@@ -218,7 +222,6 @@ function Main(a,b,right,left,mode)
     %% 角速度などの設定
         %与える条件
     %   t_step = 0.0485; %50[ms] キリが悪いと挙動がおかしくなる．48msでだめ
-        t_step = 1.6/33; %キリのいい数字にするため(制御周期より少しはやめ)
         r_v = 13.5; %有効半径[mm]
         vel = 50; %分岐時の後輪の移動速度[mm/s]
         L_gap = 150;%分岐点直前で止まる距離(約タイヤ直径の半分)
@@ -228,7 +231,7 @@ function Main(a,b,right,left,mode)
         Ln=0;
         flag = 0;
         for t=1:max_time
-            Ln=Ln+omega(t);
+            Ln=Ln+omega(t)*pi/180*r_v*t_step;;
             if flag == 0    %ロボットの初期値計算
                 if Ln>Lc
                     t_start=t;
@@ -330,7 +333,7 @@ function Main(a,b,right,left,mode)
     
         Ln=0;
         for t=1:t_end
-            Ln=Ln+omega(t);
+            Ln=Ln+omega(t)*pi/180*r_v*t_step;
             if t<=t_branch_s%スタート～カーブ開始
                 t1=t1+1;
                 the_xf = X(1); the_yf = Y(1); the_zf = Z(1);
@@ -376,8 +379,8 @@ function Main(a,b,right,left,mode)
     %% ロボットによる走行
         t1=0;t2=0;t3=0;t4=0;t5=0;flag = 0;Lnf=0;
         List_bestidx=[];
-    for t = 300:max_time%最低限進んだところを初期値にしたい
-        Lnf=Lnf+omega(t);
+    for t = t_start:max_time%最低限進んだところを初期値にしたい
+        Lnf=Lnf+omega(t)*pi/180*r_v*t_step;;
         P_f=List_P(:,t);
         C_f=List_C(:,t);
         best_idx=0;
@@ -393,6 +396,7 @@ function Main(a,b,right,left,mode)
         List_bestidx=[List_bestidx best_idx];
         P_r=List_P(:,best_idx);
         C_r=List_C(:,best_idx);
+        Lnr=List_Ln(:,best_idx);
 
         if switching==14
             %% switching==14
@@ -406,7 +410,11 @@ function Main(a,b,right,left,mode)
                 the_zr=List_the_z(:,best_idx);
     
                 omega_f=omega(t);
-                omega_r=omega(t);%本当はかえなきゃだめ
+                if t>t_start
+                    omega_r=(Lnr-data2(t-1,8))/(r_v*t_step)*180/pi;
+                else
+                    omega_r=0;
+                end
             
         elseif switching==13
             %% switching==13
@@ -684,7 +692,7 @@ function Main(a,b,right,left,mode)
              data_r(t,:) = [t*t_step the_1r the_2r the_3r];
              data_f(t,:) = [t*t_step the_1f the_2f the_3f];
              data(t,:) = [the_1f the_2f the_3f the_1r the_2r the_3r omega_f omega_r t*t_step];
-             data2(t,:) = [the_xr,the_yr,the_zr,the_xf,the_yf,the_zf t*t_step];
+             data2(t,:) = [the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,Lnf,Lnr,0,t*t_step];
 
         %% 描画
             if animation == 1
@@ -1002,6 +1010,39 @@ function Main(a,b,right,left,mode)
            ylabel('角度[deg]')
     end
 
+    %% グラフ描画（位置）
+    if true
+            T = t-1;
+           %書き出しデータの描画
+           figure(3)
+           plot(data_r(1:T,1),data2(1:T,7),'LineWidth',2)%角速度
+           hold on
+           plot(data_r(1:T,1),data2(1:T,8),'LineWidth',2)%角速度
+
+           legend('Lnf','Lnr','Location','NorthEast')
+           xlim([0 max_time*t_step]) 
+           ylim([-100 Lnf]) 
+           yticks(-100:100:Lnf)
+           xlabel('時間，ステップ')
+           ylabel('位置[mm]')
+    end
+
+    %% グラフ描画（角速度）
+    if true
+            T = t-1;
+           %書き出しデータの描画
+           figure(4)
+           plot(data_r(1:T,1),data(1:T,7),'LineWidth',2)%角速度
+           hold on
+           plot(data_r(1:T,1),data(1:T,8),'LineWidth',2)%角速度
+
+           legend('ωf','ωr','Location','NorthEast')
+           xlim([0 max_time*t_step]) 
+           ylim([-1000 1000]) 
+           yticks(-1000:100:1000)
+           xlabel('時間，ステップ')
+           ylabel('角速度[deg/s]')
+    end
 
     %% グラフ描画（軸）
     if false
@@ -1494,6 +1535,6 @@ end
 
 %% ロボットのパラメータ系の関数
 function omega=omega(t)
-    omega=1;
+    omega=212;%deg/s
 end
 
