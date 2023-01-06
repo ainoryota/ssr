@@ -1,7 +1,6 @@
 %% 変数定義
 global save           %データの保存,CSV書き出しon,off
 global animation       %アニメーションon,off
-global workspace 
 global robot_plot
 global switching 
 global max_time
@@ -18,7 +17,6 @@ t_step = 1.6/33; %キリのいい数字にするため(制御周期より少しはやめ)
 %% 初期設定
 save = 0;           %データの保存,CSV書き出しon,off
 animation = 1;      %アニメーションon,off
-workspace = 0;
 robot_plot = 1;
 testmode=3;
 
@@ -90,7 +88,6 @@ function Main(a,b,right,left,mode)
     %% 変数定義
     global save           %データの保存,CSV書き出しon,off
     global animation       %アニメーションon,off
-    global workspace 
     global robot_plot
     global switching 
     global gamma1
@@ -108,7 +105,6 @@ function Main(a,b,right,left,mode)
     phi_n = b*pi/180;      %ケーブル平面の回転角
     the_nR = right*pi/180;     %右旋回角
     the_nL = left*pi/180;    %左旋回角
-    Lnf=0;
 
     %% 定数
     %機構定数など
@@ -162,7 +158,7 @@ function Main(a,b,right,left,mode)
         data_r = zeros(max_time,4);
         data_f = zeros(max_time,4);
         data = zeros(max_time,9);
-        data2 = zeros(max_time,10); 
+        debug_data = zeros(max_time,10); 
 
         %諸々の初期化
         t1 = 0; t2 = 0; t3 = 0;t4 = 0;t5 = 0;
@@ -356,7 +352,6 @@ function Main(a,b,right,left,mode)
             elseif norm(Q1-Sigma_cable)<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc
                 t_arc=(Ln-norm(Q1-Sigma_cable))/(R_rute);
                 P=O_R_-y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc);
-                disp([t_arc Ln L_arc-(Ln-norm(Q1-Sigma_cable))])
             elseif norm(Q1-Sigma_cable)+L_arc<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2)
                 P=Q2+(Ln-L_arc-norm(Q1-Sigma_cable))*e2;
             else
@@ -377,10 +372,9 @@ function Main(a,b,right,left,mode)
         end
     
     %% ロボットによる走行
-        t1=0;t2=0;t3=0;t4=0;t5=0;flag = 0;Lnf=0;
-        List_bestidx=[];
+        Lnf=0;
     for t = t_start:max_time%最低限進んだところを初期値にしたい
-        Lnf=Lnf+omega(t)*pi/180*r_v*t_step;;
+        Lnf=Lnf+omega(t)*pi/180*r_v*t_step;
         P_f=List_P(:,t);
         C_f=List_C(:,t);
         best_idx=0;
@@ -392,8 +386,6 @@ function Main(a,b,right,left,mode)
                 best_idx=i;
             end
         end
-        disp([t best_idx best_diff])
-        List_bestidx=[List_bestidx best_idx];
         P_r=List_P(:,best_idx);
         C_r=List_C(:,best_idx);
         Lnr=List_Ln(:,best_idx);
@@ -404,271 +396,10 @@ function Main(a,b,right,left,mode)
                 the_xf=List_the_x(:,t);
                 the_yf=List_the_y(:,t);
                 the_zf=List_the_z(:,t);
-                
                 the_xr=List_the_x(:,best_idx);
                 the_yr=List_the_y(:,best_idx);
                 the_zr=List_the_z(:,best_idx);
-    
                 omega_f=omega(t);
-                if t>t_start
-                    omega_r=(Lnr-data2(t-1,8))/(r_v*t_step)*180/pi;
-                else
-                    omega_r=0;
-                end
-            
-        elseif switching==13
-            %% switching==13
-                disp("no stop")
-                 if flag == 0    %前輪の分岐開始
-                    t1 = t1+1;
-                    %メインケーブルに対して，どのケーブルに乗っているのかの情報
-    
-                    phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
-                    phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
-    
-                    the_xr = the_x_init; the_yr = 0/180*pi; the_zr = 0/180*pi;
-                    the_xf = X(t1); the_yf = Y(t1); the_zf = Z(t1);
-    
-                    Ln2 = -L_gap + omega_c*((t1*t_step)^4/(2*t_bra^3) -(t1*t_step)^3/(t_bra^2)+(t1*t_step))*pi/180*r_v;
-                    [Ln1,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal1(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln2,Lc,Rw,rw,d,mode);
-    
-                    omega_r = omega_c*(2*(t1*t_step)^3/(t_bra^3) -3*(t1*t_step)^2/(t_bra^2)+1);
-                    omega_f = omega_r;
-    
-                    P_f=Plane2World(World2Plane(O_n)+[Ln2;0;0]);
-                    C_f=OfCf+P_f;
-                    P_r=Plane2World(World2Plane(O_n)+[-Ln1;0;0]);
-                    C_r=OrCr+P_r;
-    
-                    if t1 == n_bra
-                        flag = 1;
-                        L_def = Ln1;
-                        t_const = (L_def-2*L_gap)/vel;    %定速走行時間[s]
-                        n_const = t_const/t_step;               %定速走行カウント
-                    end
-    
-                elseif flag == 1
-                    %前輪の分岐終了～加速
-                    t2 = t2+1;
-                    %メインケーブルに対して，どのケーブルに乗っているのかの情報，
-                    phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
-                    phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
-    
-                    the_xr = the_x_init; the_yr = 0/180*pi; the_zr = 0/180*pi;
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
-    
-                    Ln1 = L_def - omega_c*(-(t2*t_step)^4/(2*t_bra^3) +(t2*t_step)^3/(t_bra^2))*pi/180*r_v;
-    
-                    [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal2(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
-    
-                    omega_r = omega_c*(-2*(t2*t_step)^3/(t_bra^3) +3*(t2*t_step)^2/(t_bra^2));
-                    omega_f = omega_r;
-    
-    
-                    P_f=Plane2World(World2Plane(O_n)+Ln2*[cos(the_n);sin(the_n);0]);
-                    C_f=OfCf+P_f;
-                    P_r=Plane2World(World2Plane(O_n)+[-Ln1;0;0]);
-                    C_r=OrCr+P_r;
-    
-    
-                    if t2 == n_bra
-                        flag = 2;
-                        L_def = Ln1;
-                    end
-                elseif flag == 2
-                    %定速区間
-                    t3 = t3+1;
-                    %メインケーブルに対して，どのケーブルに乗っているのかの情報，
-                    phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
-                    phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
-    
-                    the_xr = the_x_init; the_yr = 0/180*pi; the_zr = 0/180*pi;
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
-    
-                    Ln1 = L_def - omega_c*pi/180*r_v*t3*t_step;
-                    [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal2(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
-    
-                    omega_r = omega_c;
-                    omega_f = omega_r;
-    
-                    P_f=Plane2World(World2Plane(O_n)+Ln2*[cos(the_n);sin(the_n);0]);
-                    C_f=OfCf+P_f;
-                    P_r=Plane2World(World2Plane(O_n)+[-Ln1;0;0]);
-                    C_r=OrCr+P_r;
-    
-                    if t3 >= n_const-1
-                        flag = 3;
-                        L_def = Ln1;
-                    end
-    
-                elseif flag == 3
-                    %減速区間（後輪分岐開始）
-                    t4 = t4+1;
-                    %メインケーブルに対して，どのケーブルに乗っているのかの情報，
-                    phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
-                    phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
-    
-                    the_xr = X(t4); the_yr = Y(t4); the_zr = Z(t4);
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
-    
-                    Ln1 = L_gap - omega_c*((t4*t_step)^4/(2*t_bra^3) -(t4*t_step)^3/(t_bra^2)+(t4*t_step))*pi/180*r_v;
-                    [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal2(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
-    
-                    omega_r = omega_c*(2*(t4*t_step)^3/(t_bra^3) -3*(t4*t_step)^2/(t_bra^2)+1);
-                    omega_f = omega_r;
-    
-                    P_f=Plane2World(World2Plane(O_n)+Ln2*[cos(the_n);sin(the_n);0]);
-                    C_f=OfCf+P_f;
-                    P_r=Plane2World(World2Plane(O_n)+[-Ln1;0;0]);
-                    C_r=OrCr+P_r;
-    
-                    if t4 == n_bra
-                        flag = 4;
-                    end
-    
-                elseif flag == 4
-                    %分岐後(加速区間)
-                    t5 = t5+1;
-    
-                    %メインケーブルに対して，どのケーブルに乗っているのかの情報，
-                    phi_nr1 = -phi_n; the_nr = the_n ;phi_nr2 = E2(3); 
-                    phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
-    
-    
-                    the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = Z(n_bra);
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
-    
-                    Ln1 = - omega_c*(-(t5*t_step)^4/(2*t_bra^3) +(t5*t_step)^3/(t_bra^2))*pi/180*r_v;
-                    [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal2(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
-    
-                    omega_r = omega_c*(-2*(t5*t_step)^3/(t_bra^3) +3*(t5*t_step)^2/(t_bra^2));
-                    omega_f = omega_r;
-    
-    
-                    P_f=Plane2World(World2Plane(O_n)+Ln2*[cos(the_n);sin(the_n);0]);
-                    C_f=OfCf+P_f;
-                    P_r=Plane2World(World2Plane(O_n)-Ln1*[cos(the_n);sin(the_n);0]);
-                    %P_r=Plane2World(World2Plane(O_n)+[-Ln1;0;0]);
-                    C_r=OrCr+P_r;
-    
-                    T = t-1;
-                    data(T+1:500,:)=[];
-                    %データの書き出し 
-                    text = "C:\Users\MSD\Documents\GitHub\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
-                    if save ==1
-                        writematrix(data,text+'.csv')
-                    end
-                   break
-                end
-
-        elseif switching ==11
-            %% switching==11
-                if flag == 0    %前輪の分岐開始
-                    t1 = t1+1;
-                    %メインケーブルに対して，どのケーブルに乗っているのかの情報，
-                    phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
-                    phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
-    
-                    the_xr = the_x_init; the_yr = 0/180*pi; the_zr = 0/180*pi;
-                    the_xf = X(t1); the_yf = Y(t1); the_zf = Z(t1);
-    
-                    Ln2 = -L_gap + omega_c*((t1*t_step)^4/(2*t_bra^3) -(t1*t_step)^3/(t_bra^2)+(t1*t_step))*pi/180*r_v;
-                    [Ln1,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal1(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln2,Lc,Rw,rw,d,mode);
-    
-                    omega_r = omega_c*(2*(t1*t_step)^3/(t_bra^3) -3*(t1*t_step)^2/(t_bra^2)+1);
-                    omega_f = omega_r;
-    
-                    if t1 == n_bra
-                        flag = 1;
-                        L_def = Ln1;
-                        t_const = (L_def-2*L_gap)/vel;    %定速走行時間[s]
-                        n_const = t_const/t_step;               %定速走行カウント
-                    end
-    
-                elseif flag == 1
-                    %前輪の分岐終了～加速
-                    t2 = t2+1;
-                    %メインケーブルに対して，どのケーブルに乗っているのかの情報，
-                    phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
-                    phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
-    
-                    the_xr = the_x_init; the_yr = 0/180*pi; the_zr = 0/180*pi;
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
-    
-                    Ln1 = L_def - omega_c*(-(t2*t_step)^4/(2*t_bra^3) +(t2*t_step)^3/(t_bra^2))*pi/180*r_v;
-    
-                    [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal2(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
-    
-                    omega_r = omega_c*(-2*(t2*t_step)^3/(t_bra^3) +3*(t2*t_step)^2/(t_bra^2));
-                    omega_f = omega_r;
-    
-                    if t2 == n_bra
-                        flag = 2;
-                        L_def = Ln1;
-                    end
-                elseif flag == 2
-                    %定速区間
-                    t3 = t3+1;
-                    %メインケーブルに対して，どのケーブルに乗っているのかの情報，
-                    phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
-                    phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
-    
-                    the_xr = the_x_init; the_yr = 0/180*pi; the_zr = 0/180*pi;
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
-    
-                    Ln1 = L_def - omega_c*pi/180*r_v*t3*t_step;
-                    [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal2(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
-    
-                    omega_r = omega_c;
-                    omega_f = omega_r;
-    
-                    if t3 >= n_const-1
-                        flag = 3;
-                        L_def = Ln1;
-                    end
-    
-                elseif flag == 3
-                    %減速区間（後輪分岐開始）
-                    t4 = t4+1;
-                    %メインケーブルに対して，どのケーブルに乗っているのかの情報，
-                    phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
-                    phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
-    
-                    the_xr = X(t4); the_yr = Y(t4); the_zr = Z(t4);
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
-    
-                    Ln1 = L_gap - omega_c*((t4*t_step)^4/(2*t_bra^3) -(t4*t_step)^3/(t_bra^2)+(t4*t_step))*pi/180*r_v;
-                    [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal2(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
-    
-                    omega_r = omega_c*(2*(t4*t_step)^3/(t_bra^3) -3*(t4*t_step)^2/(t_bra^2)+1);
-                    omega_f = omega_r;
-    
-                    if t4 == n_bra
-                        flag = 4;
-                    end
-    
-                elseif flag == 4
-                    %分岐後(加速区間)
-                    t5 = t5+1;
-    
-                    %メインケーブルに対して，どのケーブルに乗っているのかの情報，
-                    phi_nr1 = -phi_n; the_nr = the_n ;phi_nr2 = E2(3); 
-                    phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
-    
-    
-                    the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = Z(n_bra);
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
-    
-                    Ln1 = - omega_c*(-(t5*t_step)^4/(2*t_bra^3) +(t5*t_step)^3/(t_bra^2))*pi/180*r_v;
-                    [Ln2,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] = node_cal2(the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,phi_nr1,the_nr,phi_nf1,the_nf,Ln1,Lc,Rw,rw,d,mode);
-    
-                    omega_r = omega_c*(-2*(t5*t_step)^3/(t_bra^3) +3*(t5*t_step)^2/(t_bra^2));
-                    omega_f = omega_r;
-    
-                    if t5 == n_bra
-                        flag = 5;
-                    end
-                end 
         end
         
         %% 各関節角度の収束計算
@@ -691,8 +422,8 @@ function Main(a,b,right,left,mode)
         %% 関節角度データの保存
              data_r(t,:) = [t*t_step the_1r the_2r the_3r];
              data_f(t,:) = [t*t_step the_1f the_2f the_3f];
-             data(t,:) = [the_1f the_2f the_3f the_1r the_2r the_3r omega_f omega_r t*t_step];
-             data2(t,:) = [the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,Lnf,Lnr,0,t*t_step];
+             data(t,:) = [the_1f the_2f the_3f the_1r the_2r the_3r omega_f -1 t*t_step];%-1のところにはあとからomega_rが入る
+             debug_data(t,:) = [the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,Lnf,Lnr,-1,t*t_step];%-1のところには後から真のLnrが入る
 
         %% 描画
             if animation == 1
@@ -724,20 +455,7 @@ function Main(a,b,right,left,mode)
                     m6_bottom = [Xm(2,:);Ym(2,:);Zm(2,:)+l6];
     
                     %モータの座標だし
-    
-                    %OrCf =C_f-P_r;
-                    Ln1=Lnf-norm(Q1-Sigma_cable)-L_arc;
-                    %[L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]→Pr_Place
-
-                    phi_nr1 = -phi_n; the_nr = the_n ;phi_nr2 = E2(3); 
-                    phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
-                    
-                    Pr_Place=[L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0];
-                    
-                    disp([World2Plane(P_r) R("y",-gamma1)*(P_r) Pr_Place])
-
                     Pr_Place=R("y",-gamma1)*(P_r);
-
                     m1_coord = R("y",gamma1)*(Pr_Place+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*horzcat(m1_top,m1_bottom));
                     m2_coord = R("y",gamma1)*(Pr_Place+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*horzcat(m2_top,m2_bottom));
                     m3_coord = R("y",gamma1)*(Pr_Place+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*horzcat(m3_top,m3_bottom));
@@ -762,13 +480,7 @@ function Main(a,b,right,left,mode)
                     w2r_coord = R("y",gamma1)*(Pr_Place+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W2);
                     w1f_coord = R("y",gamma1)*(Pr_Place+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W2);
                     w2f_coord = R("y",gamma1)*(Pr_Place+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W1);
-                    
-                    %w1r_coord = R("y",gamma1)*(Pr_Place+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W1);
-                    %w2r_coord = R("y",gamma1)*(Pr_Place+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W2);
-                    %w1f_coord = R("y",gamma1)*(Pr_Place+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W2);
-                    %w2f_coord = R("y",gamma1)*(Pr_Place+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W1);
-    
-    
+
                     w1r_middle_bottom = (sum(w1r_coord(:,11*21-20:11*21),2)-w1r_coord(:,231))/20;
                     w2r_middle_bottom = (sum(w2r_coord(:,11*21-20:11*21),2)-w2r_coord(:,231))/20;
                     w1f_middle_bottom = (sum(w2f_coord(:,11*21-20:11*21),2)-w2f_coord(:,231))/20;
@@ -826,9 +538,6 @@ function Main(a,b,right,left,mode)
                     line(c6w2(1,:)',c6w2(2,:)',c6w2(3,:)','LineWidth',1,'Color','k')
                 end
                      %ケーブルの描画
-                    
-    
-    
                     [Xc,Yc,Zc] = cylinder(3);
                     Zc = (Zc - 0.5).*2*L1;                        %円柱の高さ補正
     
@@ -848,8 +557,6 @@ function Main(a,b,right,left,mode)
                     c_bottom2  = [Xc2(2,:);Yc2(2,:);Zc2(2,:)];
     
                     %ここは描画だけなので適当にしてある
-    
-                    
                     c_top2h =    R("y",gamma1)*([L1;0;0]+R("x",-phi_n)*R("z",the_nR)*R("y",pi/2)*c_top2);
                     c_bottom2h = R("y",gamma1)*([L1;0;0]+R("x",-phi_n)*R("z",the_nR)*R("y",pi/2)*c_bottom2);
                     c_top2s =    R("y",gamma1)*([L1;0;0]+R("x",-phi_n)*R("z",-the_nL)*R("y",pi/2)*c_top2);
@@ -859,12 +566,9 @@ function Main(a,b,right,left,mode)
                     cable_plot(c_top2s,c_bottom2s)
     
                     %曲線状のケーブルをプロットする
-                    %curve_cable_plot(O_R,e2_,-e2,R_rute,the_arc)
                     curve_cable_plot(O_R_,e2_,-e2,R_rute,the_arc)
     
-                    %必要な点をプロットする
-    
-                    
+                    %必要な点をプロットする                    
                     if false
                         plotP(Sigma_cable_,"Σcable");
                         plotP(Sigma_cable_,"Σcable'");
@@ -879,130 +583,54 @@ function Main(a,b,right,left,mode)
                         plotP(P_e_,"Pe'");
                     end
     
-                    
-                    
-                    
                     plotP(P_f,"P_f",100,20);
                     plotP(C_f,"C_f",100,20);
     
                     plotP(P_r,"P_r",100,20);
                     plotP(C_r,"C_r",100,20);
     
-    
-                    %line([400;-400],[0;0],[0;0],'Color','k','LineWidth',6) 
-                %     line([0;cable1(1)],[0;cable1(2)],[0;cable1(3)],'LineWidth',1)
-                %     line([0;cable2(1)],[0;cable2(2)],[0;cable2(3)],'LineWidth',1)
                     xlabel('x[mm]')
                     ylabel('y[mm]')
                     zlabel('z[mm]')
-    
-        %% いらない部分          
-            %
-                    %座標のトレースと接触判定
-                    %モータの中心座標
-        %            Pr2 = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCr + R("y",the_yr)*R("x",the_xr)*R("z",the_zr)*R("z",-the_3r-pi/2)*R("x",a2)*[0;0;l2]));
-        %            Pf2 = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCf + R("y",the_yr)*R("x",the_xr)*R("z",the_zr)*R("z",-the_3r-pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi)*R("y",2*a3)*R("z",the_1f)*R("x",a1)*[0;0;l2]));
-    
-        %             [data_collide_r(t,1),data_collide_r(t,2)] = collide(gamma1,phi_n,the_nR,Pr2(1),Pr2(2),Pr2(3),rj,L1);
-        %             [data_collide_f(t,1),data_collide_f(t,2)] = collide(gamma1,phi_n,the_nR,Pf2(1),Pf2(2),Pf2(3),rj,L1);
-        % 
-        %             if (data_collide_r(t,1)+data_collide_r(t,2)+data_collide_f(t,1)+data_collide_f(t,2)) ~= 0
-        %                 flag_fin =1;     %接触を検知したらフラグを立てる
-        %                 Data_sim(p,15) = 1;
-        % 
-        %             end
-        %
-    
-    
-    
-        %             [Xs,Ys,Zs] = sphere;                  
-        %             Xs = Xs*rj; Ys = Ys*rj; Zs = Zs*rj;  
-        % %             surf(Xs+Pr2(1),Ys+Pr2(2),Zs+Pr2(3),'FaceColor','r','EdgeColor','none', 'FaceAlpha','0.5')
-        % %              surf(Xs+Pf2(1),Ys+Pf2(2),Zs+Pf2(3),'FaceColor','r','EdgeColor','none', 'FaceAlpha','0.5')
-        %        
-        %             if data_collide_r(t,1) == 1 || data_collide_r(t,2) == 1 
-        %                 surf(Xs+Pr2(1),Ys+Pr2(2),Zs+Pr2(3),'FaceColor','b','EdgeColor','none', 'FaceAlpha','0.5')
-        %             end    
-        %             if data_collide_f(t,1) == 1 || data_collide_f(t,2) == 1 
-        %                 surf(Xs+Pf2(1),Ys+Pf2(2),Zs+Pf2(3),'FaceColor','b','EdgeColor','none', 'FaceAlpha','0.5')
-        %             end
-    
-        %%            %可操作楕円の描画
-        %             [e_r,M_ellipsoid_r] = manipulability_ellipsoid(a1,a2,the_2r,the_3r,phi_r,the_r,psi_r,phi_nr1,the_nr,phi_nr2,gamma1,L1,Ln1,OrCr,phi_nr1,the_nr,phi_nr2);
-        %             [e_f,M_ellipsoid_f] = manipulability_ellipsoid(a1,a2,the_2f,the_3f,phi_f,the_f,psi_f,phi_nr1,the_nr,phi_nr2,gamma1,L1,Ln1,OrCf,phi_nf1,the_nf,phi_nf2);
-    
-                    %ガンマが値を持つときはｚ軸周りにpi回すだけじゃだめっぽい
-         %           M_R_ellipsoid_r = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCr)) + R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*R("x",phi_r)*R("z",the_r)*R("y",psi_r)*R("z",pi)*R("x",-pi/2)*e_r*M_ellipsoid_r;
-         %           M_R_ellipsoid_f = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCf)) + R("x",phi_nf1)*R("z",the_nf)*R("x",phi_nf2)*R("x",phi_f)*R("z",the_f)*R("y",psi_f)*R("x",-pi/2)*e_f*M_ellipsoid_f;
-    
-                    %ガンマが値を持つときはｚ軸周りにpi回すだけじゃだめっぽい
-        %             M_R_ellipsoid_r = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCr)) + R("y",gamma1)*R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*R("y",the_yr)*R("x",the_xr)*R("z",the_zr)*e_r*M_ellipsoid_r;
-        %             M_R_ellipsoid_f = R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCf)) + R("y",gamma1)*R("x",phi_nf1)*R("z",the_nf)*R("x",phi_nf2)*R("x",phi_f)*R("z",the_f)*R("y",psi_f)*R("x",-pi/2)*e_f*M_ellipsoid_f;
-    
-        %              xr = reshape(M_R_ellipsoid_r(1,:),21,21);
-        %              yr = reshape(M_R_ellipsoid_r(2,:),21,21);
-        %              zr = reshape(M_R_ellipsoid_r(3,:),21,21);
-        %              xf = reshape(M_R_ellipsoid_f(1,:),21,21);
-        %              yf = reshape(M_R_ellipsoid_f(2,:),21,21);
-        %              zf = reshape(M_R_ellipsoid_f(3,:),21,21);
-    
-    
-                     % surf(xr, yr, zr,'FaceColor','b', 'FaceAlpha','0.3')
-                     % surf(xf, yf, zf,'FaceColor','b', 'FaceAlpha','0.3')
-        %%           ワークスペースの可視化
-    
-                if workspace == 1
-                    [n_line,M_w_sphere] =  Work_space_sphere(a1,a2,l2);
-                    %M_w_sphere_r =R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCr)) + R("y",gamma1)*R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*R("y",the_yr)*R("x",the_xr)*R("z",the_zr)*R("z",-the_3r)*R("x",-a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("x",pi)*M_w_sphere;
-                    %M_w_sphere_f =R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCf)) + R("y",gamma1)*R("x",phi_nf1)*R("z",the_nf)*R("x",phi_nf2)*R("y",the_yr)*R("x",the_xr)*R("z",the_zr)*R("z",-the_3r)*R("x",-a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("y",2*a3)*R("z",the_1f)*R("x",pi)*M_w_sphere;
-    
-                    M_w_sphere_r =  R("y",gamma1)*(Pr_Place+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("x",pi)*M_w_sphere);
-                    M_w_sphere_f =  R("y",gamma1)*(Pr_Place+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("x",pi)*M_w_sphere);
-    
-    
-    
-                    Xr = reshape(M_w_sphere_r(1,:),n_line,61);
-                    Yr = reshape(M_w_sphere_r(2,:),n_line,61);
-                    Zr = reshape(M_w_sphere_r(3,:),n_line,61);
-                    Xf = reshape(M_w_sphere_f(1,:),n_line,61);
-                    Yf = reshape(M_w_sphere_f(2,:),n_line,61);
-                    Zf = reshape(M_w_sphere_f(3,:),n_line,61);
-                    surf(Xr, Yr, Zr,'FaceColor','b','FaceAlpha','0.5','LineStyle',':')
-                    surf(Xf, Yf, Zf,'FaceColor','b','FaceAlpha','0.5','LineStyle',':')
-                end   
-        %              %確認用のプロット
-        %              xp = [Pr2(1);Pf2(1)];
-        %              yp = [Pr2(2);Pf2(2)];
-        %              zp = [Pr2(3);Pf2(3)];
-        %              plot3(xp,yp,zp)
-    
-    
-    
                     pause(0.0001)
-    %                  if t == 1
-    %                      w = waitforbuttonpress;
-    %                      w = waitforbuttonpress;
-    %                      w = waitforbuttonpress;
-    %                      w = waitforbuttonpress;
-    %                      w = waitforbuttonpress;
-    %                  end
             end
-            % w = waitforbuttonpress;
     end
+
+    %% 後輪の角速度を計算
+    chect_num=10;
+        for t = t_start+1:t_end
+            if t<t_start+chect_num+1
+                data(t,8)=(debug_data(t+chect_num,8)-debug_data(t,8))/(chect_num*r_v*t_step)*180/pi;
+            elseif t>t_end-chect_num
+                data(t,8)=(debug_data(t,8)-debug_data(t-chect_num,8))/(chect_num*r_v*t_step)*180/pi;
+            else
+                data(t,8)=(debug_data(t+chect_num,8)-debug_data(t-chect_num,8))/(2*chect_num*r_v*t_step)*180/pi;
+            end
+        end
+        for t = 2:t_end
+            debug_data(t,9)=debug_data(t-1,9)+data(t,8)*r_v*t_step*pi/180;%Lnr_real=前回のLnr_real+今回進んだ量
+        end
         
+    %% 結果の出力
+        T = t-1;
+        data(T+1:max_time,:)=[];
+        %データの書き出し 
+        text = "C:\Users\MSD\Documents\GitHub\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
+        if save ==1
+            writematrix(data,text+'.csv')
+        end
+
     %% グラフ描画（姿勢）
     if true
-            T = t-1;
            %書き出しデータの描画
            figure(2)
-           plot(data_r(1:T,1),data2(1:T,1)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),debug_data(1:T,1)*180/pi,'LineWidth',2)
            hold on
-           plot(data_r(1:T,1),data2(1:T,2)*180/pi,'LineWidth',2)
-           plot(data_r(1:T,1),data2(1:T,3)*180/pi,'LineWidth',2)
-           plot(data_r(1:T,1),data2(1:T,4)*180/pi,'LineWidth',2)
-           plot(data_r(1:T,1),data2(1:T,5)*180/pi,'LineWidth',2)
-           plot(data_r(1:T,1),data2(1:T,6)*180/pi,'LineWidth',2)
-
+           plot(data_r(1:T,1),debug_data(1:T,2)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),debug_data(1:T,3)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),debug_data(1:T,4)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),debug_data(1:T,5)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),debug_data(1:T,6)*180/pi,'LineWidth',2)
            legend('θxr','θyr','θzr','θxf','θyf','θzf','Location','NorthEast')
            ylim([-180 180]) 
            yticks(-180:30:180)
@@ -1012,14 +640,13 @@ function Main(a,b,right,left,mode)
 
     %% グラフ描画（位置）
     if true
-            T = t-1;
            %書き出しデータの描画
            figure(3)
-           plot(data_r(1:T,1),data2(1:T,7),'LineWidth',2)%角速度
+           plot(data_r(1:T,1),debug_data(1:T,7),'LineWidth',2)%Lnf
            hold on
-           plot(data_r(1:T,1),data2(1:T,8),'LineWidth',2)%角速度
-
-           legend('Lnf','Lnr','Location','NorthEast')
+           plot(data_r(1:T,1),debug_data(1:T,8),'LineWidth',2)%Lnr
+           plot(data_r(1:T,1),debug_data(1:T,9),'LineWidth',2)%Lnr_real
+           legend('Lnf','Lnr','Lnr_real','Location','NorthEast')
            xlim([0 max_time*t_step]) 
            ylim([-100 Lnf]) 
            yticks(-100:100:Lnf)
@@ -1029,13 +656,11 @@ function Main(a,b,right,left,mode)
 
     %% グラフ描画（角速度）
     if true
-            T = t-1;
            %書き出しデータの描画
            figure(4)
            plot(data_r(1:T,1),data(1:T,7),'LineWidth',2)%角速度
            hold on
            plot(data_r(1:T,1),data(1:T,8),'LineWidth',2)%角速度
-
            legend('ωf','ωr','Location','NorthEast')
            xlim([0 max_time*t_step]) 
            ylim([-1000 1000]) 
@@ -1046,25 +671,8 @@ function Main(a,b,right,left,mode)
 
     %% グラフ描画（軸）
     if false
-            T = t-1;
-            data(T+1:500,:)=[];
-            %データの書き出し 
-            text = "C:\Users\MSD\Documents\GitHub\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
-            if save ==1
-                writematrix(data,text+'.csv')
-            end
            %書き出しデータの描画
            figure(2)
-           %ダミーデータの作成
-%                x0 = [1 1];
-%                x1 = [n_count01 n_count01];
-%                x2 = [t1 t1];                            
-%                x3 = [t1+t2 t1+t2];
-%                x4 = [t1+t2+n_count01 t1+t2+n_count01];                            
-%                x5 = [t1+t2+t3 t1+t2+t3];
-%                y = [-180 350];
-
-
            plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
            hold on
            plot(data_r(1:T,1),data(1:T,2)*180/pi,'LineWidth',2)
@@ -1072,12 +680,6 @@ function Main(a,b,right,left,mode)
            plot(data_r(1:T,1),data(1:T,4)*180/pi,'LineWidth',2)
            plot(data_r(1:T,1),data(1:T,5)*180/pi,'LineWidth',2)
            plot(data_r(1:T,1),data(1:T,6)*180/pi,'LineWidth',2)
-%                plot(x1,y,'--k','LineWidth',0.5)
-%                plot(x2,y,'--k','LineWidth',0.5)
-%                plot(x3,y,'--k','LineWidth',0.5)
-%                plot(x4,y,'--k','LineWidth',0.5)
-%                plot(x0,y,'--k','LineWidth',0.5)
-%                plot(x5,y,'--k','LineWidth',0.5)
 
            legend('1軸目(前)','2軸目(前)','3軸目(前)','1軸目(後)','2軸目(後)','3軸目(後)','Location','NorthEast')
            ylim([-180 180]) 
@@ -1089,19 +691,10 @@ function Main(a,b,right,left,mode)
            plot(data_r(1:T,1),data(1:T,7),'LineWidth',2)
            hold on
            plot(data_r(1:T,1),data(1:T,8),'LineWidth',2)
-%                plot(x1,y,'--k','LineWidth',0.5)
-%                plot(x2,y,'--k','LineWidth',0.5)
-%                plot(x3,y,'--k','LineWidth',0.5)
-%                plot(x4,y,'--k','LineWidth',0.5)*
-%                plot(x0,y,'--k','LineWidth',0.5)
-%                plot(x5,y,'--k','LineWidth',0.5)
            ylim([0 350])
            xlabel('時間，ステップ')
            ylabel('角速度[deg/s]')
     end
-
-
-    List_bestidx;
 end
 
 %% 回転行列の計算
