@@ -3,20 +3,17 @@ global save           %データの保存,CSV書き出しon,off
 global animation       %アニメーションon,off
 global robot_plot
 global switching 
-global max_time
 global time_step
 global t_step
 
 idx=0;
 count=0;
 start_count=0;
-
 t_step = 1.6/33; %キリのいい数字にするため(制御周期より少しはやめ)
 
-
 %% 初期設定
-save = 0;           %データの保存,CSV書き出しon,off
-animation = 1;      %アニメーションon,off
+save = 1;           %データの保存,CSV書き出しon,off
+animation = 0;      %アニメーションon,off
 robot_plot = 1;
 testmode=3;
 
@@ -38,14 +35,15 @@ time_step=10;
 %% プログラム開始
 if animation==1
     figure(1)
-    Main(15,-30,50,70,1)
+    Main(-10,15,20,60,1,max_time)
     return
 end
 
+tic
 for loop=1:2
     for mode=1:2
-        for a=-10:5:30
-            for b=-20:5:20
+        for a=-30:5:90
+            for b=-30:5:30
                 for left=0:5:90
                     for right=0:5:90
                         if loop==1
@@ -58,17 +56,23 @@ for loop=1:2
                             continue
                         end
                         
-                        name= "C:\Users\MSD\Documents\GitHub\Data\"+a+ "_" + b+ "_" + right+ "_" + left+"_"+mode+".csv";
+                        if exist("O:\マイドライブ\Research\非停止分岐動作\分岐データ\")>0
+                            text = "O:\マイドライブ\Research\非停止分岐動作\分岐データ\";
+                        else
+                            text = "C:\Users\MSD\Documents\GitHub\Data\";
+                        end
+
+                        name= text+a+ "_" + b+ "_" + right+ "_" + left+"_"+mode+".csv";
                         if(exist(name, 'file')~=0)
                             continue
                         end
             
-                        disp(["clac",count,"/",idx,"time:",(idx-count)/10/60+"[min]",":",a,b,right,left,mode]);
+                        disp(["clac",count,"/",idx,"elapsed time:",toc,"remind time:", toc/(count-start_count)*(idx-count)/60+"[min]",":",a,b,right,left,mode]);
                         if left+right>100 || left+right<80
                             continue
                         end
                         try
-                            Main(a,b,right,left,mode)
+                            Main(a,b,right,left,mode,max_time)
                         catch exception
                             disp(exception)
                         end
@@ -81,7 +85,7 @@ end
 disp("fin")
 
 %% メイン関数
-function Main(a,b,right,left,mode)
+function Main(a,b,right,left,mode,max_time)
     %% 要設定変数
     L_cable=800;
   
@@ -94,7 +98,6 @@ function Main(a,b,right,left,mode)
     global phi_n
     global L1
     global L2
-    global max_time
     global time_step
     global t_step
     
@@ -105,7 +108,6 @@ function Main(a,b,right,left,mode)
     phi_n = b*pi/180;      %ケーブル平面の回転角
     the_nR = right*pi/180;     %右旋回角
     the_nL = left*pi/180;    %左旋回角
-    Lnf=0;
 
     %% 定数
     %機構定数など
@@ -159,7 +161,7 @@ function Main(a,b,right,left,mode)
         data_r = zeros(max_time,4);
         data_f = zeros(max_time,4);
         data = zeros(max_time,9);
-        data2 = zeros(max_time,10); 
+        debug_data = zeros(max_time,10); 
 
         %諸々の初期化
         t1 = 0; t2 = 0; t3 = 0;t4 = 0;t5 = 0;
@@ -194,7 +196,7 @@ function Main(a,b,right,left,mode)
 
         %On_の導出
         fun = @(x)norm((Sigma_cable_+x(1)*e1)-(P_e_+x(2)*e2));
-        [x,fval] = fminunc(fun,[0,0]);%普通に計算してといてもいいけど面倒なので数値計算に投げる
+        [x,fval] = fminunc(fun,[0,0], optimoptions('fminunc','display',"none"));%普通に計算してといてもいいけど面倒なので数値計算に投げる
         t=x(1);
         s=x(2);
         O_n_=Sigma_cable_+t*e1; %P2_+s*e2でもよい
@@ -353,12 +355,12 @@ function Main(a,b,right,left,mode)
             elseif norm(Q1-Sigma_cable)<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc
                 t_arc=(Ln-norm(Q1-Sigma_cable))/(R_rute);
                 P=O_R_-y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc);
-                disp([t_arc Ln L_arc-(Ln-norm(Q1-Sigma_cable))])
             elseif norm(Q1-Sigma_cable)+L_arc<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2)
                 P=Q2+(Ln-L_arc-norm(Q1-Sigma_cable))*e2;
             else
                 P=P_e;
-                disp("Lnf out of Pe");
+                disp("Ln out of Pe",str(t),str(t_end));
+                throw(MException('Error:Lnf out of Pe','%s / %s',str(t),str(t_end)))
             end
             P_f=World2Plane(P);
             C_f=Plane2World(P_f)+ R("x",the_xf)*R("y",the_yf)*[Rw*sin(the_zf);d/2+rw-Rw*cos(the_zf);0];
@@ -374,8 +376,7 @@ function Main(a,b,right,left,mode)
         end
     
     %% ロボットによる走行
-        t1=0;t2=0;t3=0;t4=0;t5=0;flag = 0;Lnf=0;
-        List_bestidx=[];
+        Lnf=0;
     for t = t_start:max_time%最低限進んだところを初期値にしたい
         Lnf=Lnf+omega(t)*pi/180*r_v*t_step;
         P_f=List_P(:,t);
@@ -389,29 +390,19 @@ function Main(a,b,right,left,mode)
                 best_idx=i;
             end
         end
-        disp([t best_idx best_diff])
-        List_bestidx=[List_bestidx best_idx];
         P_r=List_P(:,best_idx);
         C_r=List_C(:,best_idx);
         Lnr=List_Ln(:,best_idx);
 
         if switching==14
             %% switching==14
-                disp("no stop-ver2")    
                 the_xf=List_the_x(:,t);
                 the_yf=List_the_y(:,t);
                 the_zf=List_the_z(:,t);
-                
                 the_xr=List_the_x(:,best_idx);
                 the_yr=List_the_y(:,best_idx);
                 the_zr=List_the_z(:,best_idx);
-    
                 omega_f=omega(t);
-                if t>t_start
-                    omega_r=(Lnr-data2(t-1,8))/(r_v*t_step)*180/pi;
-                else
-                    omega_r=0;
-                end
         end
         
         %% 各関節角度の収束計算
@@ -435,7 +426,7 @@ function Main(a,b,right,left,mode)
              data_r(t,:) = [t*t_step the_1r the_2r the_3r];
              data_f(t,:) = [t*t_step the_1f the_2f the_3f];
              data(t,:) = [the_1f the_2f the_3f the_1r the_2r the_3r omega_f -1 t*t_step];%-1のところにはあとからomega_rが入る
-             data2(t,:) = [the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,Lnf,Lnr,-1,t*t_step];%-1のところには後から真のLnrが入る
+             debug_data(t,:) = [the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,Lnf,Lnr,-1,t*t_step];%-1のところには後から真のLnrが入る
 
         %% 描画
             if animation == 1
@@ -608,27 +599,47 @@ function Main(a,b,right,left,mode)
             end
     end
 
+    %% 後輪の角速度を計算
     chect_num=10;
-    for t = chect_num+1:t_end-chect_num
-        data(t,8)=(data2(t+chect_num,8)-data2(t-chect_num,8))/(2*chect_num*r_v*t_step)*180/pi;
-    end
-    for t = 2:t_end
-        data2(t,9)=data2(t-1,9)+data(t,8)*r_v*t_step*pi/180;%L
-    end
+        for t = t_start:t_end
+            if t<t_start+chect_num+1
+                data(t,8)=(debug_data(t+chect_num,8)-debug_data(t,8))/(chect_num*r_v*t_step)*180/pi;
+            elseif t>t_end-chect_num
+                data(t,8)=(debug_data(t,8)-debug_data(t-chect_num,8))/(chect_num*r_v*t_step)*180/pi;
+            else
+                data(t,8)=(debug_data(t+chect_num,8)-debug_data(t-chect_num,8))/(2*chect_num*r_v*t_step)*180/pi;
+            end
+        end
+        for t = 2:t_end
+            debug_data(t,9)=debug_data(t-1,9)+data(t,8)*r_v*t_step*pi/180;%Lnr_real=前回のLnr_real+今回進んだ量
+        end
         
+    %% 結果の出力
+        
+        data=data(t_start:t,:);
+        debug_data=debug_data(t_start:t,:);
+        T = size(data,1);
+        if save ==1
+        %データの書き出し 
+            if exist("O:\マイドライブ\Research\非停止分岐動作\分岐データ\")>0
+                text = "O:\マイドライブ\Research\非停止分岐動作\分岐データ\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
+            else
+                text = "C:\Users\MSD\Documents\GitHub\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
+            end
+            writematrix(data,text+'.csv')
+        end
+
     %% グラフ描画（姿勢）
-    if true
-            T = t-1;
+    if true && animation==1
            %書き出しデータの描画
            figure(2)
-           plot(data_r(1:T,1),data2(1:T,1)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),debug_data(1:T,1)*180/pi,'LineWidth',2)
            hold on
-           plot(data_r(1:T,1),data2(1:T,2)*180/pi,'LineWidth',2)
-           plot(data_r(1:T,1),data2(1:T,3)*180/pi,'LineWidth',2)
-           plot(data_r(1:T,1),data2(1:T,4)*180/pi,'LineWidth',2)
-           plot(data_r(1:T,1),data2(1:T,5)*180/pi,'LineWidth',2)
-           plot(data_r(1:T,1),data2(1:T,6)*180/pi,'LineWidth',2)
-
+           plot(data_r(1:T,1),debug_data(1:T,2)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),debug_data(1:T,3)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),debug_data(1:T,4)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),debug_data(1:T,5)*180/pi,'LineWidth',2)
+           plot(data_r(1:T,1),debug_data(1:T,6)*180/pi,'LineWidth',2)
            legend('θxr','θyr','θzr','θxf','θyf','θzf','Location','NorthEast')
            ylim([-180 180]) 
            yticks(-180:30:180)
@@ -637,15 +648,13 @@ function Main(a,b,right,left,mode)
     end
 
     %% グラフ描画（位置）
-    if true
-            T = t-1;
+    if true && animation==1
            %書き出しデータの描画
            figure(3)
-           plot(data_r(1:T,1),data2(1:T,7),'LineWidth',2)%Lnf
+           plot(data_r(1:T,1),debug_data(1:T,7),'LineWidth',2)%Lnf
            hold on
-           plot(data_r(1:T,1),data2(1:T,8),'LineWidth',2)%Lnr
-           plot(data_r(1:T,1),data2(1:T,9),'LineWidth',2)%Lnr_real
-
+           plot(data_r(1:T,1),debug_data(1:T,8),'LineWidth',2)%Lnr
+           plot(data_r(1:T,1),debug_data(1:T,9),'LineWidth',2)%Lnr_real
            legend('Lnf','Lnr','Lnr_real','Location','NorthEast')
            xlim([0 max_time*t_step]) 
            ylim([-100 Lnf]) 
@@ -655,16 +664,12 @@ function Main(a,b,right,left,mode)
     end
 
     %% グラフ描画（角速度）
-
-
-    if true
-            T = t-1;
+    if true && animation==1
            %書き出しデータの描画
            figure(4)
            plot(data_r(1:T,1),data(1:T,7),'LineWidth',2)%角速度
            hold on
            plot(data_r(1:T,1),data(1:T,8),'LineWidth',2)%角速度
-
            legend('ωf','ωr','Location','NorthEast')
            xlim([0 max_time*t_step]) 
            ylim([-1000 1000]) 
@@ -674,26 +679,9 @@ function Main(a,b,right,left,mode)
     end
 
     %% グラフ描画（軸）
-    if false
-            T = t-1;
-            data(T+1:500,:)=[];
-            %データの書き出し 
-            text = "C:\Users\MSD\Documents\GitHub\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
-            if save ==1
-                writematrix(data,text+'.csv')
-            end
+    if false && animation==1
            %書き出しデータの描画
            figure(2)
-           %ダミーデータの作成
-%                x0 = [1 1];
-%                x1 = [n_count01 n_count01];
-%                x2 = [t1 t1];                            
-%                x3 = [t1+t2 t1+t2];
-%                x4 = [t1+t2+n_count01 t1+t2+n_count01];                            
-%                x5 = [t1+t2+t3 t1+t2+t3];
-%                y = [-180 350];
-
-
            plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
            hold on
            plot(data_r(1:T,1),data(1:T,2)*180/pi,'LineWidth',2)
@@ -701,12 +689,6 @@ function Main(a,b,right,left,mode)
            plot(data_r(1:T,1),data(1:T,4)*180/pi,'LineWidth',2)
            plot(data_r(1:T,1),data(1:T,5)*180/pi,'LineWidth',2)
            plot(data_r(1:T,1),data(1:T,6)*180/pi,'LineWidth',2)
-%                plot(x1,y,'--k','LineWidth',0.5)
-%                plot(x2,y,'--k','LineWidth',0.5)
-%                plot(x3,y,'--k','LineWidth',0.5)
-%                plot(x4,y,'--k','LineWidth',0.5)
-%                plot(x0,y,'--k','LineWidth',0.5)
-%                plot(x5,y,'--k','LineWidth',0.5)
 
            legend('1軸目(前)','2軸目(前)','3軸目(前)','1軸目(後)','2軸目(後)','3軸目(後)','Location','NorthEast')
            ylim([-180 180]) 
@@ -718,19 +700,10 @@ function Main(a,b,right,left,mode)
            plot(data_r(1:T,1),data(1:T,7),'LineWidth',2)
            hold on
            plot(data_r(1:T,1),data(1:T,8),'LineWidth',2)
-%                plot(x1,y,'--k','LineWidth',0.5)
-%                plot(x2,y,'--k','LineWidth',0.5)
-%                plot(x3,y,'--k','LineWidth',0.5)
-%                plot(x4,y,'--k','LineWidth',0.5)*
-%                plot(x0,y,'--k','LineWidth',0.5)
-%                plot(x5,y,'--k','LineWidth',0.5)
            ylim([0 350])
            xlabel('時間，ステップ')
            ylabel('角速度[deg/s]')
     end
-
-
-    List_bestidx;
 end
 
 %% 回転行列の計算

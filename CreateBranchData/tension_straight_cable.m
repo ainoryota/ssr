@@ -3,20 +3,17 @@ global save           %データの保存,CSV書き出しon,off
 global animation       %アニメーションon,off
 global robot_plot
 global switching 
-global max_time
 global time_step
 global t_step
 
 idx=0;
 count=0;
 start_count=0;
-
 t_step = 1.6/33; %キリのいい数字にするため(制御周期より少しはやめ)
 
-
 %% 初期設定
-save = 0;           %データの保存,CSV書き出しon,off
-animation = 1;      %アニメーションon,off
+save = 1;           %データの保存,CSV書き出しon,off
+animation = 0;      %アニメーションon,off
 robot_plot = 1;
 testmode=3;
 
@@ -38,14 +35,15 @@ time_step=10;
 %% プログラム開始
 if animation==1
     figure(1)
-    Main(15,-30,50,70,1)
+    Main(-10,15,20,60,1,max_time)
     return
 end
 
+tic
 for loop=1:2
     for mode=1:2
-        for a=-10:5:30
-            for b=-20:5:20
+        for a=-30:5:90
+            for b=-30:5:30
                 for left=0:5:90
                     for right=0:5:90
                         if loop==1
@@ -58,17 +56,24 @@ for loop=1:2
                             continue
                         end
                         
-                        name= "C:\Users\MSD\Documents\GitHub\Data\"+a+ "_" + b+ "_" + right+ "_" + left+"_"+mode+".csv";
+                        if exist("O:\マイドライブ\Research\非停止分岐動作\分岐データ\")>0
+                            text = "O:\マイドライブ\Research\非停止分岐動作\分岐データ\";
+                        else
+                            text = "C:\Users\MSD\Documents\GitHub\Data\";
+                        end
+
+                        name= text+a+ "_" + b+ "_" + right+ "_" + left+"_"+mode+".csv";
                         if(exist(name, 'file')~=0)
                             continue
                         end
             
-                        disp(["clac",count,"/",idx,"time:",(idx-count)/10/60+"[min]",":",a,b,right,left,mode]);
+                        disp(["clac",count,"/",idx,"elapsed time:",toc,"speed[s/1000data]:",1000*toc/(count-start_count),"remind count:",(idx-count),"remind time:", toc/(count-start_count)*(idx-count)/60+"[min]"]);
+                        disp(["data:",a,b,right,left,mode]);
                         if left+right>100 || left+right<80
                             continue
                         end
                         try
-                            Main(a,b,right,left,mode)
+                            Main(a,b,right,left,mode,max_time)
                         catch exception
                             disp(exception)
                         end
@@ -81,7 +86,7 @@ end
 disp("fin")
 
 %% メイン関数
-function Main(a,b,right,left,mode)
+function Main(a,b,right,left,mode,max_time)
     %% 要設定変数
     L_cable=800;
   
@@ -94,7 +99,6 @@ function Main(a,b,right,left,mode)
     global phi_n
     global L1
     global L2
-    global max_time
     global time_step
     global t_step
     
@@ -193,7 +197,7 @@ function Main(a,b,right,left,mode)
 
         %On_の導出
         fun = @(x)norm((Sigma_cable_+x(1)*e1)-(P_e_+x(2)*e2));
-        [x,fval] = fminunc(fun,[0,0]);%普通に計算してといてもいいけど面倒なので数値計算に投げる
+        [x,fval] = fminunc(fun,[0,0], optimoptions('fminunc','display',"none"));%普通に計算してといてもいいけど面倒なので数値計算に投げる
         t=x(1);
         s=x(2);
         O_n_=Sigma_cable_+t*e1; %P2_+s*e2でもよい
@@ -356,7 +360,6 @@ function Main(a,b,right,left,mode)
                 P=Q2+(Ln-L_arc-norm(Q1-Sigma_cable))*e2;
             else
                 P=P_e;
-                disp("Lnf out of Pe");
             end
             P_f=World2Plane(P);
             C_f=Plane2World(P_f)+ R("x",the_xf)*R("y",the_yf)*[Rw*sin(the_zf);d/2+rw-Rw*cos(the_zf);0];
@@ -392,7 +395,6 @@ function Main(a,b,right,left,mode)
 
         if switching==14
             %% switching==14
-                disp("no stop-ver2")    
                 the_xf=List_the_x(:,t);
                 the_yf=List_the_y(:,t);
                 the_zf=List_the_z(:,t);
@@ -598,7 +600,7 @@ function Main(a,b,right,left,mode)
 
     %% 後輪の角速度を計算
     chect_num=10;
-        for t = t_start+1:t_end
+        for t = t_start:t_end
             if t<t_start+chect_num+1
                 data(t,8)=(debug_data(t+chect_num,8)-debug_data(t,8))/(chect_num*r_v*t_step)*180/pi;
             elseif t>t_end-chect_num
@@ -612,16 +614,22 @@ function Main(a,b,right,left,mode)
         end
         
     %% 結果の出力
-        T = t-1;
-        data(T+1:max_time,:)=[];
-        %データの書き出し 
-        text = "C:\Users\MSD\Documents\GitHub\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
+        
+        data=data(t_start:t,:);
+        debug_data=debug_data(t_start:t,:);
+        T = size(data,1);
         if save ==1
+        %データの書き出し 
+            if exist("O:\マイドライブ\Research\非停止分岐動作\分岐データ\")>0
+                text = "O:\マイドライブ\Research\非停止分岐動作\分岐データ\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
+            else
+                text = "C:\Users\MSD\Documents\GitHub\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
+            end
             writematrix(data,text+'.csv')
         end
 
     %% グラフ描画（姿勢）
-    if true
+    if true && animation==1
            %書き出しデータの描画
            figure(2)
            plot(data_r(1:T,1),debug_data(1:T,1)*180/pi,'LineWidth',2)
@@ -639,7 +647,7 @@ function Main(a,b,right,left,mode)
     end
 
     %% グラフ描画（位置）
-    if true
+    if true && animation==1
            %書き出しデータの描画
            figure(3)
            plot(data_r(1:T,1),debug_data(1:T,7),'LineWidth',2)%Lnf
@@ -655,7 +663,7 @@ function Main(a,b,right,left,mode)
     end
 
     %% グラフ描画（角速度）
-    if true
+    if true && animation==1
            %書き出しデータの描画
            figure(4)
            plot(data_r(1:T,1),data(1:T,7),'LineWidth',2)%角速度
@@ -670,7 +678,7 @@ function Main(a,b,right,left,mode)
     end
 
     %% グラフ描画（軸）
-    if false
+    if false && animation==1
            %書き出しデータの描画
            figure(2)
            plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
