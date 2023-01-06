@@ -31,7 +31,7 @@ elseif testmode==2 %非停止モードをテストするとき
     max_time=1000;  
 elseif testmode==3
     switching=14;
-    max_time=1000;  
+    max_time=2000;  
 end
 time_step=10;
 
@@ -163,6 +163,58 @@ function Main(a,b,right,left,mode)
         %諸々の初期化
         t1 = 0; t2 = 0; t3 = 0;t4 = 0;t5 = 0;
 
+        if mode == 1
+            the_x_init = -pi/2;
+            the_n = the_nR;
+        else
+            the_x_init = pi/2;
+            the_n = -the_nL;
+        end
+    
+        
+    %% ケーブル情報の計算
+        a_w=6;
+        b_w=30;
+        
+        x_cable=Plane2World([1;0;0]);
+        y_cable=Plane2World([0;1;0]);
+        z_cable=Plane2World([0;0;1]);
+        Sigma_cable=Plane2World([0;0;0]);
+
+        O_n=Plane2World([L_cable;0;0]);
+        P_e=Plane2World(World2Plane(O_n)+L_cable*[cos(the_n);sin(the_n);0]);
+        e1=Plane2World([-1;0;0]);
+        e2=(P_e-O_n)/norm(P_e-O_n);
+
+        e2_=axang2rotm([z_cable.' -pi/2])*e2;
+    
+        Sigma_cable_=Sigma_cable-b_w*y_cable;
+        P_e_=P_e+b_w*e2_;
+
+        %On_の導出
+        fun = @(x)norm((Sigma_cable_+x(1)*e1)-(P_e_+x(2)*e2));
+        [x,fval] = fminunc(fun,[0,0]);%普通に計算してといてもいいけど面倒なので数値計算に投げる
+        t=x(1);
+        s=x(2);
+        O_n_=Sigma_cable_+t*e1; %P2_+s*e2でもよい
+
+        theta_rute=(pi-the_n)/2;
+
+        R_a=norm(O_n_-O_n)-a_w;
+        R_rute=(R_a*sin(theta_rute))/(1-sin(theta_rute));
+        O_R=O_n_+(e1+e2)/norm(e1+e2)*(R_a+R_rute);
+        O_R_=O_R+O_n-O_n_;
+        the_arc=pi/2-acos(dot(e1,-e2_));
+        
+        Q1=O_R_-R_rute*y_cable;
+        Q2=O_R_+R_rute*e2_;
+        
+        L_arc=R_rute*the_arc;
+
+        if Q1(1)<0
+            disp("L_cable is too small");
+        end
+
     %% 角速度などの設定
         %与える条件
     %   t_step = 0.0485; %50[ms] キリが悪いと挙動がおかしくなる．48msでだめ
@@ -171,10 +223,51 @@ function Main(a,b,right,left,mode)
         vel = 50; %分岐時の後輪の移動速度[mm/s]
         L_gap = 150;%分岐点直前で止まる距離(約タイヤ直径の半分)
 
+        t_start=0;t_branch_s=0;t_branch_c=0;t_branch_e=0;t_end=0;
+
+        Ln=0;
+        flag = 0;
+        for t=1:max_time
+            Ln=Ln+omega(t);
+            if flag == 0    %ロボットの初期値計算
+                if Ln>Lc
+                    t_start=t;
+                    flag=flag+1;
+                end
+            elseif flag==1
+                if Ln>=norm(Q1-Sigma_cable)
+                    t_branch_s=t;
+                    flag=flag+1;
+                end
+            elseif flag==2
+                if Ln>=norm(Q1-Sigma_cable)+L_arc/2
+                    t_branch_c=t;
+                    flag=flag+1;
+                end
+            elseif flag==3
+                if Ln>=norm(Q1-Sigma_cable)+L_arc
+                    t_branch_e=t;
+                    flag=flag+1;
+                end
+            elseif flag==4
+                if Ln>=norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2)
+                    t_end=t;
+                    break;
+                end
+            end
+        end
+        max_time=t_end;
+        
         %従属的に決まるものたち
-        t_bra = 2*L_gap/vel;                    %駆動輪が分岐にかかる時間(80/50=1.6[s])
+        if switching==14
+            t_bra=t_branch_e-t_branch_s;
+        else
+            t_bra = 2*L_gap/vel;                    %駆動輪が分岐にかかる時間(80/50=1.6[s])
+        end
+        
         n_bra = round(t_bra/t_step);            %分岐にかかるカウント
         omega_c =vel/r_v*180/pi ;                 %[deg/s] 通常走行時の速度    
+
 
     %% XYXオイラー角とクォータニオンによる分岐時の姿勢表現
 
@@ -224,57 +317,8 @@ function Main(a,b,right,left,mode)
         %t_const = (L_def-L_gap)/vel - t_bra;    %定速走行時間[s]
         %n_const = t_const/t_step;               %定速走行カウント
 
-        if mode == 1
-            the_x_init = -pi/2;
-            the_n = the_nR;
-        else
-            the_x_init = pi/2;
-            the_n = -the_nL;
-        end
+
     
-    %% ケーブル情報の計算
-        a_w=6;
-        b_w=30;
-        
-        x_cable=Plane2World([1;0;0]);
-        y_cable=Plane2World([0;1;0]);
-        z_cable=Plane2World([0;0;1]);
-        Sigma_cable=Plane2World([0;0;0]);
-
-        O_n=Plane2World([L_cable;0;0]);
-        P_e=Plane2World(World2Plane(O_n)+L_cable*[cos(the_n);sin(the_n);0]);
-        e1=Plane2World([-1;0;0]);
-        e2=(P_e-O_n)/norm(P_e-O_n);
-
-        e2_=axang2rotm([z_cable.' -pi/2])*e2;
-    
-        Sigma_cable_=Sigma_cable-b_w*y_cable;
-        P_e_=P_e+b_w*e2_;
-
-        %On_の導出
-        fun = @(x)norm((Sigma_cable_+x(1)*e1)-(P_e_+x(2)*e2));
-        [x,fval] = fminunc(fun,[0,0]);%普通に計算してといてもいいけど面倒なので数値計算に投げる
-        t=x(1);
-        s=x(2);
-        O_n_=Sigma_cable_+t*e1; %P2_+s*e2でもよい
-
-        theta_rute=(pi-the_n)/2;
-
-        R_a=norm(O_n_-O_n)-a_w;
-        R_rute=(R_a*sin(theta_rute))/(1-sin(theta_rute));
-        O_R=O_n_+(e1+e2)/norm(e1+e2)*(R_a+R_rute);
-        O_R_=O_R+O_n-O_n_;
-        the_arc=pi/2-acos(dot(e1,-e2_));
-        
-        Q1=O_R_-R_rute*y_cable;
-        Q2=O_R_+R_rute*e2_;
-        
-        L_arc=R_rute*the_arc;
-
-        if Q1(1)<0
-            disp("L_cable is too small");
-        end
-
     %% 位置と姿勢のリストを生成
         List_time=[];
         List_Ln=[];
@@ -285,50 +329,25 @@ function Main(a,b,right,left,mode)
         List_the_z=[];
     
         Ln=0;
-        flag = 0;
-        for t=1:max_time
+        for t=1:t_end
             Ln=Ln+omega(t);
-            if flag == 0    %前輪の分岐開始
-                    t1 = t1+1;
-                    the_xf = X(t1); the_yf = Y(t1); the_zf = Z(t1);
-                    if t1 == n_bra
-                        flag = 1;
-                        L_def = 315;
-                        t_const = (L_def-2*L_gap)/vel;    %定速走行時間[s]
-                        n_const = t_const/t_step;               %定速走行カウント
-                    end
-    
-                elseif flag == 1
-                    %前輪の分岐終了～加速
-                    t2 = t2+1;
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
-                    if t2 == n_bra
-                        flag = 2;
-                    end
-                elseif flag == 2
-                    %定速区間
-                    t3 = t3+1;
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
-                    if t3 >= n_const-1
-                        flag = 3;
-                    end
-    
-                elseif flag == 3
-                    %減速区間（後輪分岐開始）
-                    t4 = t4+1;
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
-                    if t4 == n_bra
-                        flag = 4;
-                    end
-    
-                elseif flag == 4
-                    %分岐後(加速区間)
-                    t5 = t5+1;
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
-                    if t5 == n_bra
-                        flag = 5;
-                    end
+            if t<=t_branch_s%スタート～カーブ開始
+                t1=t1+1;
+                the_xf = X(1); the_yf = Y(1); the_zf = Z(1);
+            elseif t<=t_branch_c%カーブ開始～非行き先ケーブル
+                t2=t2+1;
+                the_xf = X(round(t2/t_step)); the_yf = Y(round(t2/t_step)); the_zf = Z(round(t2/t_step));
+            elseif t<=t_branch_e%非行き先ケーブル～カーブ終了
+                t3=t3+1;
+                the_xf = X (round((t2+t3)/t_step)); the_yf = Y( round((t2+t3)/t_step)); the_zf = Z(round((t2+t3)/t_step));
+            elseif t<=t_end%カーブ終了～終わり
+                t4=t4+1;
+                the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
+            else
+                disp("error:out of range");
+                break;
             end
+
             if 0<=Ln && Ln<norm(Q1-Sigma_cable)
                 P=Ln*x_cable+Sigma_cable;
             elseif norm(Q1-Sigma_cable)<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc
@@ -377,11 +396,7 @@ function Main(a,b,right,left,mode)
 
         if switching==14
             %% switching==14
-                disp("no stop-ver2")
-                OrCr=C_r-P_r;
-                OfCf=C_f-P_f;
-                OrOf=P_f-P_r;
-    
+                disp("no stop-ver2")    
                 the_xf=List_the_x(:,t);
                 the_yf=List_the_y(:,t);
                 the_zf=List_the_z(:,t);
@@ -390,15 +405,9 @@ function Main(a,b,right,left,mode)
                 the_yr=List_the_y(:,best_idx);
                 the_zr=List_the_z(:,best_idx);
     
-                Ln1=List_Ln(:,best_idx);
-                Ln2=List_Ln(:,t);
-    
-                omega_f=10;
-                omega_r=10;
-    
-                phi_nr1 = 0/180*pi; the_nr = 0/180*pi ;phi_nr2 = 0/180*pi; 
-                phi_nf1 = 0/180*pi; the_nf = 0/180*pi; phi_nf2 = 0/180*pi;
-
+                omega_f=omega(t);
+                omega_r=omega(t);%本当はかえなきゃだめ
+            
         elseif switching==13
             %% switching==13
                 disp("no stop")
