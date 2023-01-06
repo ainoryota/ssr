@@ -718,13 +718,24 @@ function Main(a,b,right,left,mode)
                     %モータの座標だし
     
                     %OrCf =C_f-P_r;
-                    %[L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]→World2Plane(P_r)
-                    m1_coord = R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*horzcat(m1_top,m1_bottom));
-                    m2_coord = R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*horzcat(m2_top,m2_bottom));
-                    m3_coord = R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*horzcat(m3_top,m3_bottom));
-                    m4_coord = R("y",gamma1)*(World2Plane(P_r)+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*horzcat(m4_top,m4_bottom));
-                    m5_coord = R("y",gamma1)*(World2Plane(P_r)+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*horzcat(m5_top,m5_bottom));
-                    m6_coord = R("y",gamma1)*(World2Plane(P_r)+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*horzcat(m6_top,m6_bottom));
+                    Ln1=Lnf-norm(Q1-Sigma_cable)-L_arc;
+                    %[L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0]→Pr_Place
+
+                    phi_nr1 = -phi_n; the_nr = the_n ;phi_nr2 = E2(3); 
+                    phi_nf1 = -phi_n; the_nf = the_n; phi_nf2 = E2(3);
+                    
+                    Pr_Place=[L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*[-Ln1;0;0];
+                    
+                    disp([World2Plane(P_r) R("y",-gamma1)*(P_r) Pr_Place])
+
+                    Pr_Place=R("y",-gamma1)*(P_r);
+
+                    m1_coord = R("y",gamma1)*(Pr_Place+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*horzcat(m1_top,m1_bottom));
+                    m2_coord = R("y",gamma1)*(Pr_Place+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*horzcat(m2_top,m2_bottom));
+                    m3_coord = R("y",gamma1)*(Pr_Place+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*horzcat(m3_top,m3_bottom));
+                    m4_coord = R("y",gamma1)*(Pr_Place+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*horzcat(m4_top,m4_bottom));
+                    m5_coord = R("y",gamma1)*(Pr_Place+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*horzcat(m5_top,m5_bottom));
+                    m6_coord = R("y",gamma1)*(Pr_Place+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*horzcat(m6_top,m6_bottom));
     
     
                     %タイヤ部分の位置だし（タイヤはひょうたん型）
@@ -739,15 +750,15 @@ function Main(a,b,right,left,mode)
                     W2 = W + [0;Rw;0];
     
                     %phi_nr1とかは常に0なので実質的に何もしていない（分岐後を描画したいときのみ使用）
-                    w1r_coord = R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W1);
-                    w2r_coord = R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W2);
-                    w1f_coord = R("y",gamma1)*(World2Plane(P_r)+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W2);
-                    w2f_coord = R("y",gamma1)*(World2Plane(P_r)+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W1);
+                    w1r_coord = R("y",gamma1)*(Pr_Place+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W1);
+                    w2r_coord = R("y",gamma1)*(Pr_Place+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W2);
+                    w1f_coord = R("y",gamma1)*(Pr_Place+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W2);
+                    w2f_coord = R("y",gamma1)*(Pr_Place+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W1);
                     
-                    %w1r_coord = R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W1);
-                    %w2r_coord = R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W2);
-                    %w1f_coord = R("y",gamma1)*(World2Plane(P_r)+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W2);
-                    %w2f_coord = R("y",gamma1)*(World2Plane(P_r)+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W1);
+                    %w1r_coord = R("y",gamma1)*(Pr_Place+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W1);
+                    %w2r_coord = R("y",gamma1)*(Pr_Place+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*W2);
+                    %w1f_coord = R("y",gamma1)*(Pr_Place+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W2);
+                    %w2f_coord = R("y",gamma1)*(Pr_Place+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("z",-pi/2)*R("z",the_1f)*R("x",a1)*R("z",the_2f)*R("x",-a2)*R("z",the_3f+pi/2)*W1);
     
     
                     w1r_middle_bottom = (sum(w1r_coord(:,11*21-20:11*21),2)-w1r_coord(:,231))/20;
@@ -937,8 +948,8 @@ function Main(a,b,right,left,mode)
                     %M_w_sphere_r =R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCr)) + R("y",gamma1)*R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*R("y",the_yr)*R("x",the_xr)*R("z",the_zr)*R("z",-the_3r)*R("x",-a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("x",pi)*M_w_sphere;
                     %M_w_sphere_f =R("y",gamma1)*([L1;0;0]+R("x",phi_nr1)*R("z",the_nr)*R("x",phi_nr2)*([-Ln1;0;0]+OrCf)) + R("y",gamma1)*R("x",phi_nf1)*R("z",the_nf)*R("x",phi_nf2)*R("y",the_yr)*R("x",the_xr)*R("z",the_zr)*R("z",-the_3r)*R("x",-a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("y",2*a3)*R("z",the_1f)*R("x",pi)*M_w_sphere;
     
-                    M_w_sphere_r =  R("y",gamma1)*(World2Plane(P_r)+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("x",pi)*M_w_sphere);
-                    M_w_sphere_f =  R("y",gamma1)*(World2Plane(P_r)+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("x",pi)*M_w_sphere);
+                    M_w_sphere_r =  R("y",gamma1)*(Pr_Place+OrCr + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("x",pi)*M_w_sphere);
+                    M_w_sphere_f =  R("y",gamma1)*(Pr_Place+OrCf + R("x",the_xr)*R("y",the_yr)*R("z",the_zr)*R("z",-the_3r+pi/2)*R("x",a2)*R("z",-the_2r)*R("x",-a1)*R("z",-the_1r)*R("z",-pi/2)*R("y",2*a3)*R("x",pi)*M_w_sphere);
     
     
     
