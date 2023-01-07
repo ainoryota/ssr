@@ -639,7 +639,6 @@ function Main(a,b,right,left,mode,max_time)
     over_time_max=0;
     over_speed=0;
 
-    max_d_omega=10*t_step;
  
     for t = t_start:t_end
         if t<t_start+chect_num+1
@@ -657,7 +656,7 @@ function Main(a,b,right,left,mode,max_time)
         end
     end
     if(over_time_min<100000)
-        disp(["over speed:" data(t,8) "min_time:" over_time_min "max_time:" over_time_max]);
+        disp(["over speed:" over_speed "min_time:" over_time_min "max_time:" over_time_max]);
     end
 
     for t = 2:t_end
