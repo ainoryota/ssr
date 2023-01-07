@@ -9,11 +9,11 @@ global t_step
 idx=0;
 count=0;
 start_count=0;
-t_step = 1.6/33; %キリのいい数字にするため(制御周期より少しはやめ)
+t_step = 0.024; %キリのいい数字にするため(制御周期より少しはやめ)
 
 %% 初期設定
 save = 1;           %データの保存,CSV書き出しon,off
-animation = 0;      %アニメーションon,off
+animation = 1;      %アニメーションon,off
 robot_plot = 1;
 testmode=3;
 
@@ -28,14 +28,14 @@ elseif testmode==2 %非停止モードをテストするとき
     max_time=1000;  
 elseif testmode==3
     switching=14;
-    max_time=2000;  
+    max_time=4000;  
 end
 time_step=10;
 
 %% プログラム開始
 if animation==1
     figure(1)
-    Main(-10,15,20,60,1,max_time)
+    Main(20,0,80,40,1,max_time)
     return
 end
 
@@ -67,7 +67,8 @@ for loop=1:2
                             continue
                         end
             
-                        disp(["clac",count,"/",idx,"elapsed time:",toc,"remind time:", toc/(count-start_count)*(idx-count)/60+"[min]",":",a,b,right,left,mode]);
+                        disp(["clac",count,"/",idx,"elapsed time:",toc,"speed[s/1000data]:",1000*toc/(count-start_count),"remind count:",(idx-count),"remind time:", toc/(count-start_count)*(idx-count)/60+"[min]"]);
+                        disp(["data:",a,b,right,left,mode]);
                         if left+right>100 || left+right<80
                             continue
                         end
@@ -87,7 +88,7 @@ disp("fin")
 %% メイン関数
 function Main(a,b,right,left,mode,max_time)
     %% 要設定変数
-    L_cable=800;
+    L_cable=740;
   
     %% 変数定義
     global save           %データの保存,CSV書き出しon,off
@@ -176,8 +177,8 @@ function Main(a,b,right,left,mode,max_time)
     
         
     %% ケーブル情報の計算
-        a_w=6;
-        b_w=30;
+        a_w=25/2;%分岐点の半径
+        b_w=17;%外輪と中心との差
         
         x_cable=Plane2World([1;0;0]);
         y_cable=Plane2World([0;1;0]);
@@ -230,7 +231,7 @@ function Main(a,b,right,left,mode,max_time)
         Ln=0;
         flag = 0;
         for t=1:max_time
-            Ln=Ln+omega(t)*pi/180*r_v*t_step;;
+            Ln=Ln+omega(t)*pi/180*r_v*t_step;
             if flag == 0    %ロボットの初期値計算
                 if Ln>Lc
                     t_start=t;
@@ -331,9 +332,20 @@ function Main(a,b,right,left,mode,max_time)
         List_the_z=[];
     
         Ln=0;
+        tension_time=1/t_step;
+        gap_time=3/t_step;
         for t=1:t_end
             Ln=Ln+omega(t)*pi/180*r_v*t_step;
-            if t<=t_branch_s%スタート～カーブ開始
+            if t<=t_branch_s-tension_time-gap_time%スタート～カーブ開始
+                t1=t1+1;    
+                the_xf = X(1); the_yf = Y(1); the_zf=tension_angle;
+            elseif t<=t_branch_s-gap_time%スタート～カーブ開始
+                t1=t1+1;
+                the_xf = X(1); the_yf = Y(1); 
+                t_temp=t-(t_branch_s-tension_time-gap_time);
+                rate=t_temp/tension_time;
+                the_zf = tension_angle*(1-rate)+rate*Z(1);
+            elseif t<=t_branch_s%スタート～カーブ開始
                 t1=t1+1;
                 the_xf = X(1); the_yf = Y(1); the_zf = Z(1);
             elseif t<=t_branch_c%カーブ開始～非行き先ケーブル
@@ -342,9 +354,14 @@ function Main(a,b,right,left,mode,max_time)
             elseif t<=t_branch_e%非行き先ケーブル～カーブ終了
                 t3=t3+1;
                 the_xf = X (round((t2+t3)/t_step)); the_yf = Y( round((t2+t3)/t_step)); the_zf = Z(round((t2+t3)/t_step));
+            elseif t<=t_branch_e+tension_time%カーブ終了～終わり
+                t4=t4+1;
+                t_temp=(t-t_branch_e);
+                rate=t_temp/tension_time;
+                the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = tension_angle*rate+Z(n_bra);
             elseif t<=t_end%カーブ終了～終わり
                 t4=t4+1;
-                the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
+                the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = tension_angle+Z(n_bra);
             else
                 disp("error:out of range");
                 break;
@@ -359,8 +376,6 @@ function Main(a,b,right,left,mode,max_time)
                 P=Q2+(Ln-L_arc-norm(Q1-Sigma_cable))*e2;
             else
                 P=P_e;
-                disp("Ln out of Pe",str(t),str(t_end));
-                throw(MException('Error:Lnf out of Pe','%s / %s',str(t),str(t_end)))
             end
             P_f=World2Plane(P);
             C_f=Plane2World(P_f)+ R("x",the_xf)*R("y",the_yf)*[Rw*sin(the_zf);d/2+rw-Rw*cos(the_zf);0];
@@ -377,18 +392,25 @@ function Main(a,b,right,left,mode,max_time)
     
     %% ロボットによる走行
         Lnf=0;
+        best_idx=1;
     for t = t_start:max_time%最低限進んだところを初期値にしたい
         Lnf=Lnf+omega(t)*pi/180*r_v*t_step;
         P_f=List_P(:,t);
         C_f=List_C(:,t);
-        best_idx=0;
+        
         best_diff=1000000;
+        if t_branch_s-gap_time<=best_idx && best_idx<t_branch_s
+            best_idx=best_idx+1;
+        else
+        
+            next_best_i
         for i=1:t
             diff=norm(List_C(:,i)-C_f);
             if abs(diff-Lc)<best_diff
                 best_diff=abs(diff-Lc);
                 best_idx=i;
             end
+        end
         end
         P_r=List_P(:,best_idx);
         C_r=List_C(:,best_idx);
@@ -427,6 +449,7 @@ function Main(a,b,right,left,mode,max_time)
              data_f(t,:) = [t*t_step the_1f the_2f the_3f];
              data(t,:) = [the_1f the_2f the_3f the_1r the_2r the_3r omega_f -1 t*t_step];%-1のところにはあとからomega_rが入る
              debug_data(t,:) = [the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,Lnf,Lnr,-1,t*t_step];%-1のところには後から真のLnrが入る
+        
 
         %% 描画
             if animation == 1
@@ -551,8 +574,6 @@ function Main(a,b,right,left,mode,max_time)
                     cable_plot(c_top,c_bottom)
     
                     %分岐ケーブル(メイン・サブ)
-                    
-                    L_cable=1000;
     
                     [Xc2,Yc2,Zc2] = cylinder(3);
                     Zc2 = Zc2*L_cable;
@@ -600,6 +621,7 @@ function Main(a,b,right,left,mode,max_time)
     end
 
     %% 後輪の角速度を計算
+   
     chect_num=10;
         for t = t_start:t_end
             if t<t_start+chect_num+1
@@ -614,10 +636,15 @@ function Main(a,b,right,left,mode,max_time)
             debug_data(t,9)=debug_data(t-1,9)+data(t,8)*r_v*t_step*pi/180;%Lnr_real=前回のLnr_real+今回進んだ量
         end
         
+    %% 走り込み部分の結果を設定
+    for t=1:t_start
+        data(t,:) = data(t_start,:);
+    end
+    
     %% 結果の出力
         
-        data=data(t_start:t,:);
-        debug_data=debug_data(t_start:t,:);
+        data=data(t_branch_s:max_time,:);%t_branch_s～
+        debug_data=debug_data(t_branch_s:max_time,:);
         T = size(data,1);
         if save ==1
         %データの書き出し 
@@ -679,9 +706,9 @@ function Main(a,b,right,left,mode,max_time)
     end
 
     %% グラフ描画（軸）
-    if false && animation==1
+    if true && animation==1
            %書き出しデータの描画
-           figure(2)
+           figure(5)
            plot(data_r(1:T,1),data(1:T,1)*180/pi,'LineWidth',2)
            hold on
            plot(data_r(1:T,1),data(1:T,2)*180/pi,'LineWidth',2)
@@ -695,14 +722,6 @@ function Main(a,b,right,left,mode,max_time)
            yticks(-180:30:180)
            xlabel('時間，ステップ')
            ylabel('角度[deg]')
-
-           %figure(3)
-           plot(data_r(1:T,1),data(1:T,7),'LineWidth',2)
-           hold on
-           plot(data_r(1:T,1),data(1:T,8),'LineWidth',2)
-           ylim([0 350])
-           xlabel('時間，ステップ')
-           ylabel('角速度[deg/s]')
     end
 end
 
@@ -1137,6 +1156,7 @@ end
 
 %% ロボットのパラメータ系の関数
 function omega=omega(t)
-    omega=212;%deg/s
+    omega=200;%deg/s
+    %omega=100;%deg/s
 end
 

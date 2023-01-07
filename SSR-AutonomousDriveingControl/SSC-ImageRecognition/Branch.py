@@ -44,17 +44,22 @@ class Branch(object):
 
         t = 0
 
-        for line in range(0,n - 1):#行数-1
+        for line in range(1,n - 2):#行数-1
             #if(t%4==1):continue;#早めに後輪を分岐する
                                                #log[t][0] = time.perf_counter()
                                                                                   #-
                                                                                                                      #time_start
 
+            #self.robot.motors[id[1]].insertOrder(PosOrder(round((data[line-1,0]+data[line,0]+data[line+1,0])/3 / math.pi * 180,2),t))#前のアームの根本 時計回りが正
+            #self.robot.motors[id[2]].insertOrder(PosOrder(round((data[line-1,1]+data[line,1]+data[line+1,1])/3 / math.pi * 180,2),t))#前のアームの2番目
+            #self.robot.motors[id[3]].insertOrder(PosOrder(round((data[line-1,2]+data[line,2]+data[line+1,2])/3 / math.pi * 180,2),t))#前のアームの3番目
+            #self.robot.motors[id[6]].insertOrder(PosOrder(round((data[line-1,3]+data[line,3]+data[line+1,3])/3 / math.pi * 180,2),t))#後ろのアームの根本
+            #self.robot.motors[id[7]].insertOrder(PosOrder(round((data[line-1,4]+data[line,4]+data[line+1,4])/3 / math.pi * 180,2),t))#後ろのアームの2番目
+            #self.robot.motors[id[8]].insertOrder(PosOrder(round((data[line-1,5]+data[line,5]+data[line+1,5])/3 / math.pi * 180,2),t))#後ろのアームの3番目
 
             self.robot.motors[id[1]].insertOrder(PosOrder(round(data[line,0] / math.pi * 180,2),t))#前のアームの根本 時計回りが正
             self.robot.motors[id[2]].insertOrder(PosOrder(round(data[line,1] / math.pi * 180,2),t))#前のアームの2番目
             self.robot.motors[id[3]].insertOrder(PosOrder(round(data[line,2] / math.pi * 180,2),t))#前のアームの3番目
-
             self.robot.motors[id[6]].insertOrder(PosOrder(round(data[line,3] / math.pi * 180,2),t))#後ろのアームの根本
             self.robot.motors[id[7]].insertOrder(PosOrder(round(data[line,4] / math.pi * 180,2),t))#後ろのアームの2番目
             self.robot.motors[id[8]].insertOrder(PosOrder(round(data[line,5] / math.pi * 180,2),t))#後ろのアームの3番目
@@ -72,7 +77,8 @@ class Branch(object):
             #2.12206591 * 100),t))
             #self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct *
             #2.12206591 * 100),t))
-            if(line == n // 2):t+=2#0.7
+            #if(line == n // 2):t+=2#0.7
+            #t+=0.024
             t+=0.024
             #t+=(0.024 * 100) / a #aが大きいほど小さな値にする。
 
