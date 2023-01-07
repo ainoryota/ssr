@@ -89,6 +89,11 @@ disp("fin")
 function Main(a,b,right,left,mode,max_time)
     %% 要設定変数
     L_cable=740;
+
+    L_start_cable=100;
+    L_end_cable=500;
+    t_start_cable=0;
+    t_end_cable=0;
   
     %% 変数定義
     global save           %データの保存,CSV書き出しon,off
@@ -232,6 +237,15 @@ function Main(a,b,right,left,mode,max_time)
         flag = 0;
         for t=1:max_time
             Ln=Ln+omega(t)*pi/180*r_v*t_step;
+            temp=World2Plane(O_n);
+            if temp(1)-Ln>L_start_cable
+                t_start_cable=t;
+            end
+
+            if Ln-norm(Q1-Sigma_cable)+L_arc<L_end_cable
+                t_end_cable=t;
+            end
+
             if flag == 0    %ロボットの初期値計算
                 if Ln>Lc
                     t_start=t;
@@ -435,7 +449,6 @@ function Main(a,b,right,left,mode,max_time)
             fun = @(x)Joint_angle_calc8(x,the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,...
                                                gamma1,a1,a2,a3,Lc,OrCr,OfCf,OrOf,g0,g2,g3,g4,g6,w0,w2,w3,w4,w6,mode);
             [x,fval,exitflag,output]= fzero(fun,0);
-            output;
             %収束した結果を用いて，関節角度を算出
             [F,the_2r,the_3r,the_1r,the_2f,the_3f,the_1f] ...
                     = Joint_angle_calc8(x,the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,...
@@ -451,7 +464,7 @@ function Main(a,b,right,left,mode,max_time)
         
 
         %% 描画
-            if animation == 1
+            if animation == 1 && t_start_cable<=t && t<=t_end_cable
                 if mod(t,time_step)~=0
                     continue
                 end
@@ -622,19 +635,36 @@ function Main(a,b,right,left,mode,max_time)
     %% 後輪の角速度を計算
    
     chect_num=10;
-        for t = t_start:t_end
-            if t<t_start+chect_num+1
-                data(t,8)=(debug_data(t+chect_num,8)-debug_data(t,8))/(chect_num*r_v*t_step)*180/pi;
-            elseif t>t_end-chect_num
-                data(t,8)=(debug_data(t,8)-debug_data(t-chect_num,8))/(chect_num*r_v*t_step)*180/pi;
-            else
-                data(t,8)=(debug_data(t+chect_num,8)-debug_data(t-chect_num,8))/(2*chect_num*r_v*t_step)*180/pi;
-            end
+    over_time_min=100000;
+    over_time_max=0;
+    over_speed=0;
+
+    max_d_omega=10*t_step;
+ 
+    for t = t_start:t_end
+        if t<t_start+chect_num+1
+            data(t,8)=(debug_data(t+chect_num,8)-debug_data(t,8))/(chect_num*r_v*t_step)*180/pi;
+        elseif t>t_end-chect_num
+            data(t,8)=(debug_data(t,8)-debug_data(t-chect_num,8))/(chect_num*r_v*t_step)*180/pi;
+        else
+            data(t,8)=(debug_data(t+chect_num,8)-debug_data(t-chect_num,8))/(2*chect_num*r_v*t_step)*180/pi;
         end
-        for t = 2:t_end
-            debug_data(t,9)=debug_data(t-1,9)+data(t,8)*r_v*t_step*pi/180;%Lnr_real=前回のLnr_real+今回進んだ量
+        if data(t,8)>215
+            over_time_min=min(t,over_time_min);
+            over_time_max=max(t,over_time_max);
+            over_speed=data(t,8);
+            data(t,8)=215;
         end
-        
+    end
+    if(over_time_min<100000)
+        disp(["over speed:" data(t,8) "min_time:" over_time_min "max_time:" over_time_max]);
+    end
+
+    for t = 2:t_end
+        debug_data(t,9)=debug_data(t-1,9)+data(t,8)*r_v*t_step*pi/180;%Lnr_real=前回のLnr_real+今回進んだ量
+    end
+ 
+            
     %% 走り込み部分の結果を設定
     for t=1:t_start
         data(t,:) = data(t_start,:);
@@ -642,15 +672,16 @@ function Main(a,b,right,left,mode,max_time)
     
     %% 結果の出力
         
-        data=data(t_branch_s:max_time,:);%t_branch_s～
-        debug_data=debug_data(t_branch_s:max_time,:);
-        T = size(data,1);
+        data=data(t_start_cable:t_end_cable,:);%t_branch_s～
+        debug_data=debug_data(t_start_cable:t_end_cable,:);
+        T = t_end_cable-t_start_cable;
+        max_time = t_end_cable-t_start_cable;
         if save ==1
         %データの書き出し 
             if exist("O:\マイドライブ\Research\非停止分岐動作\分岐データ\")>0
                 text = "O:\マイドライブ\Research\非停止分岐動作\分岐データ\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
             else
-                text = "C:\Users\MSD\Documents\GitHub\Data\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
+                text = "C:\Users\MSD\Documents\GitHub\NonStopData\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
             end
             writematrix(data,text+'.csv')
         end
@@ -1155,7 +1186,7 @@ end
 
 %% ロボットのパラメータ系の関数
 function omega=omega(t)
-    omega=100;%deg/s
-    %omega=100;%deg/s
+    omega=212;%deg/s
+    omega=212;
 end
 

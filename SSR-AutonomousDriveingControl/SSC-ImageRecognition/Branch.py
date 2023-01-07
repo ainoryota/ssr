@@ -25,7 +25,7 @@ class Branch(object):
 
     def FileBranch(self,csvfile,runDirection,save,a=24):
         #分岐データの読み込み
-        csvfile = "C:/Users/MSD/Documents/GitHub/Data/" + csvfile
+        csvfile = "C:/Users/MSD/Documents/GitHub/NonStopData/" + csvfile
         OutputController().msgPrint("Branch",csvfile,"a=",round(a,2))
         
         
@@ -44,6 +44,7 @@ class Branch(object):
 
         t = 0
 
+        direct*=1.2;
         for line in range(1,n - 2):#行数-1
             #if(t%4==1):continue;#早めに後輪を分岐する
                                                #log[t][0] = time.perf_counter()

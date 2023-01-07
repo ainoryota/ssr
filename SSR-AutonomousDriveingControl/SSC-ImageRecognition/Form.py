@@ -84,6 +84,7 @@ class Form(object):
         PushButton(tk,upArea,0,4,' 停止 ',self.stop)
         PushButton(tk,upArea,0,5,' フリー ',self.free)
         PushButton(tk,upArea,0,6,' 左右切り替え',self.change)
+        PushButton(tk,upArea,0,18,' テンション付与',self.ten)
         #PushButton(tk,upArea,0,7,' 前輪切り替え',self.change_f)
         #PushButton(tk,upArea,0,8,' 後輪切り替え',self.change_r)
         #PushButton(tk,upArea,0,10,' 巻取り ',self.wintchWind)
@@ -195,7 +196,7 @@ class Form(object):
         self.robot.motors[11].insertOrder(MotorModeOrder(MotorMode.VelocityNormal,0))
 
         #初期姿勢
-        d = np.loadtxt("C:/Users/MSD/Documents/GitHub/Data/normal_switching.csv",delimiter=",")
+        d = np.loadtxt("C:/Users/MSD/Documents/GitHub/NonStopData/normal_switching.csv",delimiter=",")
         self.robot.motors[0].insertOrder(PosOrder(0,0))
         self.robot.motors[1].insertOrder(PosOrder(round(d[0,0] / math.pi * 180,2),0))
         self.robot.motors[2].insertOrder(PosOrder(round(d[0,1] / math.pi * 180,2),0))
@@ -316,6 +317,13 @@ class Form(object):
             else:
                 OutputController().msgPrint("左右分岐モードの切り替えはできません")
         
+    def ten(self):           
+        OutputController().msgPrint("○○○Tension○○○")
+        if (self.data["v3"].get()):#右モード
+            self.br.FileBranch("f_normal_r-t.csv",self.data["v3"].get(),self.data["v8"].get())
+        elif (self.data["v3"].get()==False):#左モード
+            self.br.FileBranch("f_tension_r-n.csv",self.data["v3"].get(),self.data["v8"].get())
+
     def change_f(self):            
         if self.data["v3"].get() == True:                                     #通常どおりにプログラムを流すか(右分岐モードのとき)
             if self.data["v5"].get() == False:                                    #前輪にテンションがかかっていないとき
