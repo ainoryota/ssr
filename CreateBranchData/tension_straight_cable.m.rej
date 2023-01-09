@@ -1,13 +1,10 @@
 diff a/CreateBranchData/tension_straight_cable.m b/CreateBranchData/tension_straight_cable.m	(rejected hunks)
-@@ -722,8 +722,9 @@
-         %% �e�֐ߊp�x�̌v�Z
+@@ -323,7 +323,7 @@
+         end    
  
-         %�����v�Z
--        
--        fun = @(x)Joint_angle_calc8(x,the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,...
-+
-+  
-+       fun = @(x)Joint_angle_calc8(x,the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,...
-                                            gamma1,a1,a2,a3,Lc,OrCr,OfCf,OrOf,g0,g2,g3,g4,g6,w0,w2,w3,w4,w6,mode);
-         [x,fval,exitflag,output]= fzero(fun,0);
-         output;
+         %���򎞂̖ڕW�p�x(��Ԍ�)
+-        [X_01,Y_01,Z_01] = slerp_xyz_euler(quat0,quat1,ceil(n_bra/2));
++        [X_01,Y_01,Z_01] = slerp_xyz_euler(quat0,quat1,ceil(n_bra));
+         [X_12,Y_12,Z_12] = slerp_xyz_euler(quat1,quat2,fix(n_bra/2));            %�������Ȃ�������D�D�D
+         X = [X_01;X_12];
+         Y = [Y_01;Y_12];   %�A��
