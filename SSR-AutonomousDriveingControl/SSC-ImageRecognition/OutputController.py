@@ -3,6 +3,7 @@ import serial#pip install pyserial
 from Order import InitOrder
 from Order import PosOrder
 from Order import VelocityOrder
+from Order import ClearOrder
 from Order import MotorModeOrder
 from Order import ResetMotorOrder
 from Order import ResetEncoderOrder
@@ -37,6 +38,8 @@ class OutputController(object):
         self.orderList.insert(0,order)
         #OutputController().msgPrint("Order Set:",order)
 
+    def clearStep(self):
+        self.stepQueue.put([ClearOrder()]);
 
     def pushStep(self):
         self.stepQueue.put(sorted(self.orderList,key=lambda x: -x.delay - (0.001 if isinstance(x,PosOrder) else 0.002 if  isinstance(x,VelocityOrder) else 0)))
@@ -66,7 +69,6 @@ class OutputController(object):
             #print("Print Exception")
 
 
-
 def OutputDone(stepQueue):
     output = Serial()
 
@@ -78,11 +80,27 @@ def OutputDone(stepQueue):
         #OutputController().msgPrint("Start Output:",len(orderList),"datas")
 
 
-        timer = 0
+
+        start_time=time.time();
+        i=0;
         while(len(orderList) > 0):
+            with stepQueue.mutex:
+                if(len(stepQueue.queue)>0):
+                    for j in range(len(stepQueue.queue)):
+                        if(isinstance(stepQueue.queue[j][0],ClearOrder)):
+                            if(len(stepQueue.queue)>j+1):
+                                orderList = stepQueue.queue[j+1];
+                            else:
+                                orderList.Clear();
+                            stepQueue.queue.clear();
+                            break;
+            if(len(orderList) ==0):
+                break;
+            i=i+1
             data = orderList.pop()
-            time.sleep(max(data.delay - timer,0))
-            timer = data.delay + data.sleepTime
+            current_time=time.time();
+            if(i%100==0):print(data.delay,(current_time-start_time));
+            time.sleep(max(data.delay-(current_time-start_time),0))            
 
             if(isinstance(data,InitOrder)):#初期化に関する司令を1つのみ処理
                 #OutputController().msgPrint(" Init",data)

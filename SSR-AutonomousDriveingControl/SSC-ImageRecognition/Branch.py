@@ -44,7 +44,7 @@ class Branch(object):
 
         t = 0
 
-        direct*=0.8;
+        direct*=1;
         for line in range(0,n - 1):#行数-1
             #if(t%4==1):continue;#早めに後輪を分岐する
                                                #log[t][0] = time.perf_counter()
@@ -80,7 +80,7 @@ class Branch(object):
             #2.12206591 * 100),t))
             #if(line == n // 2):t+=2#0.7
             #t+=0.024
-            t+=0.024
+            t+=0.036
             #t+=(0.024 * 100) / a #aが大きいほど小さな値にする。
 
         OutputController().pushStep()

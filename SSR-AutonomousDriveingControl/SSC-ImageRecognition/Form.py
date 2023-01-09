@@ -164,7 +164,7 @@ class Form(object):
         self.data["entry1"].delete(0,'end')
         self.data["entry1"].insert(0,'20_0_80_40')
         self.data["entry2"].delete(0,'end')
-        self.data["entry2"].insert(0,'15_-5_35_45')
+        self.data["entry2"].insert(0,'10_5_60_50')
         self.data["entry3"].delete(0,'end')
         self.data["entry3"].insert(0,'20_0_80_50')
         self.data["entry4"].delete(0,'end')
@@ -237,6 +237,7 @@ class Form(object):
     def stop(self):            
         OutputController().msgPrint("○○○Stop○○○")
         self.data["v_auto"].set(False)
+        OutputController().clearStep()
         self.robot.motors[4].insertOrder(VelocityOrder(0,0))
         self.robot.motors[5].insertOrder(VelocityOrder(0,0))
         self.robot.motors[9].insertOrder(VelocityOrder(0,0))
@@ -245,7 +246,7 @@ class Form(object):
     
     def free(self):       
         OutputController().msgPrint("○○○Free○○○")
-        
+        OutputController().clearStep()
         self.robot.motors[0].insertOrder(MotorModeOrder(MotorMode.PosFree,0))
         self.robot.motors[1].insertOrder(MotorModeOrder(MotorMode.PosFree,0))
         self.robot.motors[2].insertOrder(MotorModeOrder(MotorMode.PosFree,0))

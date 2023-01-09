@@ -28,6 +28,10 @@ class VelocityOrder(Order):
         super().__init__(delay,sleepTime)
         self.velocity = velocity
 
+class ClearOrder(Order):
+    def __init__(self,delay=0,sleepTime=0.01):
+        super().__init__(delay,sleepTime)
+
 class MotorModeOrder(Order):
     def __init__(self,motorMode,delay,sleepTime=0.01):
         super().__init__(delay,sleepTime)
