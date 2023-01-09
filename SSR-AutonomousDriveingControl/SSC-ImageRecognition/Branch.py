@@ -44,7 +44,7 @@ class Branch(object):
 
         t = 0
 
-        direct*=1;
+        direct*=0.8;
         for line in range(0,n - 1):#行数-1
             #if(t%4==1):continue;#早めに後輪を分岐する
                                                #log[t][0] = time.perf_counter()

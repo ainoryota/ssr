@@ -4,11 +4,13 @@
 %% 初期設定
 %ケーブル条件
 tic
+
+%10_5_60_50_1
 i=0
-for a=-20:5:20
-for b=-20:5:20
-    for c=20:5:80
-        for right=20:5:80
+for a=10:5:10
+for b=5:5:5
+    for c=60:5:60
+        for right=50:5:50
             for mode=1:2
 disp(["clac",a,b,c,right,mode]);
 if(right+c<100)
@@ -30,7 +32,7 @@ gamma1 = a*pi/180;      %ケーブル斜度
     animation = 0;      %アニメーションon,off
     workspace = 0;
     robot_plot = 1;
-    switching = 0; 
+    switching = 11; 
     %右分岐モードが基準
     %左分岐時はGUIで解決
     %(0)テンションかけた状態で分岐

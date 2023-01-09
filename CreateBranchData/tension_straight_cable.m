@@ -136,7 +136,7 @@ function Main(a,b,right,left,mode,max_time)
        % a3 = 30/180*pi;         %1軸目の取り付け角（論文ではa0） 
 
     %各リンクの重さ，重心位置，長さ
-        Lc = 280;
+        Lc = 300;
         l2_min = (Lc-80)/2;
         l1 = 90;                %各モーターの中心点からの距離
         l2 = l2_min/sin(a2);
@@ -652,7 +652,7 @@ function Main(a,b,right,left,mode,max_time)
     over_time_max=0;
     over_speed=0;
 
- 
+    
     for t = t_start:t_end_cable
         %data(t,7)=(debug_data(t+chect_num,7)-debug_data(t,7))/(chect_num*r_v*t_step)*180/pi;
         if t<t_start+chect_num+1
@@ -662,13 +662,17 @@ function Main(a,b,right,left,mode,max_time)
         else
             data(t,7)=(debug_data(t+chect_num,7)-debug_data(t-chect_num,7))/(2*chect_num*r_v*t_step)*180/pi;
         end
-        if data(t,7)>215
+
+
+        %↑使ってない。前方微分する。
+        data(t,7)=(debug_data(t+1,7)-debug_data(t,7))/(r_v*t_step)*180/pi;
+
+        if data(t,7)>212
             over_time_min=min(t,over_time_min);
             over_time_max=max(t,over_time_max);
             over_speed=data(t,7);
-            data(t,7)=215;
+            data(t,7)=270;
         end
-        data(t,7)=(debug_data(t+1,7)-debug_data(t,7))/(r_v*t_step)*180/pi;
     end
     if(over_time_min<100000)
         disp(["over speed:" over_speed "min_time:" over_time_min "max_time:" over_time_max]);

@@ -202,6 +202,47 @@ def spin(x,y,z,a,b,c,d):
     z2 = x * a * beta * sigma + y * b * beta * sigma + z * c * beta * sigma
     return (x2, y2, z2)
 
+def find_plane(xs, ys, zs):
+    r = np.c_[xs, ys, zs]
+    # サンプル点群の重心、x, y, zの３つの成分
+    c = np.mean(r, axis=0)
+    # サンプル点群の重心を原点に移動
+    r0 = r - c
+    # SVD分解
+    u, s, v = np.linalg.svd(r0)
+    # sの最小値に対応するベクトルを取り出す
+    nv = v[-1, :]
+    # サンプル点群の平面と原点との距離
+    ds = np.dot(r, nv)
+    param = np.r_[nv, -np.mean(ds)]
+    param[0]/=-param[2];
+    param[1]/=-param[2];
+    param[3]/=-param[2];
+    param[2]=-1;
+    print(param)
+
+def fit_plane(point_cloud):
+    """
+    入力
+        point_cloud : xyzのリスト　numpy.array型
+    出力
+        plane_v : 法線ベクトルの向き(単位ベクトル)
+        com : 重心　近似平面が通る点
+    """
+
+    com = np.sum(point_cloud, axis=0) / len(point_cloud)
+    # 重心を計算
+    q = point_cloud - com
+    # 重心を原点に移動し、同様に全点群を平行移動する  pythonのブロードキャスト機能使用
+    Q = np.dot(q.T, q)
+    # 3x3行列を計算する 行列計算で和の形になるため総和になる
+    la, vectors = np.linalg.eig(Q)
+    # 固有値、固有ベクトルを計算　固有ベクトルは縦のベクトルが横に並ぶ形式
+    plane_v = vectors.T[np.argmin(la)]
+    # 固有値が最小となるベクトルの成分を抽出
+
+    return plane_v, com
+
 # depthの画像を回転させ、仰角や回転角が地面と水平になるようにする
 # @lru_cache(maxsize=10000)
 def ConvertDepthCoordinate(x, y, z):
@@ -218,6 +259,11 @@ def ConvertDepthCoordinate(x, y, z):
     if(A.shape == (1,0)):
         return False,0,0,0,0
     fit = (A.T * A).I * A.T * b
+
+
+    #hoge=fit_plane(np.array([x,y,z]));
+    #foo=find_plane(x,y,z);
+
     # errors = b - A * fit
     # residual = np.linalg.norm(errors)
 
