@@ -646,10 +646,10 @@ function Main(a,b,right,left,mode,max_time)
     over_speed=0;
 
  
-    for t = t_start:t_end
+    for t = t_start:t_end_cable
         if t<t_start+chect_num+1
             data(t,7)=(debug_data(t+chect_num,7)-debug_data(t,7))/(chect_num*r_v*t_step)*180/pi;
-        elseif t>t_end-chect_num
+        elseif t>t_end_cable-chect_num
             data(t,7)=(debug_data(t,7)-debug_data(t-chect_num,7))/(chect_num*r_v*t_step)*180/pi;
         else
             data(t,7)=(debug_data(t+chect_num,7)-debug_data(t-chect_num,7))/(2*chect_num*r_v*t_step)*180/pi;
@@ -665,7 +665,7 @@ function Main(a,b,right,left,mode,max_time)
         disp(["over speed:" over_speed "min_time:" over_time_min "max_time:" over_time_max]);
     end
 
-    for t = 2:t_end
+    for t = 2:t_end_cable
         debug_data(t,9)=debug_data(t-1,9)+data(t,7)*r_v*t_step*pi/180;%Lnr_real=‘O‰ñ‚ÌLnr_real+¡‰ñi‚ñ‚¾—Ê
     end
  
