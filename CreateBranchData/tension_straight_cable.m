@@ -647,6 +647,7 @@ function Main(a,b,right,left,mode,max_time)
 
  
     for t = t_start:t_end_cable
+        %data(t,7)=(debug_data(t+chect_num,7)-debug_data(t,7))/(chect_num*r_v*t_step)*180/pi;
         if t<t_start+chect_num+1
             data(t,7)=(debug_data(t+chect_num,7)-debug_data(t,7))/(chect_num*r_v*t_step)*180/pi;
         elseif t>t_end_cable-chect_num
