@@ -323,8 +323,8 @@ function Main(a,b,right,left,mode,max_time)
         end    
 
         %分岐時の目標角度(補間後)
-        [X_01,Y_01,Z_01] = slerp_xyz_euler(quat0,quat1,ceil(n_bra));
-        $[X_12,Y_12,Z_12] = slerp_xyz_euler(quat1,quat2,fix(n_bra/2));            %偶数じゃなかったら．．．
+        [X_01,Y_01,Z_01] = slerp_xyz_euler(quat0,quat1,ceil(n_bra/2));
+        [X_12,Y_12,Z_12] = slerp_xyz_euler(quat1,quat2,fix(n_bra/2));            %偶数じゃなかったら．．．
         X = [X_01;X_12];
         Y = [Y_01;Y_12];   %連結
         Z = [Z_01;Z_12];
@@ -407,9 +407,10 @@ function Main(a,b,right,left,mode,max_time)
     
     %% ロボットによる走行
         Lnf=0;
+        Lnr=0;
         best_idx=1;
     for t = t_start:max_time%最低限進んだところを初期値にしたい
-        Lnf=Lnf+omega(t)*pi/180*r_v*t_step;
+        Lnr=Lnr+omega(t)*pi/180*r_v*t_step;
         P_f=List_P(:,t);
         C_f=List_C(:,t);
         
@@ -891,8 +892,8 @@ function [X,Y,Z] = slerp_xyz_euler(q1,q2,t)
        
     for i=1:t
         %tは分割数，iはi番目の分割点
-        k = 6*(i/t)^5-15*(i/t)^4+10*(i/t)^3;
-        %k=i/t;
+        %k = 6*(i/t)^5-15*(i/t)^4+10*(i/t)^3;
+        k=i/t;
         qt = sin((1-k)*the)/sin(the)*q1+sin(k*the)/sin(the)*q2;
         temp = euler(qt,'XYZ','frame');
         X(i,1) = temp(1);

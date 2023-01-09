@@ -13,7 +13,7 @@ t_step = 0.024; %キリのいい数字にするため(制御周期より少しはやめ)
 
 %% 初期設定
 save = 0;           %データの保存,CSV書き出しon,off
-animation = 0;      %アニメーションon,off
+animation = 1;      %アニメーションon,off
 robot_plot = 1;
 testmode=3;
 
@@ -238,14 +238,6 @@ function Main(a,b,right,left,mode,max_time)
         for t=1:max_time
             Ln=Ln+omega(t)*pi/180*r_v*t_step;
             temp=World2Plane(O_n);
-            if temp(1)-Ln>L_start_cable
-                t_start_cable=t;
-            end
-
-            if Ln-norm(Q1-Sigma_cable)+L_arc<L_end_cable
-                t_end_cable=t;
-            end
-
             if flag == 0    %ロボットの初期値計算
                 if Ln>Lc
                     t_start=t;
@@ -407,37 +399,50 @@ function Main(a,b,right,left,mode,max_time)
     
     %% ロボットによる走行
         Lnf=0;
+        Lnr=-Lc;
         best_idx=1;
-    for t = t_start:max_time%最低限進んだところを初期値にしたい
-        Lnf=Lnf+omega(t)*pi/180*r_v*t_step;
-        P_f=List_P(:,t);
-        C_f=List_C(:,t);
+    for t = 1:max_time
+        Lnr=Lnr+omega(t)*pi/180*r_v*t_step;
+        P_r=List_P(:,t);
+        C_r=List_C(:,t);
         
         best_diff=1000000;
         next_best_idx=best_idx;
-        for i=best_idx:t
-            diff=norm(List_C(:,i)-C_f);
+        for i=best_idx:max_time
+            diff=norm(List_C(:,i)-C_r);
             if abs(diff-Lc)<best_diff
                 best_diff=abs(diff-Lc);
                 next_best_idx=i;
             end
         end
 
+
+
         best_idx=next_best_idx;
 
-        P_r=List_P(:,best_idx);
-        C_r=List_C(:,best_idx);
-        Lnr=List_Ln(:,best_idx);
+        P_f=List_P(:,best_idx);
+        C_f=List_C(:,best_idx);
+        Lnf=List_Ln(:,best_idx);
+
+        temp=World2Plane(O_n);
+        if temp(1)-Lnf>L_start_cable
+            t_start_cable=t;
+        end
+
+        if(Lnf>norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2))
+            t_end_cable=t;
+            break;
+        end
 
         if switching==14
             %% switching==14
-                the_xf=List_the_x(:,t);
-                the_yf=List_the_y(:,t);
-                the_zf=List_the_z(:,t);
-                the_xr=List_the_x(:,best_idx);
-                the_yr=List_the_y(:,best_idx);
-                the_zr=List_the_z(:,best_idx);
-                omega_f=omega(t);
+                the_xr=List_the_x(:,t);
+                the_yr=List_the_y(:,t);
+                the_zr=List_the_z(:,t);
+                the_xf=List_the_x(:,best_idx);
+                the_yf=List_the_y(:,best_idx);
+                the_zf=List_the_z(:,best_idx);
+                omega_r=omega(t);
         end
         
         %% 各関節角度の収束計算
@@ -459,12 +464,12 @@ function Main(a,b,right,left,mode,max_time)
         %% 関節角度データの保存
              data_r(t,:) = [t*t_step the_1r the_2r the_3r];
              data_f(t,:) = [t*t_step the_1f the_2f the_3f];
-             data(t,:) = [the_1f the_2f the_3f the_1r the_2r the_3r omega_f -1 t*t_step];%-1のところにはあとからomega_rが入る
+             data(t,:) = [the_1f the_2f the_3f the_1r the_2r the_3r -1 omega_r t*t_step];%-1のところにはあとからomega_fが入る
              debug_data(t,:) = [the_xr,the_yr,the_zr,the_xf,the_yf,the_zf,Lnf,Lnr,-1,t*t_step];%-1のところには後から真のLnrが入る
         
 
         %% 描画
-            if animation == 1 && t_start_cable<=t && t<=t_end_cable
+            if animation == 1 &&  temp(1)-Lnf<L_start_cable && Lnf<norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2)
                 if mod(t,time_step)~=0
                     continue
                 end
@@ -633,7 +638,7 @@ function Main(a,b,right,left,mode,max_time)
             end
     end
 
-    %% 後輪の角速度を計算
+    %% 前輪の角速度を計算
    
     chect_num=10;
     over_time_min=100000;
@@ -643,17 +648,17 @@ function Main(a,b,right,left,mode,max_time)
  
     for t = t_start:t_end
         if t<t_start+chect_num+1
-            data(t,8)=(debug_data(t+chect_num,8)-debug_data(t,8))/(chect_num*r_v*t_step)*180/pi;
+            data(t,7)=(debug_data(t+chect_num,7)-debug_data(t,7))/(chect_num*r_v*t_step)*180/pi;
         elseif t>t_end-chect_num
-            data(t,8)=(debug_data(t,8)-debug_data(t-chect_num,8))/(chect_num*r_v*t_step)*180/pi;
+            data(t,7)=(debug_data(t,7)-debug_data(t-chect_num,7))/(chect_num*r_v*t_step)*180/pi;
         else
-            data(t,8)=(debug_data(t+chect_num,8)-debug_data(t-chect_num,8))/(2*chect_num*r_v*t_step)*180/pi;
+            data(t,7)=(debug_data(t+chect_num,7)-debug_data(t-chect_num,7))/(2*chect_num*r_v*t_step)*180/pi;
         end
-        if data(t,8)>215
+        if data(t,7)>215
             over_time_min=min(t,over_time_min);
             over_time_max=max(t,over_time_max);
-            over_speed=data(t,8);
-            data(t,8)=215;
+            over_speed=data(t,7);
+            data(t,7)=215;
         end
     end
     if(over_time_min<100000)
@@ -661,7 +666,7 @@ function Main(a,b,right,left,mode,max_time)
     end
 
     for t = 2:t_end
-        debug_data(t,9)=debug_data(t-1,9)+data(t,8)*r_v*t_step*pi/180;%Lnr_real=前回のLnr_real+今回進んだ量
+        debug_data(t,9)=debug_data(t-1,9)+data(t,7)*r_v*t_step*pi/180;%Lnr_real=前回のLnr_real+今回進んだ量
     end
  
             
