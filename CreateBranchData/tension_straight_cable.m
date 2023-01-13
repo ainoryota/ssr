@@ -12,14 +12,14 @@ start_count=0;
 t_step = 0.036;%制御周期
 
 %% 初期設定
-testmode=1;
+testmode=0;
 
 
 save = 1;           %データの保存,CSV書き出しon,off
 animation = 0;      %アニメーションon,off
 robot_plot = 1;
 switching=14;
-max_time=20000;
+max_time=4000;
 time_step=10;
 
 %% プログラム開始
@@ -52,7 +52,7 @@ for loop=1:2
     for untension=0:1
         for mode=1:2
             for a=-90:5:90
-                for b=-90:5:30
+                for b=-90:5:90
                     for left=0:5:90
                         for right=0:5:90
                             if loop==1
@@ -84,7 +84,7 @@ for loop=1:2
                             try
                                 Main(a,b,right,left,mode,max_time,untension)
                             catch exception
-                                pass;
+                                ;
                                 %disp(exception)
                             end
                         end
@@ -105,7 +105,7 @@ function Main(a,b,right,left,mode,max_time,untension)
     L_end_cable=100;
     t_start_cable=0;
     t_end_cable=0;
-    omega_end=30;
+    omega_end=212;
   
     %% 変数定義
     global save           %データの保存,CSV書き出しon,off
@@ -734,16 +734,16 @@ function Main(a,b,right,left,mode,max_time,untension)
         %↑使ってない。前方微分する。
         %data(t,7)=(debug_data(t+1,7)-debug_data(t,7))/(r_v*t_step)*180/pi;
 
-        if data(t,7)>30
+        if data(t,7)>212
             over_time_min=min(t,over_time_min);
             over_time_max=max(t,over_time_max);
             over_speed=data(t,7);
-            data(t,7)=30;
-        elseif data(t,7)<-30
+            data(t,7)=212;
+        elseif data(t,7)<-212
             over_time_min=min(t,over_time_min);
             over_time_max=max(t,over_time_max);
             over_speed=data(t,7);
-            data(t,7)=-30;
+            data(t,7)=-212;
         end
     end
     if(over_time_min<100000)
@@ -1281,7 +1281,7 @@ end
 
 %% ロボットのパラメータ系の関数
 function omega=omega(t)
-    omega=30;%deg/s
-    omega=30;
+    omega=212;%deg/s
+    omega=212;
 end
 
