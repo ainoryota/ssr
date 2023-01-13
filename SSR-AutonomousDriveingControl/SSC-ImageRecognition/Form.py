@@ -166,7 +166,7 @@ class Form(object):
         self.data["entry2"].delete(0,'end')
         self.data["entry2"].insert(0,'10_5_60_50')
         self.data["entry3"].delete(0,'end')
-        self.data["entry3"].insert(0,'20_0_80_50')
+        self.data["entry3"].insert(0,'0_0_20_80')
         self.data["entry4"].delete(0,'end')
         self.data["entry4"].insert(0,'-5_0_60_80')
         

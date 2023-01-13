@@ -44,8 +44,8 @@ class Branch(object):
 
         t = 0
 
-        direct*=0.8;
-        for line in range(0,n - 1):#行数-1
+        direct*=1;
+        for line in range(0,n):#行数-1
             #if(t%4==1):continue;#早めに後輪を分岐する
                                                #log[t][0] = time.perf_counter()
                                                                                   #-
@@ -70,8 +70,7 @@ class Branch(object):
             self.robot.motors[id[9]].insertOrder(VelocityOrder(round(-direct * data[line,7]),t))
             self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct * data[line,7]),t))
             
-            #self.robot.motors[id[4]].insertOrder(VelocityOrder(round(-direct *
-            #2.12206591 * 100),t))
+            #self.robot.motors[id[4]].insertOrder(VelocityOrder(round(-direct * #2.12206591 * 100),t))
             #self.robot.motors[id[5]].insertOrder(VelocityOrder(round(direct *
             #2.12206591 * 100),t))
             #self.robot.motors[id[9]].insertOrder(VelocityOrder(round(-direct *
@@ -82,6 +81,7 @@ class Branch(object):
             #t+=0.024
             t+=0.036
             #t+=(0.024 * 100) / a #aが大きいほど小さな値にする。
+
 
         OutputController().pushStep()
 

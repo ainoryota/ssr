@@ -12,70 +12,81 @@ start_count=0;
 t_step = 0.036;%制御周期
 
 %% 初期設定
-save = 1;           %データの保存,CSV書き出しon,off
-animation = 1;      %アニメーションon,off
-robot_plot = 1;
-testmode=3;
+testmode=1;
 
-if testmode==0%ノーマルモードで動くとき
-    switching = 11; 
-    max_time=1000;    
-elseif testmode==1%ケーブルの描画をテストするとき
-    switching = 11; 
-    max_time=11;
-elseif testmode==2 %非停止モードをテストするとき
-    switching = 13; 
-    max_time=1000;  
-elseif testmode==3
-    switching=14;
-    max_time=4000;  
-end
+
+save = 1;           %データの保存,CSV書き出しon,off
+animation = 0;      %アニメーションon,off
+robot_plot = 1;
+switching=14;
+max_time=20000;
 time_step=10;
 
 %% プログラム開始
-if animation==1
+if testmode==1
+    a=0;
+    b=0;
+    right=20;
+    left=80;
+    mode_value=2;
+    untension_value=0;
+
+    animation=0;
+    save=1;
+    for untension=0:1
+        for mode=1:2
+            Main(a,b,right,left,mode,max_time,untension)
+        end
+    end
+
+    animation=1;
+    save=0;
     figure(1)
-    Main(10,5,60,50,1,max_time)
+    Main(a,b,right,left,mode_value,max_time,untension_value)
+    
     return
 end
 
 tic
 for loop=1:2
-    for mode=1:2
-        for a=-30:5:90
-            for b=-30:5:30
-                for left=0:5:90
-                    for right=0:5:90
-                        if loop==1
-                            idx=idx+1;
-                            continue
-                        else
-                            count=count+1;
-                        end
-                        if(count<start_count)
-                            continue
-                        end
-                        
-                        if exist("O:\マイドライブ\Research\非停止分岐動作\分岐データ\")>0
-                            text = "O:\マイドライブ\Research\非停止分岐動作\分岐データ\";
-                        else
-                            text = "C:\Users\MSD\Documents\GitHub\Data\";
-                        end
-
-                        name= text+a+ "_" + b+ "_" + right+ "_" + left+"_"+mode+".csv";
-                        if(exist(name, 'file')~=0)
-                            continue
-                        end
-            
-                        disp(["clac",count,"/",idx,"elapsed time:",toc,"speed[s/1000data]:",1000*toc/(count-start_count),"remind count:",(idx-count),"remind time:", toc/(count-start_count)*(idx-count)/60+"[min]"]);
-                        disp(["data:",a,b,right,left,mode]);
-                        if left+right>100 || left+right<80
-                            continue
-                        end
-                        try
-                            Main(a,b,right,left,mode,max_time)
-                        catch exception
-                            disp(exception)
+    for untension=0:1
+        for mode=1:2
+            for a=-90:5:90
+                for b=-90:5:30
+                    for left=0:5:90
+                        for right=0:5:90
+                            if loop==1
+                                idx=idx+1;
+                                continue
+                            else
+                                count=count+1;
+                            end
+                            if(count<start_count)
+                                continue
+                            end
+                            
+                            if exist("O:\マイドライブ\Research\非停止分岐動作\分岐データ\")>0
+                                text = "O:\マイドライブ\Research\非停止分岐動作\分岐データ\";
+                            else
+                                text = "C:\Users\MSD\Documents\GitHub\Data\";
+                            end
+    
+                            name= text+a+ "_" + b+ "_" + right+ "_" + left+"_"+mode+".csv";
+                            if(exist(name, 'file')~=0)
+                                continue
+                            end
+                
+                            disp(["clac",count,"/",idx,"elapsed time:",toc,"speed[s/1000data]:",1000*toc/(count-start_count),"remind count:",(idx-count),"remind time:", toc/(count-start_count)*(idx-count)/60+"[min]"]);
+                            disp(["data:",a,b,right,left,mode,untension]);
+                            if left+right>100 || left+right<80
+                                continue
+                            end
+                            try
+                                Main(a,b,right,left,mode,max_time,untension)
+                            catch exception
+                                pass;
+                                %disp(exception)
+                            end
                         end
                     end
                 end
@@ -86,14 +97,15 @@ end
 disp("fin")
 
 %% メイン関数
-function Main(a,b,right,left,mode,max_time)
+function Main(a,b,right,left,mode,max_time,untension)
     %% 要設定変数
     L_cable=740;
 
-    L_start_cable=100;
-    L_end_cable=700;
+    L_start_cable=50;
+    L_end_cable=100;
     t_start_cable=0;
     t_end_cable=0;
+    omega_end=30;
   
     %% 変数定義
     global save           %データの保存,CSV書き出しon,off
@@ -136,7 +148,7 @@ function Main(a,b,right,left,mode,max_time)
        % a3 = 30/180*pi;         %1軸目の取り付け角（論文ではa0） 
 
     %各リンクの重さ，重心位置，長さ
-        Lc = 300;
+        Lc = 260;%本当は280
         l2_min = (Lc-80)/2;
         l1 = 90;                %各モーターの中心点からの距離
         l2 = l2_min/sin(a2);
@@ -150,7 +162,7 @@ function Main(a,b,right,left,mode,max_time)
         %w1 = 146.34;
         w2 = 154;
         %w3 = 635+865;
-        w3 = 700+700;
+        w3 = 2792;%もとは700+700。2792にしたい
         w4 = 154;   
         %w5 = 146.34;
         w6 = 800;
@@ -196,10 +208,18 @@ function Main(a,b,right,left,mode,max_time)
         e1=Plane2World([-1;0;0]);
         e2=(P_e-O_n)/norm(P_e-O_n);
 
-        e2_=axang2rotm([z_cable.' -pi/2])*e2;
+        
     
-        Sigma_cable_=Sigma_cable-b_w*y_cable;
+        if mode == 1
+            e2_=axang2rotm([z_cable.' -pi/2])*e2;
+            Sigma_cable_=Sigma_cable-b_w*y_cable;
+        else
+            e2_=axang2rotm([z_cable.' pi/2])*e2;
+            Sigma_cable_=Sigma_cable+b_w*y_cable;
+        end
         P_e_=P_e+b_w*e2_;
+        
+        
 
         %On_の導出
         fun = @(x)norm((Sigma_cable_+x(1)*e1)-(P_e_+x(2)*e2));
@@ -214,7 +234,10 @@ function Main(a,b,right,left,mode,max_time)
         R_rute=(R_a*sin(theta_rute))/(1-sin(theta_rute));
         O_R=O_n_+(e1+e2)/norm(e1+e2)*(R_a+R_rute);
         O_R_=O_R+O_n-O_n_;
+
         the_arc=pi/2-acos(dot(e1,-e2_));
+        
+        
         
         Q1=O_R_-R_rute*y_cable;
         Q2=O_R_+R_rute*e2_;
@@ -321,15 +344,19 @@ function Main(a,b,right,left,mode,max_time)
         List_time=[];
         List_Ln=[];
         List_P=[];
-        List_C=[];
-        List_the_x=[];
-        List_the_y=[];
-        List_the_z=[];
+        List_C_f=[];
+        List_C_r=[]; 
+        List_the_x_f=[];
+        List_the_y_f=[];
+        List_the_z_f=[];
+        List_the_x_r=[];
+        List_the_y_r=[];
+        List_the_z_r=[];
     
         Ln=0;
         tension_time=1/t_step;
         gap_time=5/t_step;
-        untension=true;
+        
         
         for t=1:t_end
             Ln=Ln+omega(t)*pi/180*r_v*t_step;
@@ -337,43 +364,53 @@ function Main(a,b,right,left,mode,max_time)
                 t1=t1+1;    
                 if(untension)
                     the_xf = X(1); the_yf = Y(1); the_zf=Z(1);
+                    the_xr = X(1); the_yr = Y(1); the_zr=Z(1);
                 else
-                    the_xf = X(1); the_yf = Y(1); the_zf=tension_angle;
+                    the_xf = X(1); the_yf = Y(1); the_zf=Z(1);
+                    the_xr = X(1); the_yr = Y(1); the_zr=tension_angle;
                 end
             elseif t<=t_branch_s-gap_time%スタート～カーブ開始
                 t1=t1+1;
-                the_xf = X(1); the_yf = Y(1); 
+                the_xf = X(1); the_yf = Y(1); the_zf = Z(1);
+                the_xr = X(1); the_yr = Y(1); 
                 t_temp=t-(t_branch_s-tension_time-gap_time);
                 rate=t_temp/tension_time;
                 if(untension)
-                    the_zf = Z(1);
+                    the_zr = Z(1);
                 else
-                    the_zf = tension_angle*(1-rate)+rate*Z(1);
+                    the_zr = tension_angle*(1-rate)+rate*Z(1);
                 end
             elseif t<=t_branch_s%スタート～カーブ開始
                 t1=t1+1;
                 the_xf = X(1); the_yf = Y(1); the_zf = Z(1);
+                the_xr = X(1); the_yr = Y(1); the_zr=Z(1);
             elseif t<=t_branch_c%カーブ開始～非行き先ケーブル
                 t2=t2+1;
                 the_xf = X(round(t2/t_step)); the_yf = Y(round(t2/t_step)); the_zf = Z(round(t2/t_step));
+                the_xr = X(round(t2/t_step)); the_yr = Y(round(t2/t_step)); the_zr = Z(round(t2/t_step));
             elseif t<=t_branch_e%非行き先ケーブル～カーブ終了
                 t3=t3+1;
                 the_xf = X (round((t2+t3)/t_step)); the_yf = Y( round((t2+t3)/t_step)); the_zf = Z(round((t2+t3)/t_step));
+                the_xr = X (round((t2+t3)/t_step)); the_yr = Y( round((t2+t3)/t_step)); the_zr = Z(round((t2+t3)/t_step));
             elseif t<=t_branch_e+tension_time%カーブ終了～終わり
                 t4=t4+1;
                 t_temp=(t-t_branch_e);
                 rate=t_temp/tension_time;
                 if(untension)
                     the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
+                    the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = Z(n_bra);
                 else
                     the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = tension_angle*rate+Z(n_bra);
+                    the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = tension_angle*rate+Z(n_bra);
                 end
             elseif t<=t_end%カーブ終了～終わり
                 t4=t4+1;
                 if(untension)
                     the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
+                    the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = Z(n_bra);
                 else
-                the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = tension_angle+Z(n_bra);
+                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = tension_angle+Z(n_bra);
+                    the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = tension_angle+Z(n_bra);
                 end
                 
             else
@@ -385,23 +422,39 @@ function Main(a,b,right,left,mode,max_time)
                 P=Ln*x_cable+Sigma_cable;
             elseif norm(Q1-Sigma_cable)<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc
                 t_arc=(Ln-norm(Q1-Sigma_cable))/(R_rute);
-                P=O_R_-y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc);
+                if mode==1
+                    P=O_R_-y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc);
+                else
+                    P=O_R_+y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc);
+                    %P=O_R_-y_cable*R_rute*sin(t_arc)+x_cable*R_rute*cos(t_arc);
+                end
             elseif norm(Q1-Sigma_cable)+L_arc<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2)
                 P=Q2+(Ln-L_arc-norm(Q1-Sigma_cable))*e2;
             else
                 P=P_e;
             end
             P_f=World2Plane(P);
-            C_f=Plane2World(P_f)+ R("x",the_xf)*R("y",the_yf)*[Rw*sin(the_zf);d/2+rw-Rw*cos(the_zf);0];
+            if mode==1
+                C_f=Plane2World(P_f)+ R("x",the_xf)*R("y",the_yf)*[Rw*sin(the_zf);d/2+rw-Rw*cos(the_zf);0];
+                C_r=Plane2World(P_f)+ R("x",the_xr)*R("y",the_yr)*[Rw*sin(the_zr);d/2+rw-Rw*cos(the_zr);0];
+            else
+                C_f =Plane2World(P_f)+R("x",the_xf)*R("y",the_yf)*[-Rw*sin(the_zf);-d/2-rw+Rw*cos(the_zf);0];
+                C_r =Plane2World(P_f)+R("x",the_xr)*R("y",the_yr)*[-Rw*sin(the_zr);-d/2-rw+Rw*cos(the_zr);0];
+            end
             P_f=Plane2World(P_f);
             List_time=[List_time t];
             List_Ln=[List_Ln Ln];
             List_P=[List_P P_f];%List_Pf(:,2)のようにして取り出す
-            List_C=[List_C C_f];
+            List_C_f=[List_C_f C_f];
+            List_C_r=[List_C_r C_r];
     
-            List_the_x=[List_the_x the_xf];
-            List_the_y=[List_the_y the_yf];
-            List_the_z=[List_the_z the_zf];
+            List_the_x_f=[List_the_x_f the_xf];
+            List_the_y_f=[List_the_y_f the_yf];
+            List_the_z_f=[List_the_z_f the_zf];
+
+            List_the_x_r=[List_the_x_r the_xr];
+            List_the_y_r=[List_the_y_r the_yr];
+            List_the_z_r=[List_the_z_r the_zr];
         end
     
     %% ロボットによる走行
@@ -411,12 +464,14 @@ function Main(a,b,right,left,mode,max_time)
     for t = 1:max_time
         Lnr=Lnr+omega(t)*pi/180*r_v*t_step;
         P_r=List_P(:,t);
-        C_r=List_C(:,t);
+        C_r=List_C_r(:,t);
         
         best_diff=1000000;
         next_best_idx=best_idx;
+
+        
         for i=t:max_time
-            diff=norm(List_C(:,i)-C_r);
+            diff=norm(List_C_f(:,i)-C_r);
             if abs(diff-Lc)<best_diff
                 best_diff=abs(diff-Lc);
                 next_best_idx=i;
@@ -428,7 +483,7 @@ function Main(a,b,right,left,mode,max_time)
         best_idx=next_best_idx;
 
         P_f=List_P(:,best_idx);
-        C_f=List_C(:,best_idx);
+        C_f=List_C_f(:,best_idx);
         Lnf=List_Ln(:,best_idx);
 
         temp=World2Plane(O_n);
@@ -436,22 +491,30 @@ function Main(a,b,right,left,mode,max_time)
             t_start_cable=t;
         end
 
-        if(Lnf>norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2))
+        if(Lnr>norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2)-norm(P_e-O_n)+L_end_cable-Lc)
             t_end_cable=t;
-            break;
+            
+            the_xr=X(n_bra);
+            the_yr=Y(n_bra);
+            if(untension)
+                the_zr=Z(n_bra);
+            else
+                the_zr=tension_angle+Z(n_bra);
+            end
+            the_xf=X(n_bra);
+            the_yf=Y(n_bra);
+            the_zf=Z(n_bra);
+            omega_r=omega_end;
+        else
+            the_xr=List_the_x_r(:,t);
+            the_yr=List_the_y_r(:,t);
+            the_zr=List_the_z_r(:,t);
+            the_xf=List_the_x_f(:,best_idx);
+            the_yf=List_the_y_f(:,best_idx);
+            the_zf=List_the_z_f(:,best_idx);
+            omega_r=omega(t);
         end
 
-        if switching==14
-            %% switching==14
-                the_xr=List_the_x(:,t);
-                the_yr=List_the_y(:,t);
-                the_zr=List_the_z(:,t);
-                the_xf=List_the_x(:,best_idx);
-                the_yf=List_the_y(:,best_idx);
-                the_zf=List_the_z(:,best_idx);
-                omega_r=omega(t);
-        end
-        
         %% 各関節角度の収束計算
             OrCr=C_r-P_r;
             OfCf=C_f-P_f;
@@ -617,18 +680,18 @@ function Main(a,b,right,left,mode,max_time)
                     curve_cable_plot(O_R_,e2_,-e2,R_rute,the_arc)
     
                     %必要な点をプロットする                    
-                    if false
-                        plotP(Sigma_cable_,"Σcable");
-                        plotP(Sigma_cable_,"Σcable'");
+                    if true
+                        plotP(Sigma_cable_,"Σcable",100,20);
+                        plotP(Sigma_cable_,"Σcable'",100,20);
         
-                        plotP(O_n,"On");
-                        plotP(O_n_,"On'");
+                        plotP(O_n,"On",100,20);
+                        plotP(O_n_,"On'",100,20);
                         
-                        plotP(O_R,"OR");
-                        plotP(O_R_,"OR'");
+                        plotP(O_R,"OR",100,20);
+                        plotP(O_R_,"OR'",100,20);
         
-                        plotP(P_e,"Pe");
-                        plotP(P_e_,"Pe'");
+                        plotP(P_e,"Pe",100,20);
+                        plotP(P_e_,"Pe'",100,20);
     
                         plotP(P_f,"P_f",100,20);
                         plotP(C_f,"C_f",100,20);
@@ -642,6 +705,10 @@ function Main(a,b,right,left,mode,max_time)
                     ylabel('y[mm]')
                     zlabel('z[mm]')
                     pause(t_step)
+            end
+
+            if(t_end_cable==t)
+                break;
             end
     end
 
@@ -658,20 +725,25 @@ function Main(a,b,right,left,mode,max_time)
         if t<t_start+chect_num+1
             data(t,7)=(debug_data(t+chect_num,7)-debug_data(t,7))/(chect_num*r_v*t_step)*180/pi;
         elseif t>t_end_cable-chect_num
-            data(t,7)=(debug_data(t,7)-debug_data(t-chect_num,7))/(chect_num*r_v*t_step)*180/pi;
+            data(t,7)=omega_end;
         else
             data(t,7)=(debug_data(t+chect_num,7)-debug_data(t-chect_num,7))/(2*chect_num*r_v*t_step)*180/pi;
         end
 
 
         %↑使ってない。前方微分する。
-        data(t,7)=(debug_data(t+1,7)-debug_data(t,7))/(r_v*t_step)*180/pi;
+        %data(t,7)=(debug_data(t+1,7)-debug_data(t,7))/(r_v*t_step)*180/pi;
 
-        if data(t,7)>212
+        if data(t,7)>30
             over_time_min=min(t,over_time_min);
             over_time_max=max(t,over_time_max);
             over_speed=data(t,7);
-            data(t,7)=270;
+            data(t,7)=30;
+        elseif data(t,7)<-30
+            over_time_min=min(t,over_time_min);
+            over_time_max=max(t,over_time_max);
+            over_speed=data(t,7);
+            data(t,7)=-30;
         end
     end
     if(over_time_min<100000)
@@ -701,6 +773,10 @@ function Main(a,b,right,left,mode,max_time)
             else
                 text = "C:\Users\MSD\Documents\GitHub\NonStopData\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
             end
+            if(untension==0)
+                text=text+"_T";
+            end
+
             writematrix(data,text+'.csv')
         end
 
@@ -1205,7 +1281,7 @@ end
 
 %% ロボットのパラメータ系の関数
 function omega=omega(t)
-    omega=212;%deg/s
-    omega=212;
+    omega=30;%deg/s
+    omega=30;
 end
 
