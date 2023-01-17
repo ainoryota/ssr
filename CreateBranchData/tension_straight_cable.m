@@ -68,11 +68,16 @@ for loop=1:2
                             if exist("O:\マイドライブ\Research\非停止分岐動作\分岐データ\")>0
                                 text = "O:\マイドライブ\Research\非停止分岐動作\分岐データ\";
                             else
-                                text = "C:\Users\MSD\Documents\GitHub\Data\";
+                                text = "C:\Users\MSD\Documents\GitHub\NonStopData\";
+                                text2 = "C:\Users\MSD\Documents\GitHub\Data\";
                             end
     
                             name= text+a+ "_" + b+ "_" + right+ "_" + left+"_"+mode+".csv";
+                            name2= text2+a+ "_" + b+ "_" + right+ "_" + left+"_"+mode+".csv";                           
                             if(exist(name, 'file')~=0)
+                                continue
+                            end
+                            if(exist(name2, 'file')==0)
                                 continue
                             end
                 
@@ -94,6 +99,7 @@ for loop=1:2
         end
     end
 end
+
 disp("fin")
 
 %% メイン関数

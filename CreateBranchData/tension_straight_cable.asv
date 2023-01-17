@@ -12,7 +12,7 @@ start_count=0;
 t_step = 0.036;%制御周期
 
 %% 初期設定
-testmode=1;
+testmode=0;
 
 
 save = 1;           %データの保存,CSV書き出しon,off
@@ -51,8 +51,8 @@ tic
 for loop=1:2
     for untension=0:1
         for mode=1:2
-            for a=-90:5:90
-                for b=-90:5:30
+            for a=-30:5:30
+                for b=-30:5:90
                     for left=0:5:90
                         for right=0:5:90
                             if loop==1
@@ -68,7 +68,7 @@ for loop=1:2
                             if exist("O:\マイドライブ\Research\非停止分岐動作\分岐データ\")>0
                                 text = "O:\マイドライブ\Research\非停止分岐動作\分岐データ\";
                             else
-                                text = "C:\Users\MSD\Documents\GitHub\Data\";
+                                text = "C:\Users\MSD\Documents\GitHub\NonStopData\";
                             end
     
                             name= text+a+ "_" + b+ "_" + right+ "_" + left+"_"+mode+".csv";
@@ -84,7 +84,7 @@ for loop=1:2
                             try
                                 Main(a,b,right,left,mode,max_time,untension)
                             catch exception
-                                pass;
+                                ;
                                 %disp(exception)
                             end
                         end
@@ -344,10 +344,14 @@ function Main(a,b,right,left,mode,max_time,untension)
         List_time=[];
         List_Ln=[];
         List_P=[];
-        List_C=[];
-        List_the_x=[];
-        List_the_y=[];
-        List_the_z=[];
+        List_C_f=[];
+        List_C_r=[]; 
+        List_the_x_f=[];
+        List_the_y_f=[];
+        List_the_z_f=[];
+        List_the_x_r=[];
+        List_the_y_r=[];
+        List_the_z_r=[];
     
         Ln=0;
         tension_time=1/t_step;
@@ -396,7 +400,7 @@ function Main(a,b,right,left,mode,max_time,untension)
                     the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
                     the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = Z(n_bra);
                 else
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = -tension_angle*rate+Z(n_bra);
+                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = tension_angle*rate+Z(n_bra);
                     the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = tension_angle*rate+Z(n_bra);
                 end
             elseif t<=t_end%カーブ終了～終わり
@@ -405,7 +409,7 @@ function Main(a,b,right,left,mode,max_time,untension)
                     the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
                     the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = Z(n_bra);
                 else
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = -tension_angle+Z(n_bra);
+                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = tension_angle+Z(n_bra);
                     the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = tension_angle+Z(n_bra);
                 end
                 
@@ -435,17 +439,22 @@ function Main(a,b,right,left,mode,max_time,untension)
                 C_r=Plane2World(P_f)+ R("x",the_xr)*R("y",the_yr)*[Rw*sin(the_zr);d/2+rw-Rw*cos(the_zr);0];
             else
                 C_f =Plane2World(P_f)+R("x",the_xf)*R("y",the_yf)*[-Rw*sin(the_zf);-d/2-rw+Rw*cos(the_zf);0];
-                C_r =Plane2World(P_f)+R("x",the_xr)*R("y",the_yf)*[-Rw*sin(the_zf);-d/2-rw+Rw*cos(the_zf);0];
+                C_r =Plane2World(P_f)+R("x",the_xr)*R("y",the_yr)*[-Rw*sin(the_zr);-d/2-rw+Rw*cos(the_zr);0];
             end
             P_f=Plane2World(P_f);
             List_time=[List_time t];
             List_Ln=[List_Ln Ln];
             List_P=[List_P P_f];%List_Pf(:,2)のようにして取り出す
-            List_C=[List_C C_f];
+            List_C_f=[List_C_f C_f];
+            List_C_r=[List_C_r C_r];
     
-            List_the_x=[List_the_x the_xf];
-            List_the_y=[List_the_y the_yf];
-            List_the_z=[List_the_z the_zf];
+            List_the_x_f=[List_the_x_f the_xf];
+            List_the_y_f=[List_the_y_f the_yf];
+            List_the_z_f=[List_the_z_f the_zf];
+
+            List_the_x_r=[List_the_x_r the_xr];
+            List_the_y_r=[List_the_y_r the_yr];
+            List_the_z_r=[List_the_z_r the_zr];
         end
     
     %% ロボットによる走行
@@ -455,12 +464,14 @@ function Main(a,b,right,left,mode,max_time,untension)
     for t = 1:max_time
         Lnr=Lnr+omega(t)*pi/180*r_v*t_step;
         P_r=List_P(:,t);
-        C_r=List_C(:,t);
+        C_r=List_C_r(:,t);
         
         best_diff=1000000;
         next_best_idx=best_idx;
+
+        
         for i=t:max_time
-            diff=norm(List_C(:,i)-C_r);
+            diff=norm(List_C_f(:,i)-C_r);
             if abs(diff-Lc)<best_diff
                 best_diff=abs(diff-Lc);
                 next_best_idx=i;
@@ -472,7 +483,7 @@ function Main(a,b,right,left,mode,max_time,untension)
         best_idx=next_best_idx;
 
         P_f=List_P(:,best_idx);
-        C_f=List_C(:,best_idx);
+        C_f=List_C_f(:,best_idx);
         Lnf=List_Ln(:,best_idx);
 
         temp=World2Plane(O_n);
@@ -493,14 +504,14 @@ function Main(a,b,right,left,mode,max_time,untension)
             the_xf=X(n_bra);
             the_yf=Y(n_bra);
             the_zf=Z(n_bra);
-            omega_r=omega_end
+            omega_r=omega_end;
         else
-            the_xr=List_the_x(:,t);
-            the_yr=List_the_y(:,t);
-            the_zr=List_the_z(:,t);
-            the_xf=List_the_x(:,best_idx);
-            the_yf=List_the_y(:,best_idx);
-            the_zf=List_the_z(:,best_idx);
+            the_xr=List_the_x_r(:,t);
+            the_yr=List_the_y_r(:,t);
+            the_zr=List_the_z_r(:,t);
+            the_xf=List_the_x_f(:,best_idx);
+            the_yf=List_the_y_f(:,best_idx);
+            the_zf=List_the_z_f(:,best_idx);
             omega_r=omega(t);
         end
 
