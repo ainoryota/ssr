@@ -12,7 +12,7 @@ start_count=0;
 t_step = 0.036;%制御周期
 
 %% 初期設定
-testmode=0;
+testmode=1;
 
 
 save = 1;           %データの保存,CSV書き出しon,off
@@ -28,7 +28,7 @@ if testmode==1
     b=0;
     right=20;
     left=80;
-    mode_value=2;
+    mode_value=1;
     untension_value=0;
 
     animation=0;
@@ -361,25 +361,25 @@ function Main(a,b,right,left,mode,max_time,untension)
     
         Ln=0;
         tension_time=1/t_step;
-        gap_time=5/t_step;
+        r_gap_time=1/t_step;
+        f_gap_time=1.5/t_step;
         
         
         for t=1:t_end
             Ln=Ln+omega(t)*pi/180*r_v*t_step;
-            if t<=t_branch_s-tension_time-gap_time%スタート～カーブ開始
+
+            %後輪
+            if t<=t_branch_s-tension_time-r_gap_time%スタート～カーブ開始
                 t1=t1+1;    
                 if(untension)
-                    the_xf = X(1); the_yf = Y(1); the_zf=Z(1);
                     the_xr = X(1); the_yr = Y(1); the_zr=Z(1);
                 else
-                    the_xf = X(1); the_yf = Y(1); the_zf=Z(1);
                     the_xr = X(1); the_yr = Y(1); the_zr=tension_angle;
                 end
-            elseif t<=t_branch_s-gap_time%スタート～カーブ開始
+            elseif t<=t_branch_s-r_gap_time%スタート～カーブ開始
                 t1=t1+1;
-                the_xf = X(1); the_yf = Y(1); the_zf = Z(1);
                 the_xr = X(1); the_yr = Y(1); 
-                t_temp=t-(t_branch_s-tension_time-gap_time);
+                t_temp=t-(t_branch_s-tension_time-r_gap_time);
                 rate=t_temp/tension_time;
                 if(untension)
                     the_zr = Z(1);
@@ -388,37 +388,69 @@ function Main(a,b,right,left,mode,max_time,untension)
                 end
             elseif t<=t_branch_s%スタート～カーブ開始
                 t1=t1+1;
-                the_xf = X(1); the_yf = Y(1); the_zf = Z(1);
                 the_xr = X(1); the_yr = Y(1); the_zr=Z(1);
             elseif t<=t_branch_c%カーブ開始～非行き先ケーブル
                 t2=t2+1;
-                the_xf = X(round(t2/t_step)); the_yf = Y(round(t2/t_step)); the_zf = Z(round(t2/t_step));
                 the_xr = X(round(t2/t_step)); the_yr = Y(round(t2/t_step)); the_zr = Z(round(t2/t_step));
             elseif t<=t_branch_e%非行き先ケーブル～カーブ終了
                 t3=t3+1;
-                the_xf = X (round((t2+t3)/t_step)); the_yf = Y( round((t2+t3)/t_step)); the_zf = Z(round((t2+t3)/t_step));
                 the_xr = X (round((t2+t3)/t_step)); the_yr = Y( round((t2+t3)/t_step)); the_zr = Z(round((t2+t3)/t_step));
             elseif t<=t_branch_e+tension_time%カーブ終了～終わり
                 t4=t4+1;
                 t_temp=(t-t_branch_e);
                 rate=t_temp/tension_time;
                 if(untension)
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
                     the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = Z(n_bra);
                 else
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = tension_angle*rate+Z(n_bra);
                     the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = tension_angle*rate+Z(n_bra);
                 end
             elseif t<=t_end%カーブ終了～終わり
                 t4=t4+1;
                 if(untension)
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
                     the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = Z(n_bra);
                 else
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = tension_angle+Z(n_bra);
                     the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = tension_angle+Z(n_bra);
                 end
                 
+            else
+                disp("error:out of range");
+                break;
+            end
+
+            %前輪
+            if t<=t_branch_s-tension_time-r_gap_time%スタート～カーブ開始  
+                the_xf = X(1); the_yf = Y(1); the_zf=Z(1);
+            elseif t<=t_branch_s-r_gap_time%スタート～カーブ開始
+                the_xf = X(1); the_yf = Y(1); the_zf = Z(1);
+                t_temp=t-(t_branch_s-tension_time-r_gap_time);
+                rate=t_temp/tension_time;
+                if(untension)
+                    the_zr = Z(1);
+                else
+                    the_zr = tension_angle*(1-rate)+rate*Z(1);
+                end
+            elseif t<=t_branch_s%スタート～カーブ開始
+                the_xf = X(1); the_yf = Y(1); the_zf = Z(1);
+            elseif t<=t_branch_c%カーブ開始～非行き先ケーブル
+                the_xf = X(round(t2/t_step)); the_yf = Y(round(t2/t_step)); the_zf = Z(round(t2/t_step));
+            elseif t<=t_branch_e%非行き先ケーブル～カーブ終了
+                the_xf = X (round((t2+t3)/t_step)); the_yf = Y( round((t2+t3)/t_step)); the_zf = Z(round((t2+t3)/t_step));
+            elseif t<=t_branch_e+f_gap_time%カーブ終了～終わり
+                the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
+            elseif t<=t_branch_e+tension_time+f_gap_time%カーブ終了～終わり
+                t_temp=(t-t_branch_e-f_gap_time);
+                rate=t_temp/tension_time;
+                if(untension)
+                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
+                else
+                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = -tension_angle*rate+Z(n_bra);
+                end
+            elseif t<=t_end%カーブ終了～終わり
+                if(untension)
+                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
+                else
+                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = -tension_angle+Z(n_bra);
+                end
             else
                 disp("error:out of range");
                 break;
@@ -475,16 +507,48 @@ function Main(a,b,right,left,mode,max_time,untension)
         best_diff=1000000;
         next_best_idx=best_idx;
 
-        
+%         if(next_best_idx==best_idx)
+%             for i=t:max_time
+%                 diff=norm(List_C_f(:,i)-C_r);
+%                 if abs(diff-Lc)<best_diff
+%                     best_diff=abs(diff-Lc);
+%                     next_best_idx=i;
+%                 end
+%             end
+%         end
+
+        %diff=norm(List_C_f(:,next_best_idx)-C_r);
+        %disp(["A:" best_idx next_best_idx abs(List_the_z_f(:,best_idx)-List_the_z_f(:,next_best_idx)) diff])
+        best_diff=1000000;
+        next_best_idx=best_idx;
+
+       
         for i=t:max_time
             diff=norm(List_C_f(:,i)-C_r);
             if abs(diff-Lc)<best_diff
+
                 best_diff=abs(diff-Lc);
                 next_best_idx=i;
             end
         end
 
+        if(next_best_idx-best_idx>15 && best_idx~=1)
+            best_diff=1000000;
+            next_best_idx=best_idx;
+            for i=best_idx+1:best_idx+3
+                diff=norm(List_C_f(:,i)-C_r);
+                if abs(diff-Lc)<best_diff
+                    best_diff=abs(diff-Lc);
+                    next_best_idx=i;
+                end
+            end
+        end
 
+
+
+        diff=norm(List_C_f(:,next_best_idx)-C_r);
+        disp([t diff next_best_idx])
+        %disp(["B" best_idx next_best_idx abs(List_the_z_f(:,best_idx)-List_the_z_f(:,next_best_idx)) diff List_the_z_f(:,best_idx)])
 
         best_idx=next_best_idx;
 
@@ -546,6 +610,9 @@ function Main(a,b,right,left,mode,max_time,untension)
 
         %% 描画
             if animation == 1 &&  temp(1)-Lnf<L_start_cable && Lnf<norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2)
+                if(t>490)
+                    disp([the_xf the_yf the_zf the_xr the_yr the_zr])
+                end
                 if mod(t,time_step)~=0
                     continue
                 end
@@ -555,6 +622,7 @@ function Main(a,b,right,left,mode,max_time,untension)
     
                     %モータの位置だし
                     %準備
+                    
                     [Xm,Ym,Zm] = cylinder(rm);                  %基準円柱座標（モータ部分）
                     Zm = (Zm - 0.5).*lm;                        %円柱の高さ補正
                     %Xm = Xm + 0.01*t; 
@@ -1199,7 +1267,7 @@ function curve_cable_plot(O,e1,e2,R,theta_max)
     zlim([-250 550])
     %写真用
     xlim([-300 1500]) 
-    ylim([-450 750]) 
+    ylim([-550 750]) 
     zlim([-450 450])
     
     
