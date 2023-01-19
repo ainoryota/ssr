@@ -245,7 +245,7 @@ class RealSense(object):
 
         if(self.stop_branch_time > 0):
             self.stop_branch_time-=1
-        elif(rule0 > 0.9 and rule1 > 1 and rule2 > 1 and rule5 > 0.5 and rule6 > 0.5 and rule7 > 0):#and rule3_L < 10000 and rule3_R < 10000
+        elif(rule0 > 0.9 and rule1 > 1 and rule2> 1 and rule5 > 0.5 and rule6 > 0.5 and rule7 > 0):#and rule3_L < 10000 and rule3_R < 10000
             OutputController().msgPrint("■■■■■分岐",tangle,InclinationAngle,Rangle,Langle)
             (tangle,InclinationAngle,Rangle,Langle) = getLikeAngle(tangle,InclinationAngle,Rangle,Langle)
             if((InclinationAngle,tangle,Rangle,Langle) != (0,0,0,0)):

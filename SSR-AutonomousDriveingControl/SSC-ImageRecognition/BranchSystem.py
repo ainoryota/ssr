@@ -239,7 +239,7 @@ class BranchSystem:
         if(len(l1) < N1 / 2):
             if(len(l1) > 0):
                 a,b = reg1dim(l1,l2)   
-                rule2 = (b + a * (start_time + one_time * (5 + N1))) / (self.h * 1.2)
+                rule2 = (b + a * (start_time + one_time * (5 + N1))) / (self.h +35)
             else:
                 a = 0
                 b = 0
@@ -263,7 +263,7 @@ class BranchSystem:
             #a,b = L_abs_minimize(l1,l2)
             
             
-            rule2 = (b + a * (start_time + one_time * (5 + N1))) / (self.h * 1.2)
+            rule2 = (b + a * (start_time + one_time * (5 + N1))) / (self.h +35)
 
             OutputController().msgPrint("l2:","a=",a,"b=",b,"one_time=",one_time,"place=",(b + a * (one_time * (5 + N1))),"l2=",l2)
 

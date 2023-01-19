@@ -94,6 +94,7 @@ class Form(object):
         PushButton(tk,upArea,0,15,' 前進カメラ ',self.frontCam)
         PushButton(tk,upArea,0,16,' 後退カメラ ',self.backCam)
         PushButton(tk,upArea,0,17,' webカメラ ',self.webCam)
+        PushButton(tk,upArea,0,19,' 逆初期化 ',self.backinit)
 
         #チェックボックスの作成
         self.data = dict()
@@ -168,7 +169,7 @@ class Form(object):
         self.data["entry3"].delete(0,'end')
         self.data["entry3"].insert(0,'0_0_20_80')
         self.data["entry4"].delete(0,'end')
-        self.data["entry4"].insert(0,'-5_0_60_80')
+        self.data["entry4"].insert(0,'5_-5_45_60')
         
 
 
@@ -210,7 +211,43 @@ class Form(object):
         self.robot.motors[10].insertOrder(VelocityOrder(0,0))
         self.robot.motors[11].insertOrder(VelocityOrder(0,0))
         OutputController().pushStep()       
+        self.data["v3"].set(True) 
+        self.data["v4"].set(False)
 
+        #ボタン関数の定義
+    def backinit(self):
+        self.robot.motors[0].insertOrder(MotorModeOrder(MotorMode.PosNormal,0))
+        self.robot.motors[1].insertOrder(MotorModeOrder(MotorMode.PosNormal,0))
+        self.robot.motors[2].insertOrder(MotorModeOrder(MotorMode.PosNormal,0))
+        self.robot.motors[3].insertOrder(MotorModeOrder(MotorMode.PosNormal,0))
+        self.robot.motors[4].insertOrder(MotorModeOrder(MotorMode.VelocityNormal,0))
+        self.robot.motors[5].insertOrder(MotorModeOrder(MotorMode.VelocityNormal,0))
+        self.robot.motors[6].insertOrder(MotorModeOrder(MotorMode.PosNormal,0))
+        self.robot.motors[7].insertOrder(MotorModeOrder(MotorMode.PosNormal,0))
+        self.robot.motors[8].insertOrder(MotorModeOrder(MotorMode.PosNormal,0))
+        self.robot.motors[9].insertOrder(MotorModeOrder(MotorMode.VelocityNormal,0))
+        self.robot.motors[10].insertOrder(MotorModeOrder(MotorMode.VelocityNormal,0))
+        self.robot.motors[11].insertOrder(MotorModeOrder(MotorMode.VelocityNormal,0))
+
+        #初期姿勢
+        d = np.loadtxt("C:/Users/MSD/Documents/GitHub/NonStopData/normal_switching.csv",delimiter=",")
+        (n,m) = d.shape
+        n-=1;
+        self.robot.motors[0].insertOrder(PosOrder(0,0))
+        self.robot.motors[1].insertOrder(PosOrder(round(d[n,0] / math.pi * 180,2),0))
+        self.robot.motors[2].insertOrder(PosOrder(round(d[n,1] / math.pi * 180,2),0))
+        self.robot.motors[3].insertOrder(PosOrder(round(d[n,2] / math.pi * 180,2),0))
+        self.robot.motors[4].insertOrder(VelocityOrder(0,0))
+        self.robot.motors[5].insertOrder(VelocityOrder(0,0))
+        self.robot.motors[6].insertOrder(PosOrder(round(d[n,3] / math.pi * 180,2),0))
+        self.robot.motors[7].insertOrder(PosOrder(round(d[n,4] / math.pi * 180,2),0))
+        self.robot.motors[8].insertOrder(PosOrder(round(d[n,5] / math.pi * 180,2),0))
+        self.robot.motors[9].insertOrder(VelocityOrder(0,0))
+        self.robot.motors[10].insertOrder(VelocityOrder(0,0))
+        self.robot.motors[11].insertOrder(VelocityOrder(0,0))
+        OutputController().pushStep()
+        self.data["v3"].set(False) 
+        self.data["v4"].set(True)
     
     def forward(self):   
         OutputController().msgPrint("○○○Forward○○○")

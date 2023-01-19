@@ -24,15 +24,16 @@ time_step=10;
 
 %% プログラム開始
 if testmode==1
-    a=0;
-    b=0;
-    right=20;
-    left=80;
-    mode_value=1;
+    a=5;
+    b=-5;
+    right=45;
+    left=60;
+    mode_value=2;
     untension_value=0;
 
     animation=0;
     save=1;
+    Main(a,b,right,left,mode_value,max_time,untension_value)
     for untension=0:1
         for mode=1:2
             Main(a,b,right,left,mode,max_time,untension)
@@ -154,7 +155,7 @@ function Main(a,b,right,left,mode,max_time,untension)
        % a3 = 30/180*pi;         %1軸目の取り付け角（論文ではa0） 
 
     %各リンクの重さ，重心位置，長さ
-        Lc = 260;%本当は280
+        Lc = 255;%本当は280
         l2_min = (Lc-80)/2;
         l1 = 90;                %各モーターの中心点からの距離
         l2 = l2_min/sin(a2);
@@ -298,6 +299,88 @@ function Main(a,b,right,left,mode,max_time,untension)
 
     %% XYXオイラー角とクォータニオンによる分岐時の姿勢表現
 
+        tension_time=1/t_step;
+        r_gap_time=1/t_step;
+        f_gap_time=1.5/t_step;
+        
+%         E0=[0;0;0];E1=[0;0;0];E2=[0;0;0];E3=[0;0;0];E4=[0;0;0];E5=[0;0;0];E6=[0;0;0];E7=[0;0;0];E8=[0;0;0];
+%         t0=0;t1=0;t2=0;t3=0;t4=0;t5=0;t6=0;t7=0;t8=0;
+%         Q0=Sigma_cable;Q1=[0;0;0];Q2=[0;0;0];Q3=[0;0;0];Q4=[0;0;0];Q5=[0;0;0];Q6=[0;0;0];Q7=[0;0;0];Q8=[0;0;0];
+%         eP0=Plane2World([1;0;0]);eP1=[0;0;0];eP2=[0;0;0];eP3=[0;0;0];eP4=[0;0;0];eP5=[0;0;0];eP6=[0;0;0];eP7=[0;0;0];eP8=[0;0;0];
+% 
+%         Ln=0;
+%         for t=1:max_time
+%             Ln=Ln+omega(t)*pi/180*r_v*t_step;
+%             if 0<=Ln && Ln<norm(Q1-Sigma_cable)
+%                 P=Ln*x_cable+Sigma_cable;
+%                 eP=x_cable;
+%             elseif norm(Q1-Sigma_cable)<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc
+%                 t_arc=(Ln-norm(Q1-Sigma_cable))/(R_rute);
+%                 if mode==1
+%                     P=O_R_-y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc);
+%                     eP=y_cable*R_rute*sin(t_arc)+x_cable*R_rute*cos(t_arc);
+%                 else
+%                     P=O_R_+y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc);
+%                     eP=-y_cable*R_rute*sin(t_arc)+x_cable*R_rute*cos(t_arc);
+%                 end
+%             elseif norm(Q1-Sigma_cable)+L_arc<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2)
+%                 P=Q2+(Ln-L_arc-norm(Q1-Sigma_cable))*e2;
+%                 eP=e2;
+%             else
+%                 break;
+%             end
+%             eP=eP/norm(eP);
+%             eP=Plane2World(eP);
+% 
+%             if t<=t_branch_s-tension_time-r_gap_time%スタート～カーブ開始
+%                 t1=t;
+%                 Q1=P;
+%                 eP1=eP;               
+%             elseif t<=t_branch_s-r_gap_time%スタート～カーブ開始
+%                 t2=t;
+%                 Q2=P;
+%                 eP2=eP;
+%             elseif t<=t_branch_s%スタート～カーブ開始
+%                 t3=t;
+%                 Q3=P;
+%                 eP3=eP;
+%             elseif t<=t_branch_c%カーブ開始～非行き先ケーブル
+%                 t4=t;
+%                 Q4=P;
+%                 eP4=eP;
+%             elseif t<=t_branch_e%非行き先ケーブル～カーブ終了
+%                 t5=t;
+%                 Q5=P;
+%                 eP5=eP;
+%             elseif t<=t_branch_e+tension_time%カーブ終了～終わり
+%                 t6=t;
+%                 Q6=P;
+%                 eP6=eP;
+%             elseif t<=t_branch_e+tension_time+f_gap_time%カーブ終了～終わり
+%                 t7=t;
+%                 Q7=P;
+%                 eP7=eP;
+%             elseif t<=t_end%カーブ終了～終わり
+%                 t8=t;
+%                 Q8=P;
+%                 eP8=eP;
+%             end
+%         end
+%         E0=getPosure(eP0,e1,mode);
+%         E1=getPosure(eP1,e1,mode);
+%         E2=getPosure(eP2,e1,mode);
+%         E3=getPosure(eP3,e1,mode);
+%         if(mode==1)
+%             E4 = [-pi/2-phi_n,-pi/2+the_nL,phi_nw];  %サブケーブルを抜く姿勢 
+%         else
+%             E4 = [pi/2-phi_n,-pi/2+the_nR,-phi_nw];  %サブケーブルを抜く姿勢 
+%         end
+% 
+%         E5=getPosure(eP5,e1,mode);
+%         E6=getPosure(eP6,e1,mode);
+%         E7=getPosure(eP7,e1,mode);
+%         E8=getPosure(eP8,e1,mode);
+
         %分岐動作における姿
         E0_R = [-pi/2,0,0];               %オイラー角の初期値
         E1_R = [-pi/2-phi_n,-pi/2+the_nL,phi_nw];  %サブケーブルを抜く姿勢 
@@ -360,13 +443,33 @@ function Main(a,b,right,left,mode,max_time,untension)
         List_the_z_r=[];
     
         Ln=0;
-        tension_time=1/t_step;
-        r_gap_time=1/t_step;
-        f_gap_time=1.5/t_step;
-        
+
         
         for t=1:t_end
             Ln=Ln+omega(t)*pi/180*r_v*t_step;
+
+
+            if 0<=Ln && Ln<norm(Q1-Sigma_cable)
+                P=Ln*x_cable+Sigma_cable;
+                eP=x_cable;
+            elseif norm(Q1-Sigma_cable)<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc
+                t_arc=(Ln-norm(Q1-Sigma_cable))/(R_rute);
+                if mode==1
+                    P=O_R_-y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc);
+                    eP=y_cable*R_rute*sin(t_arc)+x_cable*R_rute*cos(t_arc);
+                else
+                    P=O_R_+y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc);
+                    eP=-y_cable*R_rute*sin(t_arc)+x_cable*R_rute*cos(t_arc);
+                    %P=O_R_-y_cable*R_rute*sin(t_arc)+x_cable*R_rute*cos(t_arc);
+                end
+            elseif norm(Q1-Sigma_cable)+L_arc<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2)
+                P=Q2+(Ln-L_arc-norm(Q1-Sigma_cable))*e2;
+                eP=e2;
+            else
+                P=P_e;
+                eP=e2;
+            end
+            eP=eP/norm(eP);
 
             %後輪
             if t<=t_branch_s-tension_time-r_gap_time%スタート～カーブ開始
@@ -456,21 +559,8 @@ function Main(a,b,right,left,mode,max_time,untension)
                 break;
             end
 
-            if 0<=Ln && Ln<norm(Q1-Sigma_cable)
-                P=Ln*x_cable+Sigma_cable;
-            elseif norm(Q1-Sigma_cable)<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc
-                t_arc=(Ln-norm(Q1-Sigma_cable))/(R_rute);
-                if mode==1
-                    P=O_R_-y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc);
-                else
-                    P=O_R_+y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc);
-                    %P=O_R_-y_cable*R_rute*sin(t_arc)+x_cable*R_rute*cos(t_arc);
-                end
-            elseif norm(Q1-Sigma_cable)+L_arc<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2)
-                P=Q2+(Ln-L_arc-norm(Q1-Sigma_cable))*e2;
-            else
-                P=P_e;
-            end
+
+
             P_f=World2Plane(P);
             if mode==1
                 C_f=Plane2World(P_f)+ R("x",the_xf)*R("y",the_yf)*[Rw*sin(the_zf);d/2+rw-Rw*cos(the_zf);0];
@@ -1357,5 +1447,19 @@ end
 function omega=omega(t)
     omega=212;%deg/s
     omega=212;
+end
+
+function E=getPosure(eP,e1,mode)
+    e3=cross(e1,eP);
+    phi_n=atan(e3(2)/e3(3));
+    gamma1=atan(e3(1)/e3(3));
+    the_n=acos(dot(-e1,eP));
+    if(mode==1)
+        %右分岐
+        E = [-pi/2-phi_n,-the_n,atan((-sin(gamma1)*sin(the_n) + cos(gamma1)*cos(the_n)*sin(phi_n))/cos(phi_n)*cos(gamma1))]; 
+    else
+        %左分岐
+        E = [pi/2-phi_n,-the_n,atan((sin(gamma1)*sin(the_n) + cos(gamma1)*cos(the_n)*sin(phi_n))/cos(phi_n)*cos(gamma1))]; 
+    end
 end
 
