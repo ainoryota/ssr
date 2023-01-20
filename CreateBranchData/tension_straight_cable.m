@@ -24,8 +24,8 @@ time_step=10;
 
 %% プログラム開始
 if testmode==1
-    a=5;
-    b=-5;
+    a=15;
+    b=15;
     right=45;
     left=60;
     mode_value=2;
@@ -155,7 +155,7 @@ function Main(a,b,right,left,mode,max_time,untension)
        % a3 = 30/180*pi;         %1軸目の取り付け角（論文ではa0） 
 
     %各リンクの重さ，重心位置，長さ
-        Lc = 255;%本当は280
+        Lc = 260;%本当は280
         l2_min = (Lc-80)/2;
         l1 = 90;                %各モーターの中心点からの距離
         l2 = l2_min/sin(a2);
@@ -214,7 +214,8 @@ function Main(a,b,right,left,mode,max_time,untension)
         P_e=Plane2World(World2Plane(O_n)+L_cable*[cos(the_n);sin(the_n);0]);
         e1=Plane2World([-1;0;0]);
         e2=(P_e-O_n)/norm(P_e-O_n);
-
+        e3=cross(e1,e2);
+        e3=e3/norm(e3);
         
     
         if mode == 1
@@ -246,12 +247,12 @@ function Main(a,b,right,left,mode,max_time,untension)
         
         
         
-        Q1=O_R_-R_rute*y_cable;
-        Q2=O_R_+R_rute*e2_;
+        Q3=O_R_-R_rute*y_cable;
+        Q5=O_R_+R_rute*e2_;
         
         L_arc=R_rute*the_arc;
 
-        if Q1(1)<0
+        if Q3(1)<0
             disp("L_cable is too small");
         end
 
@@ -270,32 +271,30 @@ function Main(a,b,right,left,mode,max_time,untension)
                     flag=flag+1;
                 end
             elseif flag==1
-                if Ln>=norm(Q1-Sigma_cable)
+                if Ln>=norm(Q3-Sigma_cable)
                     t_branch_s=t;
                     flag=flag+1;
                 end
             elseif flag==2
-                if Ln>=norm(Q1-Sigma_cable)+L_arc/2
+                if Ln>=norm(Q3-Sigma_cable)+L_arc/2
                     t_branch_c=t;
                     flag=flag+1;
                 end
             elseif flag==3
-                if Ln>=norm(Q1-Sigma_cable)+L_arc
+                if Ln>=norm(Q3-Sigma_cable)+L_arc
                     t_branch_e=t;
                     flag=flag+1;
                 end
             elseif flag==4
-                if Ln>=norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2)
+                if Ln>=norm(Q3-Sigma_cable)+L_arc+norm(P_e-Q5)
                     t_end=t;
                     break;
                 end
             end
         end
         max_time=t_end;
+
         
-        %従属的に決まるものたち
-        t_bra=t_branch_e-t_branch_s;
-        n_bra = round(t_bra/t_step);            %分岐にかかるカウント
 
     %% XYXオイラー角とクォータニオンによる分岐時の姿勢表現
 
@@ -303,131 +302,157 @@ function Main(a,b,right,left,mode,max_time,untension)
         r_gap_time=1/t_step;
         f_gap_time=1.5/t_step;
         
-%         E0=[0;0;0];E1=[0;0;0];E2=[0;0;0];E3=[0;0;0];E4=[0;0;0];E5=[0;0;0];E6=[0;0;0];E7=[0;0;0];E8=[0;0;0];
-%         t0=0;t1=0;t2=0;t3=0;t4=0;t5=0;t6=0;t7=0;t8=0;
-%         Q0=Sigma_cable;Q1=[0;0;0];Q2=[0;0;0];Q3=[0;0;0];Q4=[0;0;0];Q5=[0;0;0];Q6=[0;0;0];Q7=[0;0;0];Q8=[0;0;0];
-%         eP0=Plane2World([1;0;0]);eP1=[0;0;0];eP2=[0;0;0];eP3=[0;0;0];eP4=[0;0;0];eP5=[0;0;0];eP6=[0;0;0];eP7=[0;0;0];eP8=[0;0;0];
-% 
-%         Ln=0;
-%         for t=1:max_time
-%             Ln=Ln+omega(t)*pi/180*r_v*t_step;
-%             if 0<=Ln && Ln<norm(Q1-Sigma_cable)
-%                 P=Ln*x_cable+Sigma_cable;
-%                 eP=x_cable;
-%             elseif norm(Q1-Sigma_cable)<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc
-%                 t_arc=(Ln-norm(Q1-Sigma_cable))/(R_rute);
-%                 if mode==1
-%                     P=O_R_-y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc);
-%                     eP=y_cable*R_rute*sin(t_arc)+x_cable*R_rute*cos(t_arc);
-%                 else
-%                     P=O_R_+y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc);
-%                     eP=-y_cable*R_rute*sin(t_arc)+x_cable*R_rute*cos(t_arc);
-%                 end
-%             elseif norm(Q1-Sigma_cable)+L_arc<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2)
-%                 P=Q2+(Ln-L_arc-norm(Q1-Sigma_cable))*e2;
-%                 eP=e2;
-%             else
-%                 break;
-%             end
-%             eP=eP/norm(eP);
-%             eP=Plane2World(eP);
-% 
-%             if t<=t_branch_s-tension_time-r_gap_time%スタート～カーブ開始
-%                 t1=t;
-%                 Q1=P;
-%                 eP1=eP;               
-%             elseif t<=t_branch_s-r_gap_time%スタート～カーブ開始
-%                 t2=t;
-%                 Q2=P;
-%                 eP2=eP;
-%             elseif t<=t_branch_s%スタート～カーブ開始
-%                 t3=t;
-%                 Q3=P;
-%                 eP3=eP;
-%             elseif t<=t_branch_c%カーブ開始～非行き先ケーブル
-%                 t4=t;
-%                 Q4=P;
-%                 eP4=eP;
-%             elseif t<=t_branch_e%非行き先ケーブル～カーブ終了
-%                 t5=t;
-%                 Q5=P;
-%                 eP5=eP;
-%             elseif t<=t_branch_e+tension_time%カーブ終了～終わり
-%                 t6=t;
-%                 Q6=P;
-%                 eP6=eP;
-%             elseif t<=t_branch_e+tension_time+f_gap_time%カーブ終了～終わり
-%                 t7=t;
-%                 Q7=P;
-%                 eP7=eP;
-%             elseif t<=t_end%カーブ終了～終わり
-%                 t8=t;
-%                 Q8=P;
-%                 eP8=eP;
-%             end
-%         end
-%         E0=getPosure(eP0,e1,mode);
-%         E1=getPosure(eP1,e1,mode);
-%         E2=getPosure(eP2,e1,mode);
-%         E3=getPosure(eP3,e1,mode);
-%         if(mode==1)
-%             E4 = [-pi/2-phi_n,-pi/2+the_nL,phi_nw];  %サブケーブルを抜く姿勢 
-%         else
-%             E4 = [pi/2-phi_n,-pi/2+the_nR,-phi_nw];  %サブケーブルを抜く姿勢 
-%         end
-% 
-%         E5=getPosure(eP5,e1,mode);
-%         E6=getPosure(eP6,e1,mode);
-%         E7=getPosure(eP7,e1,mode);
-%         E8=getPosure(eP8,e1,mode);
+        E0=[0;0;0];E1=[0;0;0];E2=[0;0;0];E3=[0;0;0];E4=[0;0;0];E5=[0;0;0];E6=[0;0;0];E7=[0;0;0];E8=[0;0;0];
+        t0=0;t1=0;t2=0;t3=0;t4=0;t5=0;t6=0;t7=0;t8=0;
+        Q0=Sigma_cable;Q1=[0;0;0];Q2=[0;0;0];;Q4=[0;0;0];Q6=[0;0;0];Q7=[0;0;0];Q8=[0;0;0];
+        eP0=R("y",gamma1)*([1;0;0]);eP1=[0;0;0];eP2=[0;0;0];eP3=[0;0;0];eP4=[0;0;0];eP5=[0;0;0];eP6=[0;0;0];eP7=[0;0;0];eP8=[0;0;0];
+
+
+
+        Ln=0;
+        for t=1:max_time
+            Ln=Ln+omega(t)*pi/180*r_v*t_step;
+            if 0<=Ln && Ln<norm(Q3-Sigma_cable)
+                P=Ln*x_cable+Sigma_cable;
+                eP=x_cable;
+            elseif norm(Q3-Sigma_cable)<=Ln && Ln<norm(Q3-Sigma_cable)+L_arc
+                t_arc=(Ln-norm(Q3-Sigma_cable))/(R_rute);
+                if mode==1
+                    P=O_R_-y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc);
+                    eP=y_cable*R_rute*sin(t_arc)+x_cable*R_rute*cos(t_arc);
+                else
+                    P=O_R_+y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc);
+                    eP=-y_cable*R_rute*sin(t_arc)+x_cable*R_rute*cos(t_arc);
+                end
+            elseif norm(Q3-Sigma_cable)+L_arc<=Ln && Ln<norm(Q3-Sigma_cable)+L_arc+norm(P_e-Q5)
+                P=Q5+(Ln-L_arc-norm(Q3-Sigma_cable))*e2;
+                eP=e2;
+            else
+                break;
+            end
+            eP=eP/norm(eP);
+            eP=R("y",-gamma1)*eP;
+
+            if t<=t_branch_s-tension_time-r_gap_time%スタート～カーブ開始
+                t1=t;
+                Q1=P;
+                eP1=eP;               
+            elseif t<=t_branch_s-r_gap_time%スタート～カーブ開始
+                t2=t;
+                Q2=P;
+                eP2=eP;
+            elseif t<=t_branch_s%スタート～カーブ開始
+                t3=t;
+                %Q3=P;
+                eP3=eP;
+            elseif t<=t_branch_c%カーブ開始～非行き先ケーブル
+                t4=t;
+                Q4=P;
+                eP4=eP;
+            elseif t<=t_branch_e%非行き先ケーブル～カーブ終了
+                t5=t;
+                %Q5=P;
+                eP5=eP;
+            elseif t<=t_branch_e+tension_time%カーブ終了～終わり
+                t6=t;
+                Q6=P;
+                eP6=eP;
+            elseif t<=t_branch_e+tension_time+f_gap_time%カーブ終了～終わり
+                t7=t;
+                Q7=P;
+                eP7=eP;
+            elseif t<=t_end%カーブ終了～終わり
+                t8=t;
+                Q8=P;
+                eP8=eP;
+            end
+        end
+
+
+
+        e_xw=[1;0;0];
+        e_yw=[0;1;0]
+        e_zw=[0;0;1]
+        
+        E0=getPosure(eP0,x_cable,y_cable,mode);
+        E1=getPosure(eP1,x_cable,y_cable,mode);
+        E2=getPosure(eP2,x_cable,y_cable,mode);
+        E3=getPosure(eP3,x_cable,y_cable,mode);
+        if(mode==1)
+            E4 = [-pi/2-phi_n,-pi/2+the_nL,phi_nw];  %サブケーブルを抜く姿勢 
+        else
+            E4 = [pi/2-phi_n,-pi/2+the_nR,-phi_nw];  %サブケーブルを抜く姿勢 
+        end
+
+
+        eP5=eP5+e3;
+        eP6=eP6+e3;
+        eP7=eP7+e3;
+        eP8=eP8+e3;
+        eP5=eP5/norm(eP5);
+        eP6=eP6/norm(eP6);
+        eP7=eP7/norm(eP7);
+        eP8=eP8/norm(eP8);
+
+        E5=getPosure(eP5,x_cable,y_cable,mode);
+        E6=getPosure(eP6,x_cable,y_cable,mode);
+        E7=getPosure(eP7,x_cable,y_cable,mode);
+        E8=getPosure(eP8,x_cable,y_cable,mode);
 
         %分岐動作における姿
-        E0_R = [-pi/2,0,0];               %オイラー角の初期値
-        E1_R = [-pi/2-phi_n,-pi/2+the_nL,phi_nw];  %サブケーブルを抜く姿勢 
-        E2_R = [-pi/2-phi_n,-the_nR,atan((-sin(gamma1)*sin(the_nR) + cos(gamma1)*cos(the_nR)*sin(phi_n))/cos(phi_n)*cos(gamma1))]; 
-
-        E0_L = [pi/2,0,0];               %オイラー角の初期値
-        E1_L = [pi/2-phi_n,-pi/2+the_nR,-phi_nw];  %サブケーブルを抜く姿勢 
-        E2_L = [pi/2-phi_n,-the_nL,atan((sin(gamma1)*sin(the_nL) + cos(gamma1)*cos(the_nL)*sin(phi_n))/cos(phi_n)*cos(gamma1))]; 
+%         E0_R = [-pi/2,0,0];               %オイラー角の初期値
+%         E1_R = [-pi/2-phi_n,-pi/2+the_nL,phi_nw];  %サブケーブルを抜く姿勢 
+%         E2_R = [-pi/2-phi_n,-the_nR,atan((-sin(gamma1)*sin(the_nR) + cos(gamma1)*cos(the_nR)*sin(phi_n))/cos(phi_n)*cos(gamma1))]; 
+% 
+%         E0_L = [pi/2,0,0];               %オイラー角の初期値
+%         E1_L = [pi/2-phi_n,-pi/2+the_nR,-phi_nw];  %サブケーブルを抜く姿勢 
+%         E2_L = [pi/2-phi_n,-the_nL,atan((sin(gamma1)*sin(the_nL) + cos(gamma1)*cos(the_nL)*sin(phi_n))/cos(phi_n)*cos(gamma1))]; 
 
         %XYXオイラー角をクォータニオンに変換
-        quat0_R = quaternion(E0_R,'euler','XYX','frame');   %クォータニオンの初期値
-        quat1_R = quaternion(E1_R,'euler','XYX','frame');   %サブケーブルを抜く姿勢
-        quat2_R = quaternion(E2_R,'euler','XYX','frame');   %分岐後の姿勢
-        quat0_L = quaternion(E0_L,'euler','XYX','frame');   %クォータニオンの初期値
-        quat1_L = quaternion(E1_L,'euler','XYX','frame');   %サブケーブルを抜く姿勢
-        quat2_L = quaternion(E2_L,'euler','XYX','frame');   %分岐後の姿勢
+
+        
+        quat0 = quaternion(E0,'euler','XYX','frame')
+
+        quat0=getPosure2(eP0,e_xw,e_yw,e_zw,mode);
+
+        quat1 = quaternion(E1,'euler','XYX','frame'); 
+        quat2 = quaternion(E2,'euler','XYX','frame'); 
+        quat3 = quaternion(E3,'euler','XYX','frame'); 
+        quat4 = quaternion(E4,'euler','XYX','frame'); 
+        quat5 = quaternion(E5,'euler','XYX','frame'); 
+        quat6 = quaternion(E6,'euler','XYX','frame'); 
+
+        
+
+        quat7 = quaternion(E7,'euler','XYX','frame');
+        quat8 = quaternion(E8,'euler','XYX','frame'); 
+
 
         if mode == 1
-            %右分岐モード
-            quat0 = quaternion(E0_R,'euler','XYX','frame');   %クォータニオンの初期値
-            quat1 = quaternion(E1_R,'euler','XYX','frame');   %サブケーブルを抜く姿勢
-            quat2 = quaternion(E2_R,'euler','XYX','frame');   %分岐後の姿勢
-            E2 = E2_R;
             tension_angle = pi/2*0.8;
-            %tension_angle = acos((d+2*rw)/(2*Rw));
         else
-            quat0 = quaternion(E0_L,'euler','XYX','frame');   %クォータニオンの初期値
-            quat1 = quaternion(E1_L,'euler','XYX','frame');   %サブケーブルを抜く姿勢
-            quat2 = quaternion(E2_L,'euler','XYX','frame');   %分岐後の姿勢
-            E2 = E2_L;
             tension_angle = -pi/2*0.8;
-            %tension_angle = -acos((d+2*rw)/(2*Rw));
         end    
 
+
         %分岐時の目標角度(補間後)
-        [X_01,Y_01,Z_01] = slerp_xyz_euler(quat0,quat1,ceil(n_bra/2));
-        [X_12,Y_12,Z_12] = slerp_xyz_euler(quat1,quat2,fix(n_bra/2));            %偶数じゃなかったら．．．
-        X = [X_01;X_12];
-        Y = [Y_01;Y_12];   %連結
-        Z = [Z_01;Z_12];
 
+        t_list=[t0;t1;t2;t3;t4;t5;t6;t7;t8];
+        q_list=[quat0;quat1;quat2;quat3;quat4;quat5;quat6;quat7;quat8];
+        [X,Y,Z]=slerp_xyz_euler(q_list(1),q_list(1),1);
 
-        %[L_def,OrCr,OfCf,OrOf,OrOw1r,OrOw2r,OfOw1f,OfOw2f] =  node_cal1(0,0,0,X(n_bra),Y(n_bra),Z(n_bra),phi_n,the_n,0,Lc,Rw,rw,d,mode); %前輪分岐直後のLn1の長さ（これから後輪が移動するべき距離，空間だとLcと異なる）
-        %t_const = (L_def-L_gap)/vel - t_bra;    %定速走行時間[s]
-        %n_const = t_const/t_step;               %定速走行カウント
+        for i=1:8
+            if(q_list(i)==q_list(i+1))
 
+            end
+            [A,B,C]=slerp_xyz_euler(q_list(i),q_list(i+1),t_list(i+1)-t_list(i));
 
+            X=[X;A];
+            Y=[Y;B];
+            Z=[Z;C];
+        end
+
+        n_bra = max_time;
     
     %% 位置と姿勢のリストを生成
         List_time=[];
@@ -448,12 +473,11 @@ function Main(a,b,right,left,mode,max_time,untension)
         for t=1:t_end
             Ln=Ln+omega(t)*pi/180*r_v*t_step;
 
-
-            if 0<=Ln && Ln<norm(Q1-Sigma_cable)
+            if 0<=Ln && Ln<norm(Q3-Sigma_cable)
                 P=Ln*x_cable+Sigma_cable;
                 eP=x_cable;
-            elseif norm(Q1-Sigma_cable)<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc
-                t_arc=(Ln-norm(Q1-Sigma_cable))/(R_rute);
+            elseif norm(Q3-Sigma_cable)<=Ln && Ln<norm(Q3-Sigma_cable)+L_arc
+                t_arc=(Ln-norm(Q3-Sigma_cable))/(R_rute);
                 if mode==1
                     P=O_R_-y_cable*R_rute*cos(t_arc)+x_cable*R_rute*sin(t_arc);
                     eP=y_cable*R_rute*sin(t_arc)+x_cable*R_rute*cos(t_arc);
@@ -462,8 +486,8 @@ function Main(a,b,right,left,mode,max_time,untension)
                     eP=-y_cable*R_rute*sin(t_arc)+x_cable*R_rute*cos(t_arc);
                     %P=O_R_-y_cable*R_rute*sin(t_arc)+x_cable*R_rute*cos(t_arc);
                 end
-            elseif norm(Q1-Sigma_cable)+L_arc<=Ln && Ln<norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2)
-                P=Q2+(Ln-L_arc-norm(Q1-Sigma_cable))*e2;
+            elseif norm(Q3-Sigma_cable)+L_arc<=Ln && Ln<norm(Q3-Sigma_cable)+L_arc+norm(P_e-Q5)
+                P=Q5+(Ln-L_arc-norm(Q3-Sigma_cable))*e2;
                 eP=e2;
             else
                 P=P_e;
@@ -472,94 +496,8 @@ function Main(a,b,right,left,mode,max_time,untension)
             eP=eP/norm(eP);
 
             %後輪
-            if t<=t_branch_s-tension_time-r_gap_time%スタート～カーブ開始
-                t1=t1+1;    
-                if(untension)
-                    the_xr = X(1); the_yr = Y(1); the_zr=Z(1);
-                else
-                    the_xr = X(1); the_yr = Y(1); the_zr=tension_angle;
-                end
-            elseif t<=t_branch_s-r_gap_time%スタート～カーブ開始
-                t1=t1+1;
-                the_xr = X(1); the_yr = Y(1); 
-                t_temp=t-(t_branch_s-tension_time-r_gap_time);
-                rate=t_temp/tension_time;
-                if(untension)
-                    the_zr = Z(1);
-                else
-                    the_zr = tension_angle*(1-rate)+rate*Z(1);
-                end
-            elseif t<=t_branch_s%スタート～カーブ開始
-                t1=t1+1;
-                the_xr = X(1); the_yr = Y(1); the_zr=Z(1);
-            elseif t<=t_branch_c%カーブ開始～非行き先ケーブル
-                t2=t2+1;
-                the_xr = X(round(t2/t_step)); the_yr = Y(round(t2/t_step)); the_zr = Z(round(t2/t_step));
-            elseif t<=t_branch_e%非行き先ケーブル～カーブ終了
-                t3=t3+1;
-                the_xr = X (round((t2+t3)/t_step)); the_yr = Y( round((t2+t3)/t_step)); the_zr = Z(round((t2+t3)/t_step));
-            elseif t<=t_branch_e+tension_time%カーブ終了～終わり
-                t4=t4+1;
-                t_temp=(t-t_branch_e);
-                rate=t_temp/tension_time;
-                if(untension)
-                    the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = Z(n_bra);
-                else
-                    the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = tension_angle*rate+Z(n_bra);
-                end
-            elseif t<=t_end%カーブ終了～終わり
-                t4=t4+1;
-                if(untension)
-                    the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = Z(n_bra);
-                else
-                    the_xr = X(n_bra); the_yr = Y(n_bra); the_zr = tension_angle+Z(n_bra);
-                end
-                
-            else
-                disp("error:out of range");
-                break;
-            end
-
-            %前輪
-            if t<=t_branch_s-tension_time-r_gap_time%スタート～カーブ開始  
-                the_xf = X(1); the_yf = Y(1); the_zf=Z(1);
-            elseif t<=t_branch_s-r_gap_time%スタート～カーブ開始
-                the_xf = X(1); the_yf = Y(1); the_zf = Z(1);
-                t_temp=t-(t_branch_s-tension_time-r_gap_time);
-                rate=t_temp/tension_time;
-                if(untension)
-                    the_zr = Z(1);
-                else
-                    the_zr = tension_angle*(1-rate)+rate*Z(1);
-                end
-            elseif t<=t_branch_s%スタート～カーブ開始
-                the_xf = X(1); the_yf = Y(1); the_zf = Z(1);
-            elseif t<=t_branch_c%カーブ開始～非行き先ケーブル
-                the_xf = X(round(t2/t_step)); the_yf = Y(round(t2/t_step)); the_zf = Z(round(t2/t_step));
-            elseif t<=t_branch_e%非行き先ケーブル～カーブ終了
-                the_xf = X (round((t2+t3)/t_step)); the_yf = Y( round((t2+t3)/t_step)); the_zf = Z(round((t2+t3)/t_step));
-            elseif t<=t_branch_e+f_gap_time%カーブ終了～終わり
-                the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
-            elseif t<=t_branch_e+tension_time+f_gap_time%カーブ終了～終わり
-                t_temp=(t-t_branch_e-f_gap_time);
-                rate=t_temp/tension_time;
-                if(untension)
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
-                else
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = -tension_angle*rate+Z(n_bra);
-                end
-            elseif t<=t_end%カーブ終了～終わり
-                if(untension)
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = Z(n_bra);
-                else
-                    the_xf = X(n_bra); the_yf = Y(n_bra); the_zf = -tension_angle+Z(n_bra);
-                end
-            else
-                disp("error:out of range");
-                break;
-            end
-
-
+            the_xr = X(t); the_yr = Y(t); the_zr=Z(t);
+            the_xf = X(t); the_yf = Y(t); the_zf=Z(t);
 
             P_f=World2Plane(P);
             if mode==1
@@ -608,7 +546,6 @@ function Main(a,b,right,left,mode,max_time,untension)
 %         end
 
         %diff=norm(List_C_f(:,next_best_idx)-C_r);
-        %disp(["A:" best_idx next_best_idx abs(List_the_z_f(:,best_idx)-List_the_z_f(:,next_best_idx)) diff])
         best_diff=1000000;
         next_best_idx=best_idx;
 
@@ -637,8 +574,7 @@ function Main(a,b,right,left,mode,max_time,untension)
 
 
         diff=norm(List_C_f(:,next_best_idx)-C_r);
-        disp([t diff next_best_idx])
-        %disp(["B" best_idx next_best_idx abs(List_the_z_f(:,best_idx)-List_the_z_f(:,next_best_idx)) diff List_the_z_f(:,best_idx)])
+        %disp([t diff next_best_idx])
 
         best_idx=next_best_idx;
 
@@ -651,7 +587,7 @@ function Main(a,b,right,left,mode,max_time,untension)
             t_start_cable=t;
         end
 
-        if(Lnr>norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2)-norm(P_e-O_n)+L_end_cable-Lc)
+        if(Lnr>norm(Q3-Sigma_cable)+L_arc+norm(P_e-Q5)-norm(P_e-O_n)+L_end_cable-Lc)
             t_end_cable=t;
             
             the_xr=X(n_bra);
@@ -699,10 +635,7 @@ function Main(a,b,right,left,mode,max_time,untension)
         
 
         %% 描画
-            if animation == 1 &&  temp(1)-Lnf<L_start_cable && Lnf<norm(Q1-Sigma_cable)+L_arc+norm(P_e-Q2)
-                if(t>490)
-                    disp([the_xf the_yf the_zf the_xr the_yr the_zr])
-                end
+            if animation == 1 &&  temp(1)-Lnf<L_start_cable && Lnf<norm(Q3-Sigma_cable)+L_arc+norm(P_e-Q5)
                 if mod(t,time_step)~=0
                     continue
                 end
@@ -1148,14 +1081,26 @@ function [X,Y,Z] = slerp_xyz_euler(q1,q2,t)
     Z = zeros(t,1);
        
     for i=1:t
-        %tは分割数，iはi番目の分割点
-        %k = 6*(i/t)^5-15*(i/t)^4+10*(i/t)^3;
-        k=i/t;
-        qt = sin((1-k)*the)/sin(the)*q1+sin(k*the)/sin(the)*q2;
-        temp = euler(qt,'XYZ','frame');
-        X(i,1) = temp(1);
-        Y(i,1) = temp(2);
-        Z(i,1) = temp(3);
+        if(the==0)
+            %tは分割数，iはi番目の分割点
+            %k = 6*(i/t)^5-15*(i/t)^4+10*(i/t)^3;
+            k=i/t;
+            qt = q1;
+            temp = euler(qt,'XYZ','frame');
+            X(i,1) = temp(1);
+            Y(i,1) = temp(2);
+            Z(i,1) = temp(3);
+        else
+            %tは分割数，iはi番目の分割点
+            %k = 6*(i/t)^5-15*(i/t)^4+10*(i/t)^3;
+            k=i/t;
+            qt = sin((1-k)*the)/sin(the)*q1+sin(k*the)/sin(the)*q2;
+            temp = euler(qt,'XYZ','frame');
+            X(i,1) = temp(1);
+            Y(i,1) = temp(2);
+            Z(i,1) = temp(3);
+        end
+        
     end
 end
 
@@ -1449,11 +1394,16 @@ function omega=omega(t)
     omega=212;
 end
 
-function E=getPosure(eP,e1,mode)
-    e3=cross(e1,eP);
-    phi_n=atan(e3(2)/e3(3));
-    gamma1=atan(e3(1)/e3(3));
-    the_n=acos(dot(-e1,eP));
+function E=getPosure(eP,ex,ey,mode)
+    global gamma1
+    global phi_n
+    e3=cross(ex,eP);
+    e3=e3/norm(e3);
+    a=atan2(e3(2),e3(3));
+    b=atan2(e3(1),e3(3));
+    the_n=acos(dot(ex,eP));
+    disp([a b phi_n gamma1]);
+    
     if(mode==1)
         %右分岐
         E = [-pi/2-phi_n,-the_n,atan((-sin(gamma1)*sin(the_n) + cos(gamma1)*cos(the_n)*sin(phi_n))/cos(phi_n)*cos(gamma1))]; 
@@ -1463,3 +1413,19 @@ function E=getPosure(eP,e1,mode)
     end
 end
 
+function quat=getPosure2(eP,e_xw,e_yw,e_zw,mode)
+
+    e_X=eP;
+    e_temp=cross(eP,e_zw);
+    e_temp=e_temp/norm(e_temp);
+    rot = rotationVectorToMatrix(pi/2*e_temp);
+    e_Y=rot*eP;
+    e_Z=cross(e_X,e_Y);
+    e_Z=e_Z/norm(e_Z);
+
+    mat=[e_xw,e_yw,e_zw];
+    R=[e_X,e_Y,e_Z]*inv(mat);
+    
+    quat = quaternion(R,'rotmat','frame')
+
+end
