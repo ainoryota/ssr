@@ -26,7 +26,7 @@ time_step=10;
 if testmode==1
     a=10;
     b=15;
-    right=20;
+    right=25;
     left=80;
     mode_value=0;
     untension_value=0;
@@ -107,7 +107,7 @@ function Main(a,b,right,left,mode,max_time,untension)
     %% 要設定変数
     L_cable=740;
 
-    L_start_cable=50;
+    L_start_cable=40;
     L_end_cable=100;
     t_start_cable=0;
     t_end_cable=0;
@@ -154,7 +154,7 @@ function Main(a,b,right,left,mode,max_time,untension)
        % a3 = 30/180*pi;         %1軸目の取り付け角（論文ではa0） 
 
     %各リンクの重さ，重心位置，長さ
-        Lc = 260;%本当は280
+        Lc = 290;%本当は300
         l2_min = (Lc-80)/2;
         l1 = 90;                %各モーターの中心点からの距離
         l2 = l2_min/sin(a2);
@@ -321,14 +321,14 @@ function Main(a,b,right,left,mode,max_time,untension)
             quat1 = quaternion(E1_R,'euler','XYX','frame');   %サブケーブルを抜く姿勢
             quat2 = quaternion(E2_R,'euler','XYX','frame');   %分岐後の姿勢
             E2 = E2_R;
-            tension_angle = pi/2*0.8;
+            tension_angle = pi/2*1.2;
             %tension_angle = acos((d+2*rw)/(2*Rw));
         else
             quat0 = quaternion(E0_L,'euler','XYX','frame');   %クォータニオンの初期値
             quat1 = quaternion(E1_L,'euler','XYX','frame');   %サブケーブルを抜く姿勢
             quat2 = quaternion(E2_L,'euler','XYX','frame');   %分岐後の姿勢
             E2 = E2_L;
-            tension_angle = -pi/2*0.8;
+            tension_angle = -pi/2*1.2;
             %tension_angle = -acos((d+2*rw)/(2*Rw));
         end    
 

@@ -163,6 +163,10 @@ class BranchSystem:
         cablewayImage = self.getCablewayImage()
         imageMap = np.zeros(InclinationImage.shape)
         depthIRImage = cv2.resize(self.getDepthIRMap(depth_view_image),(307,230))
+        depthIRImage =cv2.resize( cv2.applyColorMap(cv2.convertScaleAbs(self.original_depth_image, alpha=0.08), cv2.COLORMAP_JET),(307,230))
+
+        depthIRImage=np.where(depthIRImage==[128,0,0],[0,0,0],depthIRImage)
+
         self.web_image = cv2.resize(self.web_image,(307,230))
 
         image = CreteViewImage(self.color_image,depth_view_image,self.ir_image1,cablewayImage,depthIRImage,self.web_image)

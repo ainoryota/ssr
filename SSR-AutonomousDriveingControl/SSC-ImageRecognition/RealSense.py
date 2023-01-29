@@ -4,7 +4,7 @@ from PIL import Image,ImageTk #udo pip install pillow
 import tkinter as tk
 import cv2
 import time
-
+import csv
 import platform
 from functools import partial
 import sys
@@ -19,6 +19,7 @@ from BranchSystem import BranchSystem
 from Utilty import getLikeAngle,rounddown,ConvertDepthCoordinate,DebugImage
 from OutputController import OutputController
 from FormSingleton import FormSingleton
+from datetime import datetime
 
 
 class RealSense(object):
@@ -53,6 +54,11 @@ class RealSense(object):
         self.valueLog = [0 for n in range(10)]
         self.timerLog = [0 for n in range(100)]
         self.startTime = time.time()
+        # 現在時刻を取得
+        now = datetime.now()
+        # 現在時刻をyyyy/mm/dd/hh/mm/ss.ms形式に変換
+        now_str = now.strftime('%Y%m%d%H%M%S')
+        self.logname = "log/" + now_str + ".csv"
 
         if(False):
             try:
@@ -135,11 +141,13 @@ class RealSense(object):
         depth_image = depth_image_original[(Y_all,X_all)]
         depth_image = np.reshape(depth_image,((360,640)))
 
+
+        self.branchSystem.original_depth_image = self.vs.depth_image
         hoge = np.where((depth_image < 600) & (depth_image > 0))
 
         print("A",time.time() - start)
         result,x,y,z,fit = FormSingleton().updateThreeGraph(hoge[1],hoge[0],depth_image[hoge])
-        if(result ==False):
+        if(result == False):
             print("Graph Error")
             self.imgArea.after(100,self.getRealsense)
             return
@@ -238,6 +246,16 @@ class RealSense(object):
         FormSingleton().updateForm()
 
         OutputController().msgPrint("■CurrentBranch",round(tangle,2),round(InclinationAngle,2),round(Rangle,2),round(Langle,2))
+        # CSVファイルを開く
+        with open(self.logname, 'a', newline='') as csvfile:
+            # CSVファイルに書き込むためのオブジェクトを作成
+            writer = csv.writer(csvfile)
+            # CSVファイルに「1,4」を書き込む
+            now = datetime.now()
+            now_str = now.strftime('%Y/%m/%d/%H:%M:%S.%f')[:-3]
+            writer.writerow([now_str,tangle,InclinationAngle,Rangle,Langle,rule0,rule1,rule2,rule3_R,rule3_L,rule4,rule5,rule6,rule7])
+
+
         (tangle,InclinationAngle,Rangle,Langle) = self.getAverageLog()
         OutputController().msgPrint("■AverageBranch",tangle,InclinationAngle,Rangle,Langle)
         OutputController().msgPrint("○rule","value=",round(value),"rule0=",round(rule0,2),"rule1=",round(rule1,2),"rule2=",round(rule2,2),"rule3L=",round(rule3_L),"rule3R=",round(rule3_R),"rule4=",round(rule4),"a=",round(a,2),"rule5=",round(rule5,2),"rule6=",round(rule6,2),"rule7=",round(rule7,2),"stop_time=",self.stop_branch_time)
@@ -245,7 +263,7 @@ class RealSense(object):
 
         if(self.stop_branch_time > 0):
             self.stop_branch_time-=1
-        elif(rule0 > 0.9 and rule1 > 1 and rule2> 1 and rule5 > 0.5 and rule6 > 0.5 and rule7 > 0):#and rule3_L < 10000 and rule3_R < 10000
+        elif(rule0 > 0.9 and rule1 > 1 and rule2 > 1 and rule5 > 0.5 and rule6 > 0.5 and rule7 > 0):#and rule3_L < 10000 and rule3_R < 10000
             OutputController().msgPrint("■■■■■分岐",tangle,InclinationAngle,Rangle,Langle)
             (tangle,InclinationAngle,Rangle,Langle) = getLikeAngle(tangle,InclinationAngle,Rangle,Langle)
             if((InclinationAngle,tangle,Rangle,Langle) != (0,0,0,0)):
