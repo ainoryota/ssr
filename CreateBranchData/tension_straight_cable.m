@@ -28,7 +28,7 @@ if testmode==1
     b=15;
     right=25;
     left=80;
-    mode_value=0;
+    mode_value=1;
     untension_value=0;
 
     animation=0;
@@ -108,7 +108,7 @@ function Main(a,b,right,left,mode,max_time,untension)
     L_cable=740;
 
     L_start_cable=40;
-    L_end_cable=100;
+    L_end_cable=200;
     t_start_cable=0;
     t_end_cable=0;
     omega_end=212;
@@ -261,8 +261,9 @@ function Main(a,b,right,left,mode,max_time,untension)
 
         Ln=0;
         flag = 0;
+        speed=pi/180*r_v*t_step;
         for t=1:max_time
-            Ln=Ln+omega(t)*pi/180*r_v*t_step;
+            Ln=Ln+omega(t)*speed;
             if flag == 0    %ロボットの初期値計算
                 if Ln>Lc
                     t_start=t;
@@ -270,6 +271,7 @@ function Main(a,b,right,left,mode,max_time,untension)
                 end
             elseif flag==1
                 if Ln>=norm(Q1-Sigma_cable)
+                    speed=pi/180*Rw*t_step*(R_rute/(R_rute+a_w));
                     t_branch_s=t;
                     flag=flag+1;
                 end
@@ -280,6 +282,7 @@ function Main(a,b,right,left,mode,max_time,untension)
                 end
             elseif flag==3
                 if Ln>=norm(Q1-Sigma_cable)+L_arc
+                    speed=pi/180*r_v*t_step;
                     t_branch_e=t;
                     flag=flag+1;
                 end
@@ -321,14 +324,14 @@ function Main(a,b,right,left,mode,max_time,untension)
             quat1 = quaternion(E1_R,'euler','XYX','frame');   %サブケーブルを抜く姿勢
             quat2 = quaternion(E2_R,'euler','XYX','frame');   %分岐後の姿勢
             E2 = E2_R;
-            tension_angle = pi/2*1.2;
+            tension_angle = pi/2*0.8;
             %tension_angle = acos((d+2*rw)/(2*Rw));
         else
             quat0 = quaternion(E0_L,'euler','XYX','frame');   %クォータニオンの初期値
             quat1 = quaternion(E1_L,'euler','XYX','frame');   %サブケーブルを抜く姿勢
             quat2 = quaternion(E2_L,'euler','XYX','frame');   %分岐後の姿勢
             E2 = E2_L;
-            tension_angle = -pi/2*1.2;
+            tension_angle = -pi/2*0.8;
             %tension_angle = -acos((d+2*rw)/(2*Rw));
         end    
 
@@ -366,7 +369,11 @@ function Main(a,b,right,left,mode,max_time,untension)
         
         
         for t=1:t_end
-            Ln=Ln+omega(t)*pi/180*r_v*t_step;
+            if t<= t_branch_s || t_branch_e<=t
+                Ln=Ln+omega(t)*pi/180*r_v*t_step;
+            else
+                Ln=Ln+omega(t)*pi/180*Rw*t_step*(R_rute/(R_rute+a_w));
+            end
 
             %後輪
             if t<=t_branch_s-tension_time-r_gap_time%スタート～カーブ開始
@@ -500,7 +507,12 @@ function Main(a,b,right,left,mode,max_time,untension)
         Lnr=-Lc;
         best_idx=1;
     for t = 1:max_time
-        Lnr=Lnr+omega(t)*pi/180*r_v*t_step;
+        if  t<= t_branch_s || t_branch_e<=t
+            Lnr=Lnr+omega(t)*pi/180*r_v*t_step;
+        else
+            Lnr=Lnr+omega(t)*pi/180*Rw*t_step*(R_rute/(R_rute+a_w));
+        end
+        
         P_r=List_P(:,t);
         C_r=List_C_r(:,t);
         
@@ -844,14 +856,13 @@ function Main(a,b,right,left,mode,max_time,untension)
         %データの書き出し 
             if exist("O:\マイドライブ\Research\非停止分岐動作\分岐データ\")>0
                 text = "O:\マイドライブ\Research\非停止分岐動作\分岐データ\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
-            else
-                text = "C:\Users\MSD\Documents\GitHub\NonStopData\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
-            end
-            if(untension==0)
-                text=text+"_T";
+                if(untension==0)
+                    text=text+"_T";
+                end
+    
+                writematrix(data,text+'.csv')
             end
 
-            writematrix(data,text+'.csv')
         end
 
     %% グラフ描画（姿勢）
