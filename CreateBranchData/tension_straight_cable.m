@@ -28,8 +28,8 @@ if testmode==1
     b=15;
     right=25;
     left=80;
-    mode_value=1;
-    untension_value=0;
+    mode_value=2;
+    untension_value=1;
 
     animation=0;
     save=1;
@@ -808,12 +808,18 @@ function Main(a,b,right,left,mode,max_time,untension)
     
     for t = t_start:t_end_cable
         %data(t,7)=(debug_data(t+chect_num,7)-debug_data(t,7))/(chect_num*r_v*t_step)*180/pi;
+        Ln_temp=debug_data(t,7);
+        if(Ln_temp<=norm(Q1-Sigma_cable) || norm(Q1-Sigma_cable)+L_arc<=Ln_temp)
+            speed=r_v*t_step;
+        else
+            speed=Rw*t_step;
+        end
         if t<t_start+chect_num+1
-            data(t,7)=(debug_data(t+chect_num,7)-debug_data(t,7))/(chect_num*r_v*t_step)*180/pi;
+            data(t,7)=(debug_data(t+chect_num,7)-debug_data(t,7))/(chect_num*speed)*180/pi;
         elseif t>t_end_cable-chect_num
             data(t,7)=omega_end;
         else
-            data(t,7)=(debug_data(t+chect_num,7)-debug_data(t-chect_num,7))/(2*chect_num*r_v*t_step)*180/pi;
+            data(t,7)=(debug_data(t+chect_num,7)-debug_data(t-chect_num,7))/(2*chect_num*speed)*180/pi;
         end
 
 
@@ -854,14 +860,13 @@ function Main(a,b,right,left,mode,max_time,untension)
         max_time = t_end_cable-t_start_cable;
         if save ==1
         %データの書き出し 
-            if exist("O:\マイドライブ\Research\非停止分岐動作\分岐データ\")>0
-                text = "O:\マイドライブ\Research\非停止分岐動作\分岐データ\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
-                if(untension==0)
-                    text=text+"_T";
-                end
-    
-                writematrix(data,text+'.csv')
+            text = "C:\Users\MSD\Documents\GitHub\NonStopData\"+gamma1*180/pi+ "_" + phi_n*180/pi+ "_" + the_nR*180/pi+ "_" + the_nL*180/pi+"_"+mode;
+            if(untension==0)
+                text=text+"_T";
             end
+
+            writematrix(data,text+'.csv')
+            
 
         end
 
