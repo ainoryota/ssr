@@ -13,7 +13,7 @@ from RealSense import RealSense
 import numpy as np
 import math
 import time
-
+import os
 
 
 
@@ -23,9 +23,12 @@ class Branch(object):
         self.robot = robot
         OutputController().msgPrint("Branch Start")
 
-    def FileBranch(self,csvfile,runDirection,save,a=24):
+    def FileBranch(self,csvfile_original,runDirection,save,a=24):
         #分岐データの読み込み
-        csvfile = "C:/Users/MSD/Documents/GitHub/NonStopData/" + csvfile
+        csvfile = "C:/Users/MSD/Documents/GitHub/Data_stop/" + csvfile_original
+        if(not(os.path.exists(csvfile))):
+            csvfile = "C:/Users/MSD/Documents/GitHub/Data_nonstop/" + csvfile_original
+
         OutputController().msgPrint("Branch",csvfile,"a=",round(a,2))
         
         
@@ -77,7 +80,7 @@ class Branch(object):
             #2.12206591 * 100),t))
             #self.robot.motors[id[10]].insertOrder(VelocityOrder(round(direct *
             #2.12206591 * 100),t))
-            #if(line == n // 2):t+=2#0.7
+            if(line == n // 2):t+=1.4#0.7だめ
             #t+=0.024
             t+=0.036
             #t+=(0.024 * 100) / a #aが大きいほど小さな値にする。

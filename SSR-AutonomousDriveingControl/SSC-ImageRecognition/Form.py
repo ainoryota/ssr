@@ -197,7 +197,7 @@ class Form(object):
         self.robot.motors[11].insertOrder(MotorModeOrder(MotorMode.VelocityNormal,0))
 
         #初期姿勢
-        d = np.loadtxt("C:/Users/MSD/Documents/GitHub/NonStopData/normal_switching.csv",delimiter=",")
+        d = np.loadtxt("C:/Users/MSD/Documents/GitHub/Data_stop/normal_switching.csv",delimiter=",")
         self.robot.motors[0].insertOrder(PosOrder(0,0))
         self.robot.motors[1].insertOrder(PosOrder(round(d[0,0] / math.pi * 180,2),0))
         self.robot.motors[2].insertOrder(PosOrder(round(d[0,1] / math.pi * 180,2),0))
@@ -230,7 +230,7 @@ class Form(object):
         self.robot.motors[11].insertOrder(MotorModeOrder(MotorMode.VelocityNormal,0))
 
         #初期姿勢
-        d = np.loadtxt("C:/Users/MSD/Documents/GitHub/NonStopData/normal_switching.csv",delimiter=",")
+        d = np.loadtxt("C:/Users/MSD/Documents/GitHub/Data_stop/normal_switching.csv",delimiter=",")
         (n,m) = d.shape
         n-=1;
         self.robot.motors[0].insertOrder(PosOrder(0,0))

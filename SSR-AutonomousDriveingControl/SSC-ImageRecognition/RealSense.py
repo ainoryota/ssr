@@ -272,7 +272,7 @@ class RealSense(object):
                 if(self.data["v_auto"].get()):
                     self.branchSystem.ResetLog()
                     self.ResetLog()
-                    time.sleep(1)
+                    time.sleep(0.7)
                     #OutputController().msgPrint("Branch
                     #Angle:",ElevationAngle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())
                     self.br.branchAngle(a,tangle,InclinationAngle,Rangle,Langle,self.data["v1"].get(),self.data["v3"].get(),self.data["v_tention"].get(),self.data["v8"].get())

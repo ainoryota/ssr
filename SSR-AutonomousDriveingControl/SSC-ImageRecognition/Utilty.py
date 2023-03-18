@@ -404,7 +404,92 @@ def getLikeAngle(a1, b1, c1, d1):
     if c + d < 90:
         d = 90 - c
 
-    basepath = "C:/Users/MSD/Documents/GitHub/NonStopData/"
+    basepath = "C:/Users/MSD/Documents/GitHub/Data_stop/"
+    path = basepath + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1.csv"
+    if os.path.exists(path):
+        return (a, b, c, d)
+    else:
+        OutputController().msgPrint(path, "is none")
+
+    a = int(a1 / 10) * 10
+    b = int(b1 / 10) * 10
+    c = int(c1 / 10) * 10
+    d = int(d1 / 10) * 10
+
+    path = basepath + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1.csv"
+    if os.path.exists(path):
+        return (a, b, c, d)
+    else:
+        OutputController().msgPrint(path, "is none")
+
+    a = int(a1 / 10) * 10 + 10
+    b = int(b1 / 10) * 10
+    c = int(c1 / 10) * 10
+    d = int(d1 / 10) * 10
+
+    path = basepath + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1.csv"
+    if os.path.exists(path):
+        return (a, b, c, d)
+    else:
+        OutputController().msgPrint(path, "is none")
+
+    a = int(a1 / 10) * 10
+    b = int(b1 / 10) * 10 + 10
+    c = int(c1 / 10) * 10
+    d = int(d1 / 10) * 10
+
+    path = basepath + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1.csv"
+    if os.path.exists(path):
+        return (a, b, c, d)
+    else:
+        OutputController().msgPrint(path, "is none")
+
+    a = int(a1 / 10) * 10
+    b = int(b1 / 10) * 10
+    c = int(c1 / 10) * 10 + 10
+    d = int(d1 / 10) * 10
+
+    path = basepath + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1.csv"
+    if os.path.exists(path):
+        return (a, b, c, d)
+    else:
+        OutputController().msgPrint(path, "is none")
+
+    a = int(a1 / 10) * 10
+    b = int(b1 / 10) * 10
+    c = int(c1 / 10) * 10
+    d = int(d1 / 10) * 10 + 10
+
+    path = basepath + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1.csv"
+    if os.path.exists(path):
+        return (a, b, c, d)
+    else:
+        (a, b, c, d)=getLikeAngleB(a1, b1, c1, d1)
+        return (a,b,c,d)
+
+    OutputController().msgPrint("out of range angle")
+    return (0, 0, 0, 0)
+
+
+def getLikeAngleB(a1, b1, c1, d1):
+
+    a = int(a1 / 5) * 5
+    b = int(b1 / 5) * 5
+    c = int(c1 / 5) * 5 
+    d = int(d1 / 5) * 5
+
+    # sw = True
+    # while(c + d < 100):
+    #    if(sw):
+    #        c+=5
+    #        sw = False
+    #    else:
+    #        d+=5
+    #        sw = True
+    if c + d < 90:
+        d = 90 - c
+
+    basepath = "C:/Users/MSD/Documents/GitHub/Data_nonstop/"
     path = basepath + str(a) + "_" + str(b) + "_" + str(c) + "_" + str(d) + "_1.csv"
     if os.path.exists(path):
         return (a, b, c, d)

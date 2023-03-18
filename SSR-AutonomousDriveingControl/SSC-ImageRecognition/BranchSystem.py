@@ -198,7 +198,7 @@ class BranchSystem:
         #A→屋外実験により720以上必要であると確認。屋内実験で880以下でなければならないと確認済み
         #1.直近N1ログ以内のvalueLog平均値がA以上
         #2.直近N1ログ以内のvalueLog平均値がA以上の結果から推定された5ログあとのYLogの線形近似解が高さhの1.2倍を超えた
-        N1 = 12 #処理時間が500msなら8、300msなら12
+        N1 = 8 #処理時間が500msなら8、300msなら12
 
         #YLogList = np.array(self.YLog[len(self.YLog) - N1:])
         #rule0 = np.average(YLogList)
